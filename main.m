@@ -5,7 +5,7 @@ cell_names = [14 15 16 19 20 21 23 24 25 27];
 
 %% params
 
-nfolds = 7;
+nfolds = 5;
 fold_for_plots = 1;
 [~,~,~,~,foldinds] = reg.trainAndTestKFolds(data.X, data.R, nfolds);
 
@@ -25,25 +25,36 @@ hypergrid = asd.makeHyperGrid(lbs, ubs, ns, data.ndeltas, false, isLinReg);
 M = asd.linearASDStruct(data.D, llstr);
 mlFcn = @(~) ml.fitopts('gauss'); % no poisson for ML yet
 
-cell_inds = 2;
-% cell_inds = 1:size(data.Y_all, 2);
+% cell_inds = 2;
+cell_inds = 1:size(data.Y_all, 2);
 
 ncells = numel(cell_inds);
 for nn = 1:ncells
     cell_ind = cell_inds(nn);
-    data.Y = data.Y_all(:,cell_ind); % choose cell for analysis
-    fits.ASD = reg.scoreHypergrid(data, hypergrid, M.mapFcn, M.mapFcnOpts, ...
-        M.rsqFcn, {}, foldinds, ['ASD-' llstr], fold_for_plots);
-%     fits.ASD_gs = reg.scoreGridSearch(data, lbs, ubs, ns, M.mapFcn, ...
-%         M.mapFcnOpts, M.rsqFcn, {}, foldinds, fold_for_plots, 'ASD-gs', isLog);
-    fits.ML = reg.scoreHypergrid(data, [nan nan nan], mlFcn, {}, ...
-        M.rsqFcn, {}, foldinds, 'ML', 1);
-    fits.isLinReg = isLinReg;
     lbl = ['cell_' num2str(cell_ind)];
-%     io.updateStruct(dat_fnfcn(lbl), fits);
-    fig_svfcn(fits.ML.fig, [lbl '-ML'], 'png');
+    data.Y = data.Y_all(:,cell_ind); % choose cell for analysis
+
+    [fits.ASD, wf, sc] = reg.scoreHypergrid(data, hypergrid, M.mapFcn, M.mapFcnOpts, ...
+        M.rsqFcn, {}, foldinds, ['ASD-' llstr], fold_for_plots);
+    fits.ASD.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
+        data.nt, fold_for_plots, fits.ASD.lbl, sc);
     fig_svfcn(fits.ASD.fig, [lbl '-ASD_' llstr], 'png');
+
+%     [fits.ASD_gs, wf, sc] = reg.scoreGridSearch(data, lbs, ubs, ns, M.mapFcn, ...
+%         M.mapFcnOpts, M.rsqFcn, {}, foldinds, fold_for_plots, 'ASD-gs', isLog);
+%     fits.ASD_gs.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
+%         data.nt, fold_for_plots, fits.ASD_gs.lbl, sc);
 %     fig_svfcn(fits.ASD_gs.fig, [lbl '-ASD-gs_' llstr], 'png');
+
+    [fits.ML, wf, sc] = reg.scoreHypergrid(data, [nan nan nan], mlFcn, {}, ...
+        M.rsqFcn, {}, foldinds, 'ML', 1);
+    fits.ML.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
+        data.nt, fold_for_plots, fits.ML.lbl, sc);
+    fig_svfcn(fits.ML.fig, [lbl '-ML'], 'png');
+
+    fits.isLinReg = isLinReg;
+    io.updateStruct(dat_fnfcn(lbl), fits);
+        
 end
 
 %% run on decision
@@ -54,15 +65,24 @@ hypergrid = asd.makeHyperGrid(lbs, ubs, ns, data.ndeltas, false, isLinReg);
 M = asd.logisticASDStruct(data.D);
 mlFcn = @(~) ml.fitopts('bern');
 data.Y = data.R;
-fits.ASD = reg.scoreHypergrid(data, hypergrid, M.mapFcn, M.mapFcnOpts, ...
-    M.rsqFcn, {}, foldinds, 'ASD', fold_for_plots);
-% fits.ASD_gs = reg.scoreGridSearch(data, lbs, ubs, ns, M.mapFcn, ...
-%     M.mapFcnOpts, M.rsqFcn, {}, foldinds, fold_for_plots, 'ASD-gs', isLog);
-fits.ML = reg.scoreHypergrid(data, [nan nan nan], mlFcn, {}, ...
-    M.rsqFcn, {}, foldinds, 'ML', 1);
-fits.isLinReg = isLinReg;
 
-% io.updateStruct(dat_fnfcn('decision'), fits);
+[fits.ASD, wf, sc] = reg.scoreHypergrid(data, hypergrid, M.mapFcn, M.mapFcnOpts, ...
+    M.rsqFcn, {}, foldinds, 'ASD', fold_for_plots);
+fits.ASD.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
+    data.nt, fold_for_plots, fits.ASD.lbl, sc);
 fig_svfcn(fits.ASD.fig, 'decision-ASD', 'png');
+
+% [fits.ASD_gs, wf, sc] = reg.scoreGridSearch(data, lbs, ubs, ns, M.mapFcn, ...
+%     M.mapFcnOpts, M.rsqFcn, {}, foldinds, fold_for_plots, 'ASD-gs', isLog);
+% fits.ASD_gs.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
+%         data.nt, fold_for_plots, fits.ASD_gs.lbl, sc);
 % fig_svfcn(fits.ASD_gs.fig, 'decision-ASD-gs', 'png');
+
+[fits.ML, wf, sc] = reg.scoreHypergrid(data, [nan nan nan], mlFcn, {}, ...
+    M.rsqFcn, {}, foldinds, 'ML', 1);
+fits.ML.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
+    data.nt, fold_for_plots, fits.ML.lbl, sc);
 fig_svfcn(fits.ML.fig, 'decision-ML', 'png');
+
+fits.isLinReg = isLinReg;
+io.updateStruct(dat_fnfcn('decision'), fits);
