@@ -17,11 +17,12 @@ fig_svfcn = @(fig, tag, ext) hgexport(fig, fig_fnfcn(tag, ext), hgexport('factor
 
 %% run on all cells
 
+isLog = true;
 isLinReg = true;
 llstr = 'gauss';
 % for gridding:
-lbs = [-3, -2, -5]; ubs = [3, 10, 10]; ns = 5*ones(1,3); isLog = true;
-hypergrid = asd.makeHyperGrid(lbs, ubs, ns, data.ndeltas, false, isLinReg);
+lbs = [-3, -5 -5]; ubs = [3, 10 10]; ns = 5*ones(1,3);
+hypergrid = exp(tools.gridCartesianProduct(lbs, ubs, ns));
 M = asd.linearASDStruct(data.D, llstr);
 mlFcn = @(~) ml.fitopts('gauss'); % no poisson for ML yet
 
@@ -34,19 +35,19 @@ for nn = 1:ncells
     lbl = ['cell_' num2str(cell_ind)];
     data.Y = data.Y_all(:,cell_ind); % choose cell for analysis
 
-    [fits.ASD, wf, sc] = reg.scoreHypergrid(data, hypergrid, M.mapFcn, M.mapFcnOpts, ...
+    [fits.ASD, wf, sc] = reg.cvMaxScoreGrid(data, hypergrid, M.mapFcn, {}, ...
         M.rsqFcn, {}, foldinds, ['ASD-' llstr], fold_for_plots);
     fits.ASD.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
         data.nt, fold_for_plots, fits.ASD.lbl, sc);
     fig_svfcn(fits.ASD.fig, [lbl '-ASD_' llstr], 'png');
 
-%     [fits.ASD_gs, wf, sc] = reg.scoreGridSearch(data, lbs, ubs, ns, M.mapFcn, ...
-%         M.mapFcnOpts, M.rsqFcn, {}, foldinds, fold_for_plots, 'ASD-gs', isLog);
+%     [fits.ASD_gs, wf, sc] = reg.cvMaxScoreGridSearch(data, lbs, ubs, ns, M.mapFcn, ...
+%         {}, M.rsqFcn, {}, foldinds, fold_for_plots, 'ASD-gs', isLog);
 %     fits.ASD_gs.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
 %         data.nt, fold_for_plots, fits.ASD_gs.lbl, sc);
 %     fig_svfcn(fits.ASD_gs.fig, [lbl '-ASD-gs_' llstr], 'png');
 
-    [fits.ML, wf, sc] = reg.scoreHypergrid(data, [nan nan nan], mlFcn, {}, ...
+    [fits.ML, wf, sc] = reg.cvMaxScoreGrid(data, [nan nan nan], mlFcn, {}, ...
         M.rsqFcn, {}, foldinds, 'ML', 1);
     fits.ML.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
         data.nt, fold_for_plots, fits.ML.lbl, sc);
@@ -59,26 +60,27 @@ end
 
 %% run on decision
 
+isLog = true;
 isLinReg = false;
-lbs = [-3, -2, -5]; ubs = [3, 10, 10]; ns = 5*ones(1,3); isLog = true;
-hypergrid = asd.makeHyperGrid(lbs, ubs, ns, data.ndeltas, false, isLinReg);
+lbs = [-3, -2, -5 -5]; ubs = [3, 10, 10 10]; ns = 5*ones(1,4);
+hypergrid = exp(tools.gridCartesianProduct(lbs, ubs, ns));
 M = asd.logisticASDStruct(data.D);
 mlFcn = @(~) ml.fitopts('bern');
 data.Y = data.R;
 
-[fits.ASD, wf, sc] = reg.scoreHypergrid(data, hypergrid, M.mapFcn, M.mapFcnOpts, ...
+[fits.ASD, wf, sc] = reg.cvMaxScoreGrid(data, hypergrid, M.mapFcn, {}, ...
     M.rsqFcn, {}, foldinds, 'ASD', fold_for_plots);
 fits.ASD.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
     data.nt, fold_for_plots, fits.ASD.lbl, sc);
 fig_svfcn(fits.ASD.fig, 'decision-ASD', 'png');
 
-% [fits.ASD_gs, wf, sc] = reg.scoreGridSearch(data, lbs, ubs, ns, M.mapFcn, ...
-%     M.mapFcnOpts, M.rsqFcn, {}, foldinds, fold_for_plots, 'ASD-gs', isLog);
+% [fits.ASD_gs, wf, sc] = reg.cvMaxScoreGridSearch(data, lbs, ubs, ns, M.mapFcn, ...
+%     {}, M.rsqFcn, {}, foldinds, fold_for_plots, 'ASD-gs', isLog);
 % fits.ASD_gs.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
 %         data.nt, fold_for_plots, fits.ASD_gs.lbl, sc);
 % fig_svfcn(fits.ASD_gs.fig, 'decision-ASD-gs', 'png');
 
-[fits.ML, wf, sc] = reg.scoreHypergrid(data, [nan nan nan], mlFcn, {}, ...
+[fits.ML, wf, sc] = reg.cvMaxScoreGrid(data, [nan nan nan], mlFcn, {}, ...
     M.rsqFcn, {}, foldinds, 'ML', 1);
 fits.ML.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
     data.nt, fold_for_plots, fits.ML.lbl, sc);
