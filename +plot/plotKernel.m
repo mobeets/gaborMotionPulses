@@ -1,4 +1,4 @@
-function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn)
+function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn, lblFcn)
 % plots an nw-by-nt spatiotemporal kernel
 %   creates nt subplots each with nw weights
 % 
@@ -9,9 +9,13 @@ function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn)
 % figSz - size of figure
 % figLbl - prefix for title of each subplot
 % clrFcn - color function handle of form color = f(wf(i,j)) for any i,j
+% lblFcn - generates labels for each subplot
 % 
     assert(~any(isnan(wf(:))));
-    if nargin < 7 || isnan(clrFcn)
+    if nargin < 8 || ~isa(lblFcn, 'function_handle')
+        lblFcn = @(ii) ['t=' num2str(ii)];
+    end
+    if nargin < 7 || ~isa(clrFcn, 'function_handle')
         clrs = defaultColorScheme();
         clrFcn = colorFcn(clrs{:});
     end
@@ -47,7 +51,7 @@ function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn)
             ht = title(figLbl);
             set(ht, 'FontSize', titleFontSize);
         end
-        xlabel(['t=', num2str(ii)]); % acts like a subplot title
+        xlabel(lblFcn(ii)); % acts like a subplot title
     end
     plot.suplabel(figLbl, 't'); 
     
