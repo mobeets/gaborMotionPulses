@@ -1,90 +1,83 @@
+%% load all
+
+dts = {'20130502', '20130514', '20130515', '20130517', '20130611', '20140213', '20140218', '20140226', '20140303', '20140304', '20140305', '20140306', '20140307', '20140310'};   
+
 %% load
-data = io.loadData('+io/XY.mat');
-cell_names = [14 15 16 19 20 21 23 24 25 27];
-% i.e. column i of data.Y ~> cell # cell_names(i)
+
+dt = '20130502';
+figdir = ['figs/' dt];
+datdir = ['fits/' dt];
+data = io.loadDataByDate(dt, '~/Desktop');
+% n.b. make sure to add path to github.com/mobeets/mASD
 
 %% params
 
 nfolds = 5;
-fold_for_plots = 1;
+ifold = 1;
 [~,~,~,~,foldinds] = reg.trainAndTestKFolds(data.X, data.R, nfolds);
 
-figdir = 'figs';
-datdir = 'fits';
+if ~exist(figdir, 'dir')
+    mkdir(figdir);
+end
+if ~exist(datdir, 'dir')
+    mkdir(datdir);
+end
 dat_fnfcn = @(tag) fullfile(datdir, [tag '.mat']);
-fig_fnfcn = @(tag, ext) fullfile(figdir, [tag '.' ext]);
-fig_svfcn = @(fig, tag, ext) hgexport(fig, fig_fnfcn(tag, ext), hgexport('factorystyle'), 'Format', ext);
 
 %% run on all cells
 
-isLog = true;
 isLinReg = true;
 llstr = 'gauss';
-% for gridding:
-lbs = [-3, -5 -5]; ubs = [3, 10 10]; ns = 5*ones(1,3);
-hypergrid = exp(tools.gridCartesianProduct(lbs, ubs, ns));
+lbs = [-3, -2 -5 -5]; ubs = [3, 10 10 10]; ns = 5*ones(1,4);
 M = asd.linearASDStruct(data.D, llstr);
+mapFcn = M.mapFcn;
+scFcn = M.rsqFcn;
 mlFcn = @(~) ml.fitopts('gauss'); % no poisson for ML yet
 
-% cell_inds = 2;
-cell_inds = 1:size(data.Y_all, 2);
+cell_inds = 2;
+% cell_inds = 1:size(data.Y_all, 2);
 
 ncells = numel(cell_inds);
 for nn = 1:ncells
     cell_ind = cell_inds(nn);
     lbl = ['cell_' num2str(cell_ind)];
+    
     data.Y = data.Y_all(:,cell_ind); % choose cell for analysis
+    
+    % ugly hack to drop nans in Y
+    inds = ~isnan(data.Y);
+    foldinds2 = foldinds(inds);
+    data2 = data;
+    data2.X = data2.X(inds,:,:);
+    data2.Y = data2.Y(inds);
+    fits = innermain(data2, foldinds2, mapFcn, mlFcn, scFcn, ...
+        lbs, ubs, ns, figdir, lbl, ifold, [true false true]);
+    
+%     fits = innermain(data, foldinds, mapFcn, mlFcn, scFcn, ...
+%         lbs, ubs, ns, figdir, lbl, ifold, [true false true]);
+    if ~isempty(datdir)
+        fits.isLinReg = isLinReg;
+        fits.foldinds = foldinds;
+        io.updateStruct(dat_fnfcn(lbl), fits);
+    end
 
-    [fits.ASD, wf, sc] = reg.cvMaxScoreGrid(data, hypergrid, M.mapFcn, {}, ...
-        M.rsqFcn, {}, foldinds, ['ASD-' llstr], fold_for_plots);
-    fits.ASD.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
-        data.nt, fold_for_plots, fits.ASD.lbl, sc);
-    fig_svfcn(fits.ASD.fig, [lbl '-ASD_' llstr], 'png');
-
-%     [fits.ASD_gs, wf, sc] = reg.cvMaxScoreGridSearch(data, lbs, ubs, ns, M.mapFcn, ...
-%         {}, M.rsqFcn, {}, foldinds, fold_for_plots, 'ASD-gs', isLog);
-%     fits.ASD_gs.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
-%         data.nt, fold_for_plots, fits.ASD_gs.lbl, sc);
-%     fig_svfcn(fits.ASD_gs.fig, [lbl '-ASD-gs_' llstr], 'png');
-
-    [fits.ML, wf, sc] = reg.cvMaxScoreGrid(data, [nan nan nan], mlFcn, {}, ...
-        M.rsqFcn, {}, foldinds, 'ML', 1);
-    fits.ML.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
-        data.nt, fold_for_plots, fits.ML.lbl, sc);
-    fig_svfcn(fits.ML.fig, [lbl '-ML'], 'png');
-
-    fits.isLinReg = isLinReg;
-    io.updateStruct(dat_fnfcn(lbl), fits);
-        
 end
 
 %% run on decision
 
-isLog = true;
 isLinReg = false;
-lbs = [-3, -2, -5 -5]; ubs = [3, 10, 10 10]; ns = 5*ones(1,4);
+lbs = [-3, -5 -5]; ubs = [3, 10 10]; ns = 5*ones(1,3);
 hypergrid = exp(tools.gridCartesianProduct(lbs, ubs, ns));
 M = asd.logisticASDStruct(data.D);
+mapFcn = M.mapFcn;
+scFcn = M.llFcn;
 mlFcn = @(~) ml.fitopts('bern');
 data.Y = data.R;
 
-[fits.ASD, wf, sc] = reg.cvMaxScoreGrid(data, hypergrid, M.mapFcn, {}, ...
-    M.rsqFcn, {}, foldinds, 'ASD', fold_for_plots);
-fits.ASD.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
-    data.nt, fold_for_plots, fits.ASD.lbl, sc);
-fig_svfcn(fits.ASD.fig, 'decision-ASD', 'png');
-
-% [fits.ASD_gs, wf, sc] = reg.cvMaxScoreGridSearch(data, lbs, ubs, ns, M.mapFcn, ...
-%     {}, M.rsqFcn, {}, foldinds, fold_for_plots, 'ASD-gs', isLog);
-% fits.ASD_gs.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
-%         data.nt, fold_for_plots, fits.ASD_gs.lbl, sc);
-% fig_svfcn(fits.ASD_gs.fig, 'decision-ASD-gs', 'png');
-
-[fits.ML, wf, sc] = reg.cvMaxScoreGrid(data, [nan nan nan], mlFcn, {}, ...
-    M.rsqFcn, {}, foldinds, 'ML', 1);
-fits.ML.fig = plot.prepAndPlotKernel(data.Xxy, wf, data.ns, ...
-    data.nt, fold_for_plots, fits.ML.lbl, sc);
-fig_svfcn(fits.ML.fig, 'decision-ML', 'png');
-
-fits.isLinReg = isLinReg;
-io.updateStruct(dat_fnfcn('decision'), fits);
+lbl = 'decision';
+fits = innermain(data, foldinds, mapFcn, mlFcn, scFcn, ...
+    lbs, ubs, ns, figdir, lbl, ifold, [true false true]);
+if ~isempty(datdir)
+    fits.isLinReg = isLinReg;
+    io.updateStruct(dat_fnfcn(lbl), fits);
+end

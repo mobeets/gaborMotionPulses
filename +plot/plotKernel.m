@@ -10,6 +10,7 @@ function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn)
 % figLbl - prefix for title of each subplot
 % clrFcn - color function handle of form color = f(wf(i,j)) for any i,j
 % 
+    assert(~any(isnan(wf(:))));
     if nargin < 7 || isnan(clrFcn)
         clrs = defaultColorScheme();
         clrFcn = colorFcn(clrs{:});

@@ -55,6 +55,7 @@ function newObj = makeUpdatedObj(oldObj, obj)
     end
     nobjs = max(nobjs0);
     
+    % create new struct adding fields in obj to oldObj
     for ii = 1:numel(fieldnms)
         fldnm = fieldnms{ii};
         newObj.(fldnm) = cell(nobjs+1,1); % increase size by one
@@ -62,8 +63,11 @@ function newObj = makeUpdatedObj(oldObj, obj)
         for jj = 1:curnobjs
             newObj.(fldnm){jj} = oldObj.(fldnm){jj};
         end
-        newObj.(fldnm){nobjs+1} = obj.(fldnm);
-        
+        item = {};
+        if isfield(obj, fldnm)
+            item = obj.(fldnm);
+        end
+        newObj.(fldnm){nobjs+1} = item;
     end
     
     % add fields of obj that aren't already in oldObj
