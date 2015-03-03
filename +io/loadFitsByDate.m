@@ -3,7 +3,7 @@ function fits = loadFitsByDate(dt, fitdir)
     for ii = 1:numel(fs)
         f = fs(ii);
         if ~f.isdir && numel(f.name) > 3 && strcmp(f.name(end-2:end), 'mat')
-            fname = f.name(1:end-4);
+            fname = strrep(f.name(1:end-4), '-', '_');
             fits.(fname) = load(fullfile(fitdir, dt, f.name));
         end
     end

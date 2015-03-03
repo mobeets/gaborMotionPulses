@@ -2,7 +2,7 @@
 
 dts = {'20130502', '20130514', '20130515', '20130517', '20130611', '20140213', '20140218', '20140226', '20140303', '20140304', '20140305', '20140306', '20140307', '20140310'};
 % dts = {'20130502'}
-fitBehavior = false;
+fitBehavior = true;
 fitCells = true;
 
 %% load
@@ -49,7 +49,7 @@ for ii = 1:numel(dts)
         ncells = numel(cell_inds);
         for nn = 1:ncells
             cell_ind = cell_inds(nn);
-            lbl = [data.neurons{nn}.cellType '-' num2str(cell_ind)];
+            lbl = [data.neurons{nn}.brainArea '-' num2str(cell_ind)];
 
             data.Y = data.Y_all(:,cell_ind); % choose cell for analysis
 

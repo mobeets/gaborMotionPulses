@@ -1,10 +1,23 @@
-function summaryByCell(dt, cellind, fitdir)
-    [vals, data] = io.summariesByDate(dt, fitdir, 1);
-    neuron = data.neurons{cellind};
+function summaryByCell(dt, fitdir, cellind)
+    [vals, data] = io.summaryByDate(dt, fitdir, 1);
+    if nargin < 3
+        cellinds = 1:numel(data.neurons);
+    else
+        cellinds = cellind;
+    end
     event = data.stim.targchosen;
+    for ii = 1:numel(cellinds)
+        summaryBySingleCell(vals, data, event, cellinds(ii));
+    end
+end
+
+function summaryBySingleCell(vals, data, event, cellind)
+    
+    neuron = data.neurons{cellind};    
     [Z, bins] = io.psthByEvent(data.stim, neuron, event);
     
-    ind = strcmp({vals.name}, ['cell_' num2str(cellind)]);
+    cellName = [neuron.brainArea '_' num2str(cellind)];
+    ind = strcmp({vals.name}, cellName);
     wf = vals(ind).mu;
     [u,s,v] = svd(wf);
     mu = u(:,1)*s(1)*v(:,1)';
@@ -23,7 +36,7 @@ function summaryByCell(dt, cellind, fitdir)
         else
             lbl = 'anti';
         end
-        plot(bins(:,1)*1000, Z{ii}, repmat('-', 1, ii), ...
+        plot(bins(:,1)*1000, Z{ii}, '-', ...
             'Color', 'k', 'LineWidth', ii*lw, ...
             'DisplayName', lbl);
     end
