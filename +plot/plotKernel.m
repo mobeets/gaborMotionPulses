@@ -1,4 +1,4 @@
-function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn, lblFcn)
+function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn, xLblFcn, yLblFcn)
 % plots an nw-by-nt spatiotemporal kernel
 %   creates nt subplots each with nw weights
 % 
@@ -12,12 +12,14 @@ function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn, lblFcn)
 % lblFcn - generates labels for each subplot
 % 
     assert(~any(isnan(wf(:))));
-    if nargin < 8 || ~isa(lblFcn, 'function_handle')
-        lblFcn = @(ii) ['t=' num2str(ii)];
+    if nargin < 9 || ~isa(yLblFcn, 'function_handle')
+        yLblFcn = @(ii) '';
+    end
+    if nargin < 8 || ~isa(xLblFcn, 'function_handle')
+        xLblFcn = @(ii) ['t=' num2str(ii)];
     end
     if nargin < 7 || ~isa(clrFcn, 'function_handle')
-        clrs = defaultColorScheme();
-        clrFcn = colorFcn(clrs{:});
+        clrFcn = plot.colorScheme();
     end
     if nargin < 6 || isnan(figSz)
         figSz = 1.0;
@@ -53,7 +55,8 @@ function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn, lblFcn)
             ht = title(figLbl);
             set(ht, 'FontSize', titleFontSize);
         end
-        xlabel(lblFcn(ii)); % acts like a subplot title
+        xlabel(xLblFcn(ii)); % acts like a subplot title
+        ylabel(yLblFcn(ii));
     end
     plot.suplabel(figLbl, 't'); 
     
@@ -71,26 +74,3 @@ function subplotFormat()
     box on;
 end
 
-%%
-function clrs = defaultColorScheme()
-    clrPos = [0.3, 0.3, 0.9];
-    clrNeg = [0.9, 0.3, 0.3];
-    clrMid = [0.95, 0.95, 0.95];
-    clrs = {clrNeg, clrMid, clrPos};
-end
-
-function v = getColor2(x, clrStart, clrEnd)
-    v = clrStart + x*(clrEnd - clrStart);
-end
-
-function v = getColor(x, clrNeg, clrMid, clrPos)
-    if x >= 0
-        v = getColor2(x, clrMid, clrPos);
-    else
-        v = getColor2(-x, clrMid, clrNeg);
-    end 
-end
-
-function f = colorFcn(clrNeg, clrMid, clrPos)
-    f = @(x) getColor(x, clrNeg, clrMid, clrPos);
-end

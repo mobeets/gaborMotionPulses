@@ -49,7 +49,7 @@ for ii = 1:numel(dts)
         ncells = numel(cell_inds);
         for nn = 1:ncells
             cell_ind = cell_inds(nn);
-            lbl = ['cell_' num2str(cell_ind)];
+            lbl = [data.neurons{nn}.cellType '-' num2str(cell_ind)];
 
             data.Y = data.Y_all(:,cell_ind); % choose cell for analysis
 

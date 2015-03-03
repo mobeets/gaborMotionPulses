@@ -1,4 +1,4 @@
-function [vals, data] = loadSummariesByDate(dt, fitdir, foldind)
+function [vals, data] = summariesByDate(dt, fitdir, foldind)
     data = io.loadDataByDate(dt);
     fits = io.loadFitsByDate(dt, fitdir);
     fns = fieldnames(fits);
@@ -20,9 +20,9 @@ function obj = getSummary(fit, data, fnm, dt, foldind)
     obj.mu0 = obj.mu(:,1);
     obj.separability = getSeparability(obj.mu);
     obj.score = fit.scores(foldind);
-    if numel(fnm) > 4 && strcmp(fnm(1:4), 'cell')
-        x = strsplit(fnm, '_');
-        cell_ind = str2num(x{2});
+    if sum(fnm=='-') > 0
+        x = strsplit(fnm, '-');
+        cell_ind = str2num(x{end});
         neuron = data.neurons{cell_ind};
         obj.isCell = true;
         obj.cellType = neuron.brainArea;
