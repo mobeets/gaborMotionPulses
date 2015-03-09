@@ -63,7 +63,7 @@ function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn, xLblFcn, yLbl
     pos = get(gcf,'Position');
     pos(3:4) = figSz*[10e2 2e2];
     set(gcf, 'Position', pos);
-    set(gcf,'color','w')
+    set(gcf,'color','w');
 end
 
 function subplotFormat()

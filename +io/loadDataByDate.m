@@ -17,7 +17,7 @@ function data = loadDataByDate(dt, basedir, stimdir, spikesdir)
     X = X(inds,:,:); % 1 (pref), -1 (anti-pref)
     [ny, nt, ns] = size(X);
     X = permute(X, [1 3 2]);
-    X = reshape(X, ny, nt*ns);
+    X = reshape(X, ny, ns*nt); % n.b. inverse is reshape(X, ny, ns, nt)
     D = asd.sqdist.spaceTime(Xxy, ns, nt);
     R = -(stim.targchosen(inds)-1) + 1; % 1->1 (pref), 2->0 (anti-pref)
     

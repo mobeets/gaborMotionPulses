@@ -1,17 +1,31 @@
-function summaryByCell(dt, fitdir, cellind)
-    [vals, data] = io.summaryByDate(dt, fitdir, 1);
+function figs = summaryByCell(dt, cellind, fitdir, outdir, figext)
+    if nargin < 5
+        figext = 'png';
+    end
+    if nargin < 4
+        outdir = '';
+    end
     if nargin < 3
+        fitdir = 'fits';
+    end
+    [vals, data] = io.summaryByDate(dt, fitdir, 1);
+    if nargin < 2 || any(isnan(cellind))
         cellinds = 1:numel(data.neurons);
     else
         cellinds = cellind;
     end
+  
+    figs = [];
     event = data.stim.targchosen;
     for ii = 1:numel(cellinds)
-        summaryBySingleCell(vals, data, event, cellinds(ii));
+        [fig, name] = summaryBySingleCell(vals, data, event, cellinds(ii));
+        if ~isempty(outdir)
+            plot.saveFig(fig, name, outdir, figext);
+        end
     end
 end
 
-function summaryBySingleCell(vals, data, event, cellind)
+function [fig, cellName] = summaryBySingleCell(vals, data, event, cellind)
     
     neuron = data.neurons{cellind};    
     [Z, bins] = io.psthByEvent(data.stim, neuron, event);
@@ -23,9 +37,10 @@ function summaryBySingleCell(vals, data, event, cellind)
     mu = u(:,1)*s(1)*v(:,1)';
     sc = vals(ind).score;
     sep = vals(ind).separability;
+    r = vals(ind).decisionCorrelation;
     fmt = @(val) sprintf('%0.2f', val);
     
-    figure;
+    fig = figure;
     set(gcf,'color','w');
     
     subplot(2, 2, 1); hold on;
@@ -45,25 +60,13 @@ function summaryBySingleCell(vals, data, event, cellind)
     
     subplot(2, 2, 3); hold on;
     vmax = max(abs(wf(:)));
-    plotKernelMini(data.Xxy, mu(:,1), vmax);
+    plot.plotKernelSingle(data.Xxy, mu(:,1), vmax);
     title('spatial weights');
-    xlabel(['sc=' fmt(sc) ', sep=' fmt(sep)]);
+    xlabel(['sc=' fmt(sc) ', sep=' fmt(sep) ', r_{dec}=' fmt(r)]);
     
     subplot(2, 2, 4); hold on;
     bar(v(:,1), 'FaceColor', [0.3 0.8 0.3]);
     title('temporal weights');
     xlabel('pulse');
 
-end
-
-function plotKernelMini(xy, wf, vmax)
-    sz = 50;
-    clrFcn = plot.colorScheme();
-    wf = wf/vmax;
-    hold on;
-    for ii = 1:numel(wf)
-        clr = clrFcn(wf(ii));
-        plot(xy(ii,1), xy(ii,2), 'Marker', '.', 'MarkerSize', sz, ...
-            'Color', clr, 'LineStyle', 'none');
-    end
 end
