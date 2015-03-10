@@ -16,9 +16,10 @@ function data = loadDataByDate(dt, basedir, stimdir, spikesdir)
     Xxy = stim.gaborXY;
     X = X(inds,:,:); % 1 (pref), -1 (anti-pref)
     [ny, nt, ns] = size(X);
-    X = permute(X, [1 3 2]);
-    X = reshape(X, ny, ns*nt); % n.b. inverse is reshape(X, ny, ns, nt)
+    Xf = permute(X, [1 3 2]); % full stimulus: [ny x ns x nt]
+    X = reshape(Xf, ny, ns*nt); % n.b. inverse is reshape(X, ny, ns, nt)
     D = asd.sqdist.spaceTime(Xxy, ns, nt);
+    Ds = asd.sqdist.space(Xxy);
     R = -(stim.targchosen(inds)-1) + 1; % 1->1 (pref), 2->0 (anti-pref)
     
     % load cell data
@@ -27,10 +28,12 @@ function data = loadDataByDate(dt, basedir, stimdir, spikesdir)
     Y = Y(inds,:);
     
     % add all to output struct
+    data.Xf = Xf;
     data.X = X;
     data.Y_all = Y;
     data.R = R;
     data.D = D;
+    data.Ds = Ds;
     data.ndeltas = size(D, 3);
     data.Xxy = Xxy;
     data.ns = ns;

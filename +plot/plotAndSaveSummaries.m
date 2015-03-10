@@ -20,8 +20,10 @@ function plotAndSaveSummaries(fitdir, outdir, figext)
     dts = io.getDates(fitdir);
     for ii = 1:numel(dts)
         dt = dts{ii};
-        mkdir(outdir, dt);
         curdir = fullfile(outdir, dt);
+        if ~exist(curdir, 'dir')            
+            mkdir(curdir);
+        end        
         fig = plot.quickPmfByDate(dt);
         plot.saveFig(fig, 'pmf', curdir, figext);
         fig = plot.kernelsByDate(dt, fitdir);
