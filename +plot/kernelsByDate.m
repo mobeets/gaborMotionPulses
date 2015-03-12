@@ -11,6 +11,6 @@ function fig = kernelsByDate(dt, fitdir)
         ', sep=' sprintf('%0.2f', seps{ii})];
     mus = horzcat(vals(isdt).mu0);
     vmx = repmat(max(abs(mus)), size(mus,1), 1);
-    fig = plot.plotKernel(data.Xxy, mus./vmx, nan, nan, nan, 1.5, nan, ...
+    fig = plot.plotKernel(data.Xxy, mus./vmx, 1, nan, nan, 1.5, nan, ...
         xLblFcn, yLblFcn);
 end

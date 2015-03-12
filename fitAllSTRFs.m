@@ -19,7 +19,7 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
         fitbasedir = 'fits';
     end
     if nargin < 4 || isempty(mask)
-        mask = [true false true true]; % [ASD ASD_gs ML ASD_b]
+        mask = [true false false false]; % [ASD ASD_gs ML ASD_b]
     end
     if nargin < 3 || isempty(dts)
         dts = {'20130502', '20130514', '20130515', '20130517', ...
@@ -68,7 +68,8 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
         if fitCells
             isLinReg = true;
             llstr = 'gauss';
-            lbs = [-3, -2 -5 -5]; ubs = [3, 10 10 10]; ns = 5*ones(1,4);
+%             lbs = [-3, -2 -5 -5]; ubs = [3, 10 10 10]; ns = 5*ones(1,4);
+            lbs = [-3 -2 -1 -1]; ubs = [3 10 4 4]; ns = 5*ones(1,4);
             
             % full ASD and ML
             M = asd.linearASDStruct(data.D, llstr);
@@ -89,7 +90,7 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
 
                 data.Y = data.Y_all(:,cell_ind); % choose cell for analysis
                 [cur_data, cur_foldinds] = dropTrialsIfNaN(data, ...
-                    foldinds, ~isnan(data.Y));
+                    ~isnan(data.Y), foldinds);
                 fits = fitSTRF(cur_data, cur_foldinds, mapFcn, mlFcn, ...
                     bmapFcn, scFcn, lbs, ubs, ns, figdir, lbl, ifold, ...
                     mask);
@@ -105,7 +106,8 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
         %% run on decision
         if fitBehavior
             isLinReg = false;
-            lbs = [-3, -5 -5]; ubs = [3, 10 10]; ns = 5*ones(1,3);
+%             lbs = [-3 -5 -5]; ubs = [3 10 10]; ns = 5*ones(1,3);
+            lbs = [-3 -1 -1]; ubs = [3 4 4]; ns = 5*ones(1,3);
             M = asd.logisticASDStruct(data.D);
             mapFcn = M.mapFcn;
             scFcn = M.pseudoRsqFcn;

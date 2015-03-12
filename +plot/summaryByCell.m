@@ -34,6 +34,7 @@ function [fig, cellName] = summaryBySingleCell(vals, data, event, cellind)
     ind = strcmp({vals.name}, cellName);
     wf = vals(ind).mu;
     [u,s,v] = svd(wf);
+    sgn = sign(sum(v(:,1)));
     mu = u(:,1)*s(1)*v(:,1)';
     sc = vals(ind).score;
     sep = vals(ind).separability;
@@ -60,12 +61,12 @@ function [fig, cellName] = summaryBySingleCell(vals, data, event, cellind)
     
     subplot(2, 2, 3); hold on;
     vmax = max(abs(wf(:)));
-    plot.plotKernelSingle(data.Xxy, mu(:,1), vmax);
+    plot.plotKernelSingle(data.Xxy, sgn*mu(:,1), vmax);
     title('spatial weights');
     xlabel(['sc=' fmt(sc) ', sep=' fmt(sep) ', r_{dec}=' fmt(r)]);
     
     subplot(2, 2, 4); hold on;
-    bar(v(:,1), 'FaceColor', [0.3 0.8 0.3]);
+    bar(sgn*v(:,1), 'FaceColor', [0.3 0.8 0.3]);
     title('temporal weights');
     xlabel('pulse');
 
