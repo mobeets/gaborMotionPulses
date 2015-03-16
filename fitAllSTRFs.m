@@ -71,30 +71,24 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
         devPct = 0.5;
         data = io.loadDataByDate(dt);
         % development/evaluation sets
-        [trials, evalinds] = reg.trainAndTest(data.X, data.R, devPct);
-%         evalinds = logical(ones(size(data.R,1), 1));
-%         trials = struct('x_train', data.X, ...
-%             'y_train', data.R, 'x_test', data.X, 'y_test', data.R);
-%         [~, foldinds] = reg.trainAndTestKFolds(trials.x_train, ...
-%             trials.y_train, nfolds);
+        [~, evalinds] = reg.trainAndTest(data.X, data.R, devPct);
         [~, foldinds] = reg.trainAndTestKFolds(data.X, data.R, nfolds);
 
         %% run on all cells
         if fitCells
-            isLinReg = true;
             llstr = 'gauss';
+            scorestr = 'rsq';
+            scoreFcn = reg.scoreFcns(scorestr, llstr);
+            
             lbs = [-3 -2 -1 -1]; ubs = [3 10 4 4]; ns = 7*ones(1,4);
+            hyperOpts = struct('lbs', lbs, 'ubs', ubs, 'ns', ns, ...
+                'isLog', true);
             
             % full ASD and ML
-            M = asd.linearASDStruct(data.D, llstr);
-            mapFcn = M.mapFcn;
-            scFcn = M.rsqFcn;
-            mlFcn = @(~) ml.fitopts('gauss'); % no poisson for ML yet
-            
-            % bilinear ASD
-            opts = struct(); opts.shape = {data.ns, data.nt};
-            M2 = asd.linearASDStruct(data.Ds, llstr, 'bilinear', opts);
-            bmapFcn = M2.mapFcn;
+            MAP = @(hyper) asd.fitHandle(hyper, data.D, llstr);
+            BMAP = @(hyper) asd.fitHandle(hyper, data.D, llstr, ...
+                'bilinear', struct('shape', {{data.ns, data.nt}}));
+            ML = @(~) ml.fitHandle(llstr);
 
             cell_inds = 1:size(data.Y_all, 2);
             ncells = numel(cell_inds);
@@ -103,12 +97,12 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
                 lbl = [data.neurons{nn}.brainArea '-' num2str(cell_ind)];
 
                 data.Y = data.Y_all(:,cell_ind); % choose cell for analysis
-                fits = fitSTRF(data, mapFcn, mlFcn, ...
-                    bmapFcn, scFcn, lbs, ubs, ns, figdir, lbl, ifold, ...
-                    mask, foldinds, evalinds);
+                fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, ...
+                    hyperOpts, figdir, lbl, ifold, mask, ...
+                    foldinds, evalinds);
 
                 if ~isempty(fitdir)
-                    fits.isLinReg = isLinReg;
+                    fits.isLinReg = true;
                     fits.foldinds = foldinds;
                     fits.evalinds = evalinds;
                     io.updateStruct(dat_fnfcn(lbl), fits);
@@ -118,24 +112,26 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
         end
         %% run on decision
         if fitBehavior
-            isLinReg = false;
-            lbs = [-3 -1 -1]; ubs = [3 4 4]; ns = 7*ones(1,3);
-            M = asd.logisticASDStruct(data.D);
-            mapFcn = M.mapFcn;
-            scFcn = M.pseudoRsqFcn;
-            mlFcn = @(~) ml.fitopts('bern');
-            data.Y = data.R;
+            llstr = 'bern';
+            scorestr = 'pseudoRsq';
+            scoreFcn = reg.scoreFcns(scorestr, llstr);
             
-            % bilinear ASD
-            opts = struct(); opts.shape = {data.ns, data.nt};
-            M2 = asd.logisticASDStruct(data.Ds, 'bilinear', opts);
-            bmapFcn = M2.mapFcn;
+            lbs = [-3 -1 -1]; ubs = [3 4 4]; ns = 7*ones(1,3);
+            hyperOpts = struct('lbs', lbs, 'ubs', ubs, 'ns', ns, ...
+                'isLog', true);
+            
+            MAP = @(hyper) asd.fitHandle(hyper, data.D, llstr);
+            BMAP = @(hyper) asd.fitHandle(hyper, data.D, llstr, ...
+                'bilinear', struct('shape', {{data.ns, data.nt}}));
+            ML = @(~) ml.fitHandle(llstr);
+            
+            data.Y = data.R;
 
             lbl = 'decision';
-            fits = fitSTRF(data, mapFcn, mlFcn, bmapFcn, scFcn, lbs, ...
-                ubs, ns, figdir, lbl, ifold, mask, foldinds, evalinds);
+            fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, hyperOpts, ...
+                figdir, lbl, ifold, mask, foldinds, evalinds);
             if ~isempty(fitdir)
-                fits.isLinReg = isLinReg;
+                fits.isLinReg = false;
                 fits.foldinds = foldinds;
                 fits.evalinds = evalinds;
                 io.updateStruct(dat_fnfcn(lbl), fits);

@@ -1,5 +1,5 @@
-function fits = fitSTRF(data, mapFcn, mlFcn, bmapFcn, scFcn, ...
-    lbs, ubs, ns, figdir, lbl, ifold, mask, foldinds, evalinds)
+function fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, hyperOpts, ...
+    figdir, lbl, ifold, mask, foldinds, evalinds)
 % fits = fitSTRF(data, mapFcn, mlFcn, scFcn, ...
 %     lbs, ubs, ns, figdir, lbl, ifold, mask, foldinds, evalinds)
 % 
@@ -18,30 +18,30 @@ function fits = fitSTRF(data, mapFcn, mlFcn, bmapFcn, scFcn, ...
     fitMapGridSearch = mask(2);
     fitML = mask(3);
     fitMapBilinear = mask(4);
-    isLog = true; % lbs and ubs are in logspace
     
+    lbs = hyperOpts.lbs; ubs = hyperOpts.ubs; ns = hyperOpts.ns;
     [X, Y, foldinds, evalinds] = dropTrialsIfYIsNan(data.X, data.Y, ...
         foldinds, evalinds);
 
     % MAP estimate on each hyper in hypergrid
     if fitMap
         hypergrid = exp(tools.gridCartesianProduct(lbs, ubs, ns));
-        obj = reg.cvMaxScoreGrid(X, Y, hypergrid, mapFcn, {}, ...
-            scFcn, {}, foldinds, evalinds);
+        obj = reg.cvMaxScoreGrid(X, Y, MAP, scoreFcn, hypergrid, ...
+            foldinds, evalinds, 'grid');
         fits.ASD = addFigure(obj, data, [lbl '-ASD'], figdir, ifold);
     end
 
     % MAP estimate on hypergrid with grid search
     if fitMapGridSearch
-        obj = reg.cvMaxScoreGridSearch(X, Y, lbs, ubs, ns, ...
-            mapFcn, {}, scFcn, {}, foldinds, evalinds, isLog);
+        obj = reg.cvMaxScoreGrid(X, Y, MAP, scoreFcn, nan, ...
+            foldinds, evalinds, 'grid-search', hyperOpts);
         fits.ASD_gs = addFigure(obj, data, [lbl '-ASD-gs'], figdir, ifold);
     end
 
     % ML estimate on each hyper in hypergrid
     if fitML
-        obj = reg.cvMaxScoreGrid(X, Y, [nan nan nan], mlFcn, ...
-            {}, scFcn, {}, foldinds, evalinds);
+        obj = reg.cvMaxScoreGrid(X, Y, ML, scoreFcn, [nan nan nan], ...
+            foldinds, evalinds, 'grid');
         fits.ML = addFigure(obj, data, [lbl '-ML'], figdir, ifold);
     end
     
@@ -49,8 +49,8 @@ function fits = fitSTRF(data, mapFcn, mlFcn, bmapFcn, scFcn, ...
     if fitMapBilinear
         hypergrid = exp(tools.gridCartesianProduct(lbs(1:end-1), ...
             ubs(1:end-1), ns(1:end-1))); % ignore hyper for time smoothing
-        obj = reg.cvMaxScoreGrid(X, Y, hypergrid, bmapFcn, ...
-            {}, scFcn, {}, foldinds, evalinds);
+        obj = reg.cvMaxScoreGrid(X, Y, BMAP, scoreFcn, hypergrid, ...
+            foldinds, evalinds, 'grid');
         fits.ASD_b = addFigure(obj, data, [lbl '-ASDb'], figdir, ifold);
     end
 
