@@ -16,19 +16,21 @@ function figs = summaryByCell(dt, cellind, fitdir, outdir, figext)
     end
   
     figs = [];
-    event = data.stim.targchosen;
+    event1 = data.stim.targchosen;
+    event2 = sum(sum(data.stim.pulses, 3), 2) > 0;
     for ii = 1:numel(cellinds)
-        [fig, name] = summaryBySingleCell(vals, data, event, cellinds(ii));
+        [fig, name] = summaryBySingleCell(vals, data, event1, event2, ...
+            cellinds(ii));
         if ~isempty(outdir)
             plot.saveFig(fig, name, outdir, figext);
         end
     end
 end
 
-function [fig, cellName] = summaryBySingleCell(vals, data, event, cellind)
+function [fig, cellName] = summaryBySingleCell(vals, data, event1, ...
+    event2, cellind)
     
-    neuron = data.neurons{cellind};    
-    [Z, bins] = io.psthByEvent(data.stim, neuron, event);
+    neuron = data.neurons{cellind};
     
     cellName = [neuron.brainArea '_' num2str(cellind)];
     ind = strcmp({vals.name}, cellName);
@@ -45,19 +47,14 @@ function [fig, cellName] = summaryBySingleCell(vals, data, event, cellind)
     set(gcf,'color','w');
     
     subplot(2, 2, 1); hold on;
-    lw = 1;
-    for ii = 1:numel(Z)
-        if ii == 1
-            lbl = 'pref';
-        else
-            lbl = 'anti';
-        end
-        plot(bins(:,1)*1000, Z{ii}, '-', ...
-            'Color', 'k', 'LineWidth', ii*lw, ...
-            'DisplayName', lbl);
-    end
-    title([data.stim.exname '-' neuron.brainArea '-' num2str(cellind)]);
-    xlabel('time after motion onset (msec)');
+    [Z1, bins1] = io.psthByEvent(data.stim, neuron, event1);
+    plotPsth(Z1, bins1, data, neuron, cellind);
+    ylabel('spike rate by choice');
+    
+    subplot(2, 2, 2); hold on;
+    [Z2, bins2] = io.psthByEvent(data.stim, neuron, event2);
+    plotPsth(Z2, bins2, data, neuron, cellind);
+    ylabel('spike rate by motion dir');
     
     subplot(2, 2, 3); hold on;
     vmax = max(abs(wf(:)));
@@ -70,4 +67,21 @@ function [fig, cellName] = summaryBySingleCell(vals, data, event, cellind)
     title('temporal weights');
     xlabel('pulse');
 
+end
+
+function plotPsth(Z, bins, data, neuron, cellind)
+    lw = 1;
+    for ii = 1:numel(Z)
+        if ii == 1
+            lbl = num2str(ii); % 'pref';
+        else
+            lbl = num2str(ii); % 'anti';
+        end
+        plot(bins(:,1)*1000, Z{ii}, '-', ...
+            'Color', 'k', 'LineWidth', ii*lw, ...
+            'DisplayName', lbl);
+    end
+    legend('Location', 'NorthEast');
+    title([data.stim.exname '-' neuron.brainArea '-' num2str(cellind)]);
+    xlabel('time after motion onset (msec)');
 end
