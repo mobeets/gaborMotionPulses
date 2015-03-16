@@ -57,8 +57,7 @@ function [fig, cellName] = summaryBySingleCell(vals, data, event1, ...
     ylabel('spike rate by motion dir');
     
     subplot(2, 2, 3); hold on;
-    vmax = max(abs(wf(:)));
-    plot.plotKernelSingle(data.Xxy, sgn*mu(:,1), vmax);
+    plot.plotKernelSingle(data.Xxy, sgn*mu(:,1), max(abs(mu(:))));
     title('spatial weights');
     xlabel(['sc=' fmt(sc) ', sep=' fmt(sep) ', r_{dec}=' fmt(r)]);
     

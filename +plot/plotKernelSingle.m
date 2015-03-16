@@ -1,4 +1,7 @@
 function plotKernelSingle(xy, wf, vmax)
+    if nargin < 3
+        vmax = max(abs(wf(:)));
+    end
     sz = 50;
     clrFcn = plot.colorScheme();
     wf = wf/vmax;
