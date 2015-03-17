@@ -1,4 +1,6 @@
-function [Z, bins] = psthByEvent(stim, neuron, event, stimEventLength, ntbins, ndiv)
+function [Z, bins] = psthByEvent(stim, neuron, event, ...
+    stimEventLength, ntbins, ndiv)
+% 
     if nargin < 6
         ndiv = 100;
     end

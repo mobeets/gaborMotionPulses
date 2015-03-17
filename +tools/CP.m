@@ -19,6 +19,7 @@ function [cp, lbins, Y] = CP(spikeTimes, splitEvent, alignEvent, ...
     t1 = alignEvent + tR;
     [Y, lbins] = countSpikesWithinWindowByEvent(spikeTimes, splitEvent, ...
         t0, t1, tWidth, tShift);
+    lbins = lbins - tL;
     
     nbins = size(Y{1},2);
     cp = nan(nbins,1);
