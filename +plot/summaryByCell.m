@@ -47,12 +47,12 @@ function [fig, cellName] = summaryBySingleCell(vals, data, event1, ...
     set(gcf,'color','w');
     
     subplot(2, 2, 1); hold on;
-    [Z1, bins1] = io.psthByEvent(data.stim, neuron, event1);
+    [Z1, bins1] = tools.psthByEvent(data.stim, neuron, event1);
     plotPsth(Z1, bins1, data, neuron, cellind);
     ylabel('spike rate by choice');
     
     subplot(2, 2, 2); hold on;
-    [Z2, bins2] = io.psthByEvent(data.stim, neuron, event2);
+    [Z2, bins2] = tools.psthByEvent(data.stim, neuron, event2);
     plotPsth(Z2, bins2, data, neuron, cellind);
     ylabel('spike rate by motion dir');
     
