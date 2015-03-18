@@ -19,7 +19,7 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
         fitbasedir = 'fits';
     end
     if nargin < 4 || isempty(mask)
-        mask = [true false true false]; % [ASD ASD_gs ML ASD_b]
+        mask = [false false false true]; % [ASD ASD_gs ML ASD_b]
     end
     if nargin < 3 || isempty(dts)
         dts = {'20130502', '20130514', '20130515', '20130517', ...
@@ -83,10 +83,11 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
             lbs = [-3 -2 -1 -1]; ubs = [3 10 4 4]; ns = 7*ones(1,4);
             hyperOpts = struct('lbs', lbs, 'ubs', ubs, 'ns', ns, ...
                 'isLog', true);
+            Db = asd.sqdist.space(data.Xxy);
             
             % full ASD and ML
             MAP = @(hyper) asd.fitHandle(hyper, data.D, llstr);
-            BMAP = @(hyper) asd.fitHandle(hyper, data.D, llstr, ...
+            BMAP = @(hyper) asd.fitHandle(hyper, Db, llstr, ...
                 'bilinear', struct('shape', {{data.ns, data.nt}}));
             ML = @(~) ml.fitHandle(llstr);
 
