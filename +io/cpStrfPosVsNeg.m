@@ -35,8 +35,8 @@ function vals = cpStrfPosVsNeg(vals)
         C1 = C(pref); % pref choice
         C2 = C(~pref); % anti choice
         vals(ii).cp_pred = tools.AUC(C1, C2);        
-        vals(ii).cp = tools.CP(d.stim, neuron, ...
-            d.stim.targchosen == neuron.targPref, 0.0, 1.5);
+        vals(ii).cp = io.getCP(d.stim, neuron, ...
+            d.stim.targchosen == nanmax([neuron.targPref, 1]), 0.0, 1.5);
     end
     
     categs = unique({vals.type});

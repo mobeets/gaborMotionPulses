@@ -17,7 +17,7 @@ function figs = summaryByCell(dt, cellind, fitdir, outdir, figext)
   
     figs = [];
     event1 = data.stim.targchosen;
-    event2 = sum(sum(data.stim.pulses, 3), 2) > 0; % 0->anti, 1->pref
+    event2 = sum(sum(data.stim.pulses, 3), 2) > 0; % 0->neg, 1->pos
     for ii = 1:numel(cellinds)
         [fig, name] = summaryBySingleCell(dt, vals, data, ...
             event1, event2, cellinds(ii));
@@ -32,6 +32,7 @@ function [fig, cellName] = summaryBySingleCell(dt, vals, data, event1, ...
     event2, cellind)
     
     neuron = data.neurons{cellind};
+    targPref = nanmax([neuron.targPref, 1]);
     
     cellName = [neuron.brainArea '_' num2str(cellind)];
     ind = strcmp({vals.name}, cellName);
@@ -51,14 +52,14 @@ function [fig, cellName] = summaryBySingleCell(dt, vals, data, event1, ...
     set(fig, 'Position', new_pos1);
     
     subplot(3, 2, 1); hold on;
-    [Z1, b1] = tools.psthByEvent(data.stim, neuron, ...
-        event1 == neuron.targPref);
+    [Z1, b1] = io.getPsthByEvent(data.stim, neuron, ...
+        event1 == targPref);
     plotPsth(Z1, b1, data, neuron, cellind, {'-chc', '+chc'});
     ylabel('spike rate by choice');
     
     subplot(3, 2, 2); hold on;
-    [Z2, b2] = tools.psthByEvent(data.stim, neuron, ...
-        -(event2-2) == neuron.targPref);
+    [Z2, b2] = io.getPsthByEvent(data.stim, neuron, ...
+        -(event2-2) == targPref);
     plotPsth(Z2, b2, data, neuron, cellind, {'-mot', '+mot'});
     ylabel('spike rate by motion dir');
     
@@ -73,7 +74,7 @@ function [fig, cellName] = summaryBySingleCell(dt, vals, data, event1, ...
     xlabel('pulse');
     
     subplot(3, 2, 5); hold on;
-    [cp, xs] = tools.CP(data.stim, neuron, event1 == neuron.targPref, ...
+    [cp, xs] = io.getCP(data.stim, neuron, event1 == targPref, ...
         0.0, 1.5, 0.2, 0.1);
     plot(xs, cp);
     ylim([0.0 1.0]);
