@@ -8,7 +8,8 @@ function figs = summaryByCell(dt, cellind, fitdir, outdir, figext)
     if nargin < 3
         fitdir = 'fits';
     end
-    [vals, data] = io.summaryByDate(dt, fitdir, 1);
+    data = io.loadDataByDate(dt);
+    vals = io.summaryByDate(dt, data, fitdir, 1);
     if nargin < 2 || any(isnan(cellind))
         cellinds = 1:numel(data.neurons);
     else

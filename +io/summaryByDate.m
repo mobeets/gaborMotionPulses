@@ -1,5 +1,4 @@
-function [vals, data] = summaryByDate(dt, fitdir, foldind)
-    data = io.loadDataByDate(dt);
+function vals = summaryByDate(dt, data, fitdir, foldind)
     fits = io.loadFitsByDate(dt, fitdir);
     fns = fieldnames(fits);
     vals = struct([]);
