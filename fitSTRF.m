@@ -88,6 +88,7 @@ function obj = addFigure(obj, data, lbl, figdir, ifold)
     wf_fcn = @(wf, ns, nt) reshape(wf(1:end-1), ns, nt);
     
     obj.label = lbl;
+    obj.shape = [data.ns data.nt];
     if ~isempty(figdir)
         wf = obj.mus{ifold}; sc = obj.scores(ifold);
         fig = plot.plotKernel(data.Xxy, wf_fcn(wf, data.ns, data.nt), ...

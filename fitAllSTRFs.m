@@ -19,7 +19,7 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
         fitbasedir = 'fits';
     end
     if nargin < 4 || isempty(mask)
-        mask = [false false false true]; % [ASD ASD_gs ML ASD_b]
+        mask = [true false false true]; % [ASD ASD_gs ML ASD_b]
     end
     if nargin < 3 || isempty(dts)
         dts = {'20130502', '20130514', '20130515', '20130517', ...

@@ -1,32 +1,37 @@
-function [Z, bins] = psthByEvent(stim, neuron, event, ...
-    stimEventLength, ntbins, ndiv)
+function [Z, lbins, rbins, categs] = psthByEvent(stim, neuron, ...
+    splitEvent, windowLength, binwidth, binshift)
 % 
     if nargin < 6
-        ndiv = 100;
+        binshift = 0.01;
     end
     if nargin < 5
-        ntbins = 10;
+        binwidth = 0.1;
     end
     if nargin < 4
-        stimEventLength = 1.0;
+        windowLength = 1.35;
     end
+    sps = neuron.spikeTimes;
     inds = stim.goodtrial; % trials without broken fixation
+    inds0 = false(numel(stim.goodtrial),1);
+    inds0(neuron.trialIndex) = true;
+    inds = inds & inds0;
+%     inds = inds & abs(sum(sum(stim.pulses,3),2)) < 10;
     
     motionStartTimes = [stim.timing.motionon] + [stim.timing.plxstart];
     inds = inds & ~isnan(motionStartTimes)';
     ts0 = motionStartTimes(inds);
-    ts1 = ts0 + stimEventLength; % const vector of motion length
+    ts1 = ts0 + windowLength; % const vector of motion length
     
-    sps = neuron.spikeTimes;
-    [Y, nY] = splitSpikes(sps, ts0, ts1, event(inds));
+    [Y, nY, categs] = splitSpikes(sps, ts0, ts1, splitEvent(inds));
     Z = cell(numel(Y), 1);
     for ii = 1:numel(Y)
-        [z, bins] = smoothSpikes(Y{ii}, ntbins, ndiv, stimEventLength);
+        [z, lbins, rbins] = tools.countSpikesWithinWindow(Y{ii}, 0.0, ...
+            windowLength, binwidth, binshift);
         Z{ii} = z./nY(ii);
     end
 end
 
-function [Y, nY] = splitSpikes(sps, ts0, ts1, ev)
+function [Y, nY, categs] = splitSpikes(sps, ts0, ts1, ev)
     categs = sort(unique(ev));
     Y = cell(numel(categs), 1);
     nY = zeros(numel(categs), 1);
@@ -39,17 +44,5 @@ function [Y, nY] = splitSpikes(sps, ts0, ts1, ev)
     end
     for ii = 1:numel(categs)
         Y{cind} = sort(Y{cind});
-    end
-end
-
-function [Z, bins] = smoothSpikes(Y, ntbins, ndiv, maxT)
-    nbins = ceil(maxT*ndiv)-ntbins;
-    Z = zeros(nbins,1);
-    bins = zeros(nbins,2);
-    g = @(x,y) ([x*ntbins+1 (x+1)*ntbins] + y-2)/ndiv;
-    f = @(ii) g(floor(ii/ntbins), mod(ii,ntbins));
-    for ii = 1:nbins
-        bins(ii,:) = f(ii);
-        Z(ii) = sum(Y >= bins(ii,1) & Y <= bins(ii,2));
     end
 end

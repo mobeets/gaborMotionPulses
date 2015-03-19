@@ -1,12 +1,34 @@
-function [auc, crit] = AUC(A, B)
-% [auc, crit] = AUC(A,B)
+function cp = AUC(A, B, dim)
+% cp = AUC(A, B, DIM)
 %
-% given spike counts for A and B
-% returns the spike count that separates the two groups maximally
-% and the area under the roc curve for the two groups
-% also: A is target group, B is null group
+% returns the area under the roc curve for discriminating the two groups
+% using a given criterion
+% 
+% A, B - target and null distributions
+% If A, B are matrices:
+%       AUC(A, B, DIM) computes AUC along the dimension DIM
 %
 % Jay Hennig (2/1/2011, 3/17/2015)
+% 
+    if nargin < 3
+        if size(A,1) == 1
+            dim = 1;
+        else
+            dim = 2;
+        end
+    end
+    if dim == 1
+        A = A';
+        B = B';
+    end
+    nbins = size(A, 2);
+    cp = nan(nbins, 1);
+    for ii = 1:nbins
+        cp(ii) = AUC_single(A(:,ii), B(:,ii));
+    end
+end
+
+function [auc, crit] = AUC_single(A, B)
 
     maxsps = max(max(A), max(B)) + 1; % maximum spike count
     crits = -1:maxsps;
