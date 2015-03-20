@@ -9,7 +9,7 @@ function figs = summaryByCell(dt, cellind, fitdir, outdir, figext)
         fitdir = 'fits';
     end
     data = io.loadDataByDate(dt);
-    vals = io.summaryByDate(dt, data, fitdir, 1);
+    vals = io.fitSummaries({dt}, fitdir, 'ASD');
     if nargin < 2 || any(isnan(cellind))
         cellinds = 1:numel(data.neurons);
     else
@@ -36,7 +36,8 @@ function [fig, cellName] = summaryBySingleCell(vals, data, event1, ...
     targPref = nanmax([neuron.targPref, 1]);
     
     cellName = [neuron.brainArea '_' num2str(cellind)];
-    ind = strcmp({vals.name}, cellName);
+    ind = strcmp({vals.type}, neuron.brainArea) & ...
+        ([vals.cellind] == cellind);
     wf = vals(ind).mu;
     [u,s,v] = svd(wf);
     sgn = sign(sum(v(:,1)));

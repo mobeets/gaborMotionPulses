@@ -21,7 +21,7 @@ function plotAndSaveSummaries(fitdir, outdir, figext)
     for ii = 1:numel(dts)
         dt = dts{ii};
         curdir = fullfile(outdir, dt);
-        if ~exist(curdir, 'dir')            
+        if ~exist(curdir, 'dir')
             mkdir(curdir);
         end        
         fig = plot.quickPmfByDate(dt);
