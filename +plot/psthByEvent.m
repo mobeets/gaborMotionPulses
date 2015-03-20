@@ -1,28 +1,17 @@
-function Z = psthByEvent(dt, eventName)
-    if nargin < 2
-        eventName = 'targchosen';
-    end
-    data = io.loadDataByDate(dt);
-    event = data.stim.(eventName);
-    
-    figure; hold on;
-    lw = 1;
-    title(data.stim.exname);
-    xlabel('time after motion onset (msec)');
-    ylabel('average spike rate');
-    
-    clrs = lines(numel(data.neurons)+1);
-    for ii = 1:numel(data.neurons)
-        neuron = data.neurons{ii};
-        subplot(numel(data.neurons), 1, ii); hold on;
-        lbl = [neuron.brainArea '-' num2str(ii)];
-        ylabel(lbl);
-        
-        [Z, bins] = io.psthByEvent(data.stim, neuron, event);
-        for jj = 1:numel(Z)
-            plot(bins(:,1)*1000, Z{jj}, '-', ...
-                'Color', clrs(ii,:), 'LineWidth', jj*lw, ...
-                'DisplayName', lbl);
+function psthByEvent(data, neuron, event, cellind, lbls)
+    [Z, bins] = io.getPsthByEvent(data.stim, neuron, event);
+    for ii = 1:numel(Z)
+        if ii == 1
+            lbl = lbls{ii}; % 'pref';
+        else
+            lbl = lbls{ii}; % 'anti';
         end
+        plot(bins*1000, Z{ii}, '-', ...
+            'Color', 'k', 'LineWidth', ii, ...
+            'DisplayName', lbl);
     end
+    xlim([min(bins)*1000, max(bins)*1000]);
+    legend('Location', 'NorthEastOutside');
+    title([data.stim.exname '-' neuron.brainArea '-' num2str(cellind)]);
+    xlabel('time after motion onset (msec)');
 end

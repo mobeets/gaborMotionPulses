@@ -20,7 +20,7 @@ function figs = summaryByCell(dt, cellind, fitdir, outdir, figext)
     event1 = data.stim.targchosen;
     event2 = sum(sum(data.stim.pulses, 3), 2) > 0; % 0->neg, 1->pos
     for ii = 1:numel(cellinds)
-        [fig, name] = summaryBySingleCell(dt, vals, data, ...
+        [fig, name] = summaryBySingleCell(vals, data, ...
             event1, event2, cellinds(ii));
         figs = [figs fig];
         if ~isempty(outdir)
@@ -29,7 +29,7 @@ function figs = summaryByCell(dt, cellind, fitdir, outdir, figext)
     end
 end
 
-function [fig, cellName] = summaryBySingleCell(dt, vals, data, event1, ...
+function [fig, cellName] = summaryBySingleCell(vals, data, event1, ...
     event2, cellind)
     
     neuron = data.neurons{cellind};
@@ -53,15 +53,13 @@ function [fig, cellName] = summaryBySingleCell(dt, vals, data, event1, ...
     set(fig, 'Position', new_pos1);
     
     subplot(3, 2, 1); hold on;
-    [Z1, b1] = io.getPsthByEvent(data.stim, neuron, ...
-        event1 == targPref);
-    plotPsth(Z1, b1, data, neuron, cellind, {'-chc', '+chc'});
+    plot.psthByEvent(data, neuron, event1 == targPref, ...
+        cellind, {'-chc', '+chc'});
     ylabel('spike rate by choice');
     
     subplot(3, 2, 2); hold on;
-    [Z2, b2] = io.getPsthByEvent(data.stim, neuron, ...
-        -(event2-2) == targPref);
-    plotPsth(Z2, b2, data, neuron, cellind, {'-mot', '+mot'});
+    plot.psthByEvent(data, neuron, -(event2-2) == targPref, ...
+        cellind, {'-mot', '+mot'});
     ylabel('spike rate by motion dir');
     
     subplot(3, 2, 3); hold on;
@@ -82,22 +80,4 @@ function [fig, cellName] = summaryBySingleCell(dt, vals, data, event1, ...
     title('CP');
     xlabel('time after motion onset (sec)');
 
-end
-
-function plotPsth(Z, bins, data, neuron, cellind, lbls)
-    lw = 1;
-    for ii = 1:numel(Z)
-        if ii == 1
-            lbl = lbls{ii}; % 'pref';
-        else
-            lbl = lbls{ii}; % 'anti';
-        end
-        plot(bins*1000, Z{ii}, '-', ...
-            'Color', 'k', 'LineWidth', ii*lw, ...
-            'DisplayName', lbl);
-    end
-    xlim([min(bins)*1000, max(bins)*1000]);
-    legend('Location', 'NorthEastOutside');
-    title([data.stim.exname '-' neuron.brainArea '-' num2str(cellind)]);
-    xlabel('time after motion onset (msec)');
 end

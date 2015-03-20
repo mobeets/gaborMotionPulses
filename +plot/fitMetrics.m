@@ -1,16 +1,20 @@
-function fitMetrics(vals, x, y)
-    figure; hold on;
-    xlabel(x); ylabel(y);
-    
+function fitMetrics(vals, x, y, z)
+    if nargin < 4
+        z = x;
+    end
     categs = unique({vals.type});
     clrs = lines(numel(categs));
+    figure; hold on;
+    
     xs = [vals.(x)];
-    ys = [vals.(y)];    
+    ys = [vals.(y)];
+    zs = [vals.(z)];
     for ii = 1:numel(categs)
-        inds = strcmp({vals.type}, categs(ii));
-        scatter(xs(inds), ys(inds), 50, ...
-            'DisplayName', categs(ii), 'MarkerFaceColor', clrs(ii,:));
+        ind = strcmp({vals.type}, categs(ii));
+        scatter3(xs(ind), ys(ind), zs(ind), 40, clrs(ii,:), 'filled', ...
+            'DisplayName', categs(ii));
     end
+    xlabel(x); ylabel(y); zlabel(z);
     legend(categs, 'Location', 'NorthEastOutside');
 %     plot([0 1], [0 1], 'k--');
 end
