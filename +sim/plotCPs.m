@@ -1,4 +1,7 @@
 function plotCPs(vals, xs, xslbl)
+    if nargin < 3
+        xslbl = '';
+    end
     marker1 = '-';
     marker2 = '--';
     [~, idx] = sort(xs);

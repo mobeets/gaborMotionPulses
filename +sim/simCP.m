@@ -18,13 +18,18 @@ function obj = simCP(w, xopt, seed)
     e_sps = 2*randn(ntrials,1); % noise given to spikes only
     % higher gain on e_sps shrinks maximum deviations of CP from 0.5 for
     % any signal containing noise, i.e., cp_Yres, cp_Yposres, cp_Ynegres
-    Yh = X*w;
-    Y = X*w + e_sps + e_sps_chc;    
-    wneg = makeWsigned(w, -1);
+    Y = X*w + e_sps + e_sps_chc;
+    
+    e_w = 0*randn(ngabors,1);
+    wh = 1*w + e_w;
+    
+    wneg = makeWsigned(wh, -1);
     Yneg = X*wneg;
-    wpos = makeWsigned(w, 1);
+    wpos = makeWsigned(wh, 1);
     Ypos = X*wpos;
-    Yres = e_sps + e_sps_chc;
+    Yh = Ypos + Yneg;
+    Yres = Y - Ypos - Yneg;
+    Yres_true = e_sps + e_sps_chc;    
     Ynegres = Yneg + Yres;
     Yposres = Ypos + Yres;
     
@@ -33,6 +38,7 @@ function obj = simCP(w, xopt, seed)
     e_chc = 1*randn(ntrials,1); % noise given to choice only
     % higher gain on e_chc shrinks maximum deviations of CP from 0.5 for
     % any signal
+%     C = makeChoice(X*w, e_sps_chc + e_chc, thresh);
     C = makeChoice(sum(X,2), e_sps_chc + e_chc, thresh);
 %     C = makeChoice(Y, eps, thresh);
 
@@ -49,7 +55,7 @@ function obj = simCP(w, xopt, seed)
     obj.X = X;
     obj.w = w;
     obj.wpos = wpos;
-    obj.wneg = wneg;    
+    obj.wneg = wneg;
     obj.Y = Y;
     obj.C = C;
     obj.Yres = Yres;

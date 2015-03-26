@@ -26,19 +26,20 @@ function cp = AUC(A, B, dim)
         lbls = true(nA+numel(B(:,1)),1);
         lbls(nA+1:end) = false;
     end
+    C = [A; B];
     
     cp = nan(nbins, 1);
     for ii = 1:nbins
-        [~, ~, ~, cp(ii)] = perfcurve(lbls, [A(:,ii); B(:,ii)], 'true');
-%         cp(ii) = AUC_single(A(:,ii), B(:,ii));
+%         [~, ~, ~, cp(ii)] = perfcurve(lbls, C(:,ii), 'true');
+        cp(ii) = AUC_single(A(:,ii), B(:,ii));
     end
 end
 
 function [auc, crit] = AUC_single(A, B)
 
-    minsps = min(min(A), min(B)) - 1;
-    maxsps = max(max(A), max(B)) + 1; % maximum spike count
-    crits = minsps:maxsps;
+    minsps = min(min(A), min(B)) - 0.1;
+    maxsps = max(max(A), max(B)) + 0.1; % maximum spike count
+    crits = minsps:0.1:maxsps;
     ncrits = numel(crits);
     
     TPR = zeros(ncrits, 1);
