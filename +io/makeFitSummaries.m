@@ -1,4 +1,4 @@
-function vals = fitSummaries(dts, fitdir, fitstr)
+function vals = makeFitSummaries(dts, fitdir, fitstr)
     if nargin < 3
         fitstr = 'ASD';
     end
@@ -41,8 +41,12 @@ function vals = fitSummariesByDate(dt, fitdir, fitstr)
         val.score = fit.score;
         mcf = fit.muCorrFolds;
         val.muCorr = min(mcf(abs(triu(mcf,1)-mcf)==0));
-        val.scoreSdev = fit.scoreVarFolds; % scoreStdevFolds
-        val.tScoreDenom = fit.scoreVarFolds*2/sqrt(numel(fit.scores));
+        if isfield(fit, 'scoreVarFolds')
+            val.scoreSdev = fit.scoreVarFolds; % scoreStdevFolds
+        else
+            val.scoreSdev = fit.scoreStdvFolds; % scoreStdevFolds
+        end
+        val.tScoreDenom = val.scoreSdev*2/sqrt(numel(fit.scores));
         % p < 0.05 if val.score_mean / val.tScoreDenom > 1
         
         vals = [vals val];

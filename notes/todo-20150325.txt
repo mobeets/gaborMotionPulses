@@ -1,0 +1,19 @@
+stim.dirprob == 0
+plot Ypos vs Yneg on those, with choice colored
+
+colormap of Y, e.g. more saturated means more spikes
+or maybe Y is 3rd dimension
+
+# Cells
+
+## 20140305-2, 20140304-13
+
+* slant in X-Y-Z when Ypos > 0 suggests suppressive surround (given fixed Ypos, Yneg modulates cell's overall response)
+
+## 20140517-8, 20140218-1
+
+* slant like above only for Ypos < 0 and Ypos > 0
+
+## 20140304-1
+
+* view by dirprob==0, still looks the same
