@@ -78,7 +78,12 @@ function vals = makeFitSummaries_addCP(vals, filterBadScores, filterDecisions)
         Ynr = Yneg + Yres;
         vals(ii).Ypos = Ypos;
         vals(ii).Yneg = Yneg;
+        
+        sinds = ~isnan(Y);
         vals(ii).corr_Yposneg = corr(Ypos, Yneg);
+        vals(ii).corr_Yposresneg = corr(Y(sinds)-Ypos(sinds), Yneg(sinds));
+        vals(ii).corr_Yposobs = corr(Y(sinds), Ypos(sinds));
+        vals(ii).corr_Ynegobs = corr(Y(sinds), Yneg(sinds));
         
         % CP
         vals(ii).cp_Y = tools.AUC(Y(C), Y(~C));
@@ -88,10 +93,10 @@ function vals = makeFitSummaries_addCP(vals, filterBadScores, filterDecisions)
         vals(ii).cp_Ynegres = tools.AUC(Ynr(C), Ynr(~C));
         vals(ii).cp_Ypos = tools.AUC(Ypos(C), Ypos(~C));
         vals(ii).cp_Yneg = tools.AUC(Yneg(C), Yneg(~C));
-        
-        vals(ii).cp_Yadj1 = tools.AUC(Yadj1(C), Yadj1(~C));
-        vals(ii).cp_Yadj2 = tools.AUC(Yadj2(C), Yadj2(~C));
-    end 
+%         vals(ii).cp_Yadj1 = tools.AUC(Yadj1(C), Yadj1(~C));
+%         vals(ii).cp_Yadj2 = tools.AUC(Yadj2(C), Yadj2(~C));
+
+    end
 end
 
 function sps = getSpikes(X, w)

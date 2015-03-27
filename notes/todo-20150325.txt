@@ -1,10 +1,16 @@
+# Fits
+
+* one thing to note: Yneg is basically across-the-board (in good fits) positively correlated with the residual spikes, Y-Ypos, suggesting that overall spikes predicted to negative components really do tend to raise the actual spike rate.
+* also, this correlation increases with |wneg|/|wpos|, meaning that the larger |wneg| is proprtional to |wpos|, the more correlated Ypos is with Y-Yneg
+	- sweet spot around wrat=0.5: corr(Yneg, Y-Ypos) is maximized, around 0.5
+
+# Cells
+
 stim.dirprob == 0
 plot Ypos vs Yneg on those, with choice colored
 
 colormap of Y, e.g. more saturated means more spikes
 or maybe Y is 3rd dimension
-
-# Cells
 
 ## 20140305-2, 20140304-13
 
@@ -17,3 +23,20 @@ or maybe Y is 3rd dimension
 ## 20140304-1
 
 * view by dirprob==0, still looks the same
+
+# Cells with positive correlation between Yneg and Y
+
+n.b. none of these cells have score > 0.11
+
+* 20130502-LIP_4
+* 20130502-LIP_5
+* 20130611-MT_7 (this might be the one with misclassified targpref)
+* 20140218-MT_2
+* 20140218-MT_5
+* 20140303-MT_5 (=0.142)
+* 20140303-MT_6
+* 20140305-MT_5
+* 20140305-MT_6
+* 20140307-MT_2 (=0.187)
+* 20140307-MT_6 (=0.188)
+
