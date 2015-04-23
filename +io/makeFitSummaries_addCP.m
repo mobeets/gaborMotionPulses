@@ -96,6 +96,21 @@ function vals = makeFitSummaries_addCP(vals, filterBadScores, filterDecisions)
 %         vals(ii).cp_Yadj1 = tools.AUC(Yadj1(C), Yadj1(~C));
 %         vals(ii).cp_Yadj2 = tools.AUC(Yadj2(C), Yadj2(~C));
 
+        vals(ii).Y_mean = nanmean(Y);
+        vals(ii).Y_var = nanvar(Y);
+        vals(ii).Ypos_mean = mean(Ypos);
+        vals(ii).Yneg_mean = mean(Yneg);
+        vals(ii).Ypos_var = var(Ypos);
+        vals(ii).Yneg_var = var(Yneg);
+        
+        vals(ii).Yposlow = abs(Ypos) < 1;
+        vals(ii).Yneglow = abs(Yneg) < 1;
+        vals(ii).Yres_var = nanvar(Yres);
+        vals(ii).Yposlow_count = sum(vals(ii).Yposlow);
+        vals(ii).Yneglow_count = sum(vals(ii).Yneglow);
+        vals(ii).Yres_poslow_var = nanvar(Yres(vals(ii).Yposlow));
+        vals(ii).Yres_neglow_var = nanvar(Yres(vals(ii).Yneglow));
+
     end
 end
 

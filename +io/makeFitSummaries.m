@@ -5,7 +5,7 @@ function vals = makeFitSummaries(dts, fitdir, fitstr)
     if nargin < 2
         fitdir = 'fits';
     end
-    if nargin < 1
+    if nargin < 1 || isnan(dts)
         dts = io.getDates(fitdir);
     end
     vals = struct([]);    
@@ -35,7 +35,12 @@ function vals = fitSummariesByDate(dt, fitdir, fitstr)
         end
 
         val.wf = fit.mu;            
-        val.mu = reshape(fit.mu(1:end-1), d.ns, d.nt);
+        val.mu = reshape(fit.mu(1:end-1), d.ns, d.nt);        
+        if ~strcmp(celltype, 'decision')
+            val.ntrials = sum(~isnan(d.Y_all(:,jj)));
+        else
+            val.ntrials = sum(~isnan(d.R));
+        end
         val.separability = getSeparability(val.mu);
         val.score_mean = mean(fit.scores);
         val.score = fit.score;

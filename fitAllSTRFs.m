@@ -13,13 +13,13 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
 % n.b. make sure to add path to github.com/mobeets/mASD
 % 
     if nargin < 6
-        figbasedir = 'figs';
+        figbasedir = 'figs-poiss';
     end
     if nargin < 5
-        fitbasedir = 'fits';
+        fitbasedir = 'fits-poiss';
     end
     if nargin < 4 || isempty(mask)
-        mask = [true false false true]; % [ASD ASD_gs ML ASD_b]
+        mask = [true false false false]; % [ASD ASD_gs ML ASD_b]
     end
     if nargin < 3 || isempty(dts)
         dts = {'20130502', '20130514', '20130515', '20130517', ...
@@ -30,7 +30,7 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
         fitCells = true;
     end
     if nargin < 1
-        fitBehavior = true;
+        fitBehavior = false;
     end
     
     if ~isempty(figbasedir) && ~exist(figbasedir, 'dir')
@@ -76,7 +76,7 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
 
         %% run on all cells
         if fitCells
-            llstr = 'gauss';
+            llstr = 'poiss';
             scorestr = 'rsq';
             scoreFcn = reg.scoreFcns(scorestr, llstr);
             
