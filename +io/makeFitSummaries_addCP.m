@@ -68,6 +68,10 @@ function vals = makeFitSummaries_addCP(vals, filterBadScores, filterDecisions)
         vals(ii).wpos_norm = norm(wfPos,1);
         vals(ii).wneg_norm = norm(wfNeg,1);
         vals(ii).wrat = norm(wfNeg,1)/norm(wfPos,1);
+        
+        if strcmp(vals(ii).name, '20140304-MT_1')
+            x=1;
+        end
 
         % predicted spikes to pos/neg of RF
         Ypos = getSpikes(d.X, wfPos);

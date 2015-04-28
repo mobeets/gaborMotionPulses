@@ -38,9 +38,9 @@ function vals = pairwiseCorr(vs)
             val.rfCorr = p2(2);
             if strcmp(tps(a), tps(b))
                 if strcmp(tps(a), 'MT')
-                    val.type = 'MT-MT';
+                    val.type = 'MT- MT';
                 else
-                    val.type = 'LIP-LIP';
+                    val.type = 'LIP- LIP';
                 end
             else
                 val.type = 'MT-LIP';

@@ -76,7 +76,7 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
 
         %% run on all cells
         if fitCells
-            llstr = 'poiss';
+            llstr = 'gauss';
             scorestr = 'rsq';
             scoreFcn = reg.scoreFcns(scorestr, llstr);
             

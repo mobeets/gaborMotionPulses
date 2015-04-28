@@ -27,20 +27,26 @@ function vals = fitSummariesByDate(dt, fitdir, fitstr)
 
         val.dt = dt;
         val.type = celltype;
-        val.name = [dt '-' nms{jj}];
+        val.name = [dt '-' nms{jj}];        
         if numel(nm) > 1
             val.cellind = str2num(nm{2});
+            cip = ['-' nm{2}];
         else
             val.cellind = nan;
+            cip = '';
         end
+        
+        val.pngname = fullfile(val.dt, [val.type cip '-ASD.png']);
 
         val.wf = fit.mu;            
         val.mu = reshape(fit.mu(1:end-1), d.ns, d.nt);        
         if ~strcmp(celltype, 'decision')
-            val.ntrials = sum(~isnan(d.Y_all(:,jj)));
+            val.ntrials = sum(~isnan(d.Y_all(:,val.cellind)));
+            val.dPrime = d.neurons{val.cellind}.dPrime;
         else
+            val.dPrime = nan;
             val.ntrials = sum(~isnan(d.R));
-        end
+        end        
         val.separability = getSeparability(val.mu);
         val.score_mean = mean(fit.scores);
         val.score = fit.score;
