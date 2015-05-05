@@ -1,12 +1,27 @@
-function data = loadDataByDate(dt, basedir, stimdir, spikesdir)    
-    if nargin < 4 || isempty(spikesdir)
-        spikesdir = 'SingleNeurons';
+function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir)    
+    if nargin < 2
+        isNancy = false;
     end
-    if nargin < 3 || isempty(stimdir)
-        stimdir = 'stim';
+    if nargin < 5 || isempty(spikesdir)
+        if ~isNancy
+            spikesdir = 'SingleNeurons';
+        else
+            spikesdir = 'nancyNeuronFiles'; 
+        end
     end
-    if nargin < 2 || isempty(basedir)
-        basedir = '~/Desktop';
+    if nargin < 4 || isempty(stimdir)
+        if ~isNancy
+            stimdir = 'stim';
+        else
+            stimdir = 'nancyStimFiles';
+        end
+    end
+    if nargin < 3 || isempty(basedir)
+        if ~isNancy
+            basedir = '~/Desktop';
+        else
+            basedir = '/Volumes/LKCLAB/Users/Jay';
+        end
     end
     
     % load stimulus data
@@ -43,12 +58,12 @@ function data = loadDataByDate(dt, basedir, stimdir, spikesdir)
 end
 
 function stim = loadStim(dt, stimdir)
-    stimfiles = io.findFile(stimdir, ['p' dt '_stim.mat'], true);
+    stimfiles = io.findFile(stimdir, ['*' dt '_stim.mat'], true, true); 
     stim = load(fullfile(stimdir, stimfiles{1}));
 end
 
 function neurons = loadNeurons(dt, spikesdir)
-    spikefiles = io.findFile(spikesdir, dt);
+    spikefiles = io.findFile(spikesdir, ['*' dt '*.mat'], true, true);
     neurons = cell(numel(spikefiles), 1);
     for ii = 1:numel(spikefiles)
         neurons{ii} = load(fullfile(spikesdir, spikefiles{ii}));

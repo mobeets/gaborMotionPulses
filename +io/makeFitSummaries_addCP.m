@@ -1,10 +1,11 @@
 function vals = makeFitSummaries_addCP(vals, filterBadScores, filterDecisions)
-    if nargin < 3
-        filterDecisions = true;        
-    end
     if nargin < 2
         filterBadScores = true;
     end
+    if nargin < 3
+        filterDecisions = true;        
+    end
+    
     if filterDecisions
         inds = ~strcmp({vals.type}, 'decision');
         vals = vals(inds);
@@ -24,7 +25,7 @@ function vals = makeFitSummaries_addCP(vals, filterBadScores, filterDecisions)
             continue;
         end
         if ~strcmp(last_dt, vals(ii).dt)            
-            d = io.loadDataByDate(vals(ii).dt);
+            d = io.loadDataByDate(vals(ii).dt, vals(ii).isNancy);
             last_dt = vals(ii).dt;
         end
         disp(vals(ii).name);

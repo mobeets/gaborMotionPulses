@@ -13,24 +13,23 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
 % n.b. make sure to add path to github.com/mobeets/mASD
 % 
     if nargin < 6
-        figbasedir = 'figs-poiss';
+        figbasedir = 'figs-nancy';
     end
     if nargin < 5
-        fitbasedir = 'fits-poiss';
+        fitbasedir = 'fits-nancy';
     end
     if nargin < 4 || isempty(mask)
         mask = [true false false false]; % [ASD ASD_gs ML ASD_b]
     end
     if nargin < 3 || isempty(dts)
-        dts = {'20130502', '20130514', '20130515', '20130517', ...
-            '20130611', '20140213', '20140218', '20140226', '20140303', ...
-            '20140304', '20140305', '20140306', '20140307', '20140310'};
+        dts = {};
+%         dts = {'20150401'};
     end
     if nargin < 2
-        fitCells = true;
+        fitCells = false;
     end
     if nargin < 1
-        fitBehavior = false;
+        fitBehavior = true;
     end
     
     if ~isempty(figbasedir) && ~exist(figbasedir, 'dir')
@@ -38,6 +37,24 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
     end
     if ~isempty(fitbasedir) && ~exist(fitbasedir, 'dir')
         mkdir(fitbasedir);
+    end
+    
+    isNancy = true;
+    nfolds = 5;
+    devPct = 0.8; % can actually use all data to fit
+    lbs = [-3 -2 -1 -1]; ubs = [3 10 6 6]; ns = 10*ones(1,4);        
+    
+    if isNancy && isempty(dts)
+        dts = {'20150304a', '20150127' '20150304b', '20150305a', ...
+            '20150305b', '20150305c', '20150306b', '20150306c', ...
+            '20150309', '20150310', '20150312b', '20150313', ...
+            '20150316c', '20150324a', '20150325', '20150326a', ...
+            '20150331', '20150401', '20150402', '20150407a', ...
+            '20150407b', '20150408a', '20150408b'};
+    elseif isempty(dts)
+        dts = {'20130502', '20130514', '20130515', '20130517', ...
+            '20130611', '20140213', '20140218', '20140226', '20140303', ...
+            '20140304', '20140305', '20140306', '20140307', '20140310'};
     end
 
     for ii = 1:numel(dts)
@@ -65,11 +82,8 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
             fitdir = '';
         end
         dat_fnfcn = @(tag) fullfile(fitdir, [tag '.mat']);
-        
-        nfolds = 5;
-        ifold = 1;
-        devPct = 0.5;
-        data = io.loadDataByDate(dt);
+                
+        data = io.loadDataByDate(dt, isNancy);
         % development/evaluation sets
         [~, evalinds] = reg.trainAndTest(data.X, data.R, devPct);
         [~, foldinds] = reg.trainAndTestKFolds(data.X, data.R, nfolds);
@@ -77,29 +91,38 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
         %% run on all cells
         if fitCells
             llstr = 'gauss';
-            scorestr = 'rsq';
-            scoreFcn = reg.scoreFcns(scorestr, llstr);
             
-            lbs = [-3 -2 -1 -1]; ubs = [3 10 4 4]; ns = 7*ones(1,4);
-            hyperOpts = struct('lbs', lbs, 'ubs', ubs, 'ns', ns, ...
-                'isLog', true);
-            Db = asd.sqdist.space(data.Xxy);
+            if ~strcmpi(llstr, 'gauss') % remove ssq hyper
+                scorestr = 'pseudoRsq';
+                ix = [1 3 4]; lbsc = lbs(ix); ubsc = ubs(ix); nsc = ns(ix);
+            else
+                lbsc = lbs; ubsc = ubs; nsc = ns;
+                scorestr = 'rsq';
+            end
+            scoreFcn = reg.scoreFcns(scorestr, llstr);
+            hyperOpts = struct('lbs', lbsc, 'ubs', ubsc, 'ns', nsc, ...
+                'isLog', true);            
             
             % full ASD and ML
             MAP = @(hyper) asd.fitHandle(hyper, data.D, llstr);
+            Db = asd.sqdist.space(data.Xxy);
             BMAP = @(hyper) asd.fitHandle(hyper, Db, llstr, ...
                 'bilinear', struct('shape', {{data.ns, data.nt}}));
             ML = @(~) ml.fitHandle(llstr);
 
             cell_inds = 1:size(data.Y_all, 2);
+%             cell_inds = [19];
             ncells = numel(cell_inds);
             for nn = 1:ncells
                 cell_ind = cell_inds(nn);
-                lbl = [data.neurons{nn}.brainArea '-' num2str(cell_ind)];
+                lbl = [data.neurons{cell_ind}.brainArea '-' num2str(cell_ind)];
 
                 data.Y = data.Y_all(:,cell_ind); % choose cell for analysis
+                if sum(~isnan(data.Y)) == 0
+                    continue;
+                end
                 fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, ...
-                    hyperOpts, figdir, lbl, ifold, mask, ...
+                    hyperOpts, figdir, lbl, mask, ...
                     foldinds, evalinds);
 
                 if ~isempty(fitdir)
@@ -114,23 +137,28 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
         %% run on decision
         if fitBehavior
             llstr = 'bern';
-            scorestr = 'pseudoRsq';
-            scoreFcn = reg.scoreFcns(scorestr, llstr);
             
-            lbs = [-3 -1 -1]; ubs = [3 4 4]; ns = 7*ones(1,3);
-            hyperOpts = struct('lbs', lbs, 'ubs', ubs, 'ns', ns, ...
-                'isLog', true);
+            if ~strcmpi(llstr, 'gauss') % remove ssq hyper
+                scorestr = 'pseudoRsq';
+%                 scorestr = 'rsq';
+                ix = [1 3 4]; lbsc = lbs(ix); ubsc = ubs(ix); nsc = ns(ix);
+            else
+                lbsc = lbs; ubsc = ubs; nsc = ns;
+                scorestr = 'rsq';                
+            end
+            scoreFcn = reg.scoreFcns(scorestr, llstr);
+            hyperOpts = struct('lbs', lbsc, 'ubs', ubsc, 'ns', nsc, ...
+                'isLog', true); 
             
             MAP = @(hyper) asd.fitHandle(hyper, data.D, llstr);
             BMAP = @(hyper) asd.fitHandle(hyper, data.D, llstr, ...
                 'bilinear', struct('shape', {{data.ns, data.nt}}));
             ML = @(~) ml.fitHandle(llstr);
-            
             data.Y = data.R;
 
             lbl = 'decision';
             fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, hyperOpts, ...
-                figdir, lbl, ifold, mask, foldinds, evalinds);
+                figdir, lbl, mask, foldinds, evalinds);
             if ~isempty(fitdir)
                 fits.isLinReg = false;
                 fits.foldinds = foldinds;

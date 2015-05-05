@@ -1,21 +1,25 @@
-function vals = makeFitSummaries(dts, fitdir, fitstr)
+function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)      
+    if nargin < 1
+        fitdir = 'fits';
+    end
+    if nargin < 2
+        isNancy = false;
+    end
     if nargin < 3
         fitstr = 'ASD';
     end
-    if nargin < 2
-        fitdir = 'fits';
-    end
-    if nargin < 1 || isnan(dts)
+    if nargin < 4 || isnan(dts)
         dts = io.getDates(fitdir);
-    end
+    end    
+    
     vals = struct([]);    
     for ii = 1:numel(dts)
-        vals = [vals fitSummariesByDate(dts{ii}, fitdir, fitstr)];
+        vals = [vals fitSummariesByDate(fitdir, dts{ii}, fitstr, isNancy)];
     end
 end
 
-function vals = fitSummariesByDate(dt, fitdir, fitstr)
-    d = io.loadDataByDate(dt); % can be replaced by fit.shape eventually
+function vals = fitSummariesByDate(fitdir, dt, fitstr, isNancy)
+    d = io.loadDataByDate(dt, isNancy);
     fs = io.loadFitsByDate(dt, fitdir);
     nms = fieldnames(fs);
     
@@ -23,6 +27,9 @@ function vals = fitSummariesByDate(dt, fitdir, fitstr)
     for jj = 1:numel(nms)
         nm = strsplit(nms{jj}, '_');
         celltype = nm{1};
+        if ~isfield(fs.(nms{jj}), fitstr)
+            continue;
+        end
         fit = fs.(nms{jj}).(fitstr){end};
 
         val.dt = dt;
@@ -36,16 +43,27 @@ function vals = fitSummariesByDate(dt, fitdir, fitstr)
             cip = '';
         end
         
+        val.isNancy = isNancy;
         val.pngname = fullfile(val.dt, [val.type cip '-ASD.png']);
+        
+        val.wf = fit.mu;
+        val.mu = reshape(fit.mu(1:end-1), d.ns, d.nt);
 
-        val.wf = fit.mu;            
-        val.mu = reshape(fit.mu(1:end-1), d.ns, d.nt);        
+        if isfield(fit, 'hyper') && all(isnan(fit.hyper))
+            fit.hyper = nan(3,1);
+        end
+        val.hyper_ro = fit.hyper(1);
+        val.hyper_delta_space = fit.hyper(end-1);
+        val.hyper_delta_time = fit.hyper(end);
+        
         if ~strcmp(celltype, 'decision')
             val.ntrials = sum(~isnan(d.Y_all(:,val.cellind)));
             val.dPrime = d.neurons{val.cellind}.dPrime;
+            val.hyper_ssq = fit.hyper(2);
         else
             val.dPrime = nan;
             val.ntrials = sum(~isnan(d.R));
+            val.hyper_ssq = nan;
         end        
         val.separability = getSeparability(val.mu);
         val.score_mean = mean(fit.scores);

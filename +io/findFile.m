@@ -1,4 +1,4 @@
-function [file, idx, pid] = findFile(files, searchStr, exact)
+function [file, idx, pid] = findFile(files, searchStr, exact, wildcard)
 % [file, idx, pid] = findFile(files, searchStr)
 % gets the index for a file in [files] that matches a search string
 % inputs:
@@ -21,7 +21,11 @@ function [file, idx, pid] = findFile(files, searchStr, exact)
 %       [cell-array] of the char index for files
 
 % 2015 jly merged Jake and Leor's findFile versions
+% 20150501 - jah added wildcard search
 
+if ~exist('wildcard', 'var')
+    wildcard = false;
+end
 if ~exist('exact', 'var')
     exact = false;
 end
@@ -49,7 +53,12 @@ pid = cell(nFiles,nStr);
 if exact
     for kFile = 1:nFiles
         for kStr = 1:nStr
-            tmp = strcmp(files{kFile}, searchStr{kStr});
+            if wildcard
+                tmp = regexp(files{kFile}, ...
+                    regexptranslate('wildcard', searchStr{kStr}));
+            else
+                tmp = strcmp(files{kFile}, searchStr{kStr});
+            end
             tmp(tmp==0)=[];
             pid{kFile, kStr} = tmp;
         end
