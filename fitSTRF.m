@@ -90,7 +90,7 @@ function obj = addFigure(obj, data, lbl, figdir)
     obj.shape = [data.ns data.nt];
     if ~isempty(figdir)
         wf = obj.mu;
-        sc = obj.score;
+        sc = mean(obj.scores);
         fig = plot.plotKernel(data.Xxy, wf_fcn(wf, data.ns, data.nt), ...
             nan, fig_lblfcn(obj.label, sc));
         fig_svfcn(fig, obj.label, 'png');        

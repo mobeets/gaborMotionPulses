@@ -8,7 +8,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
     if nargin < 3
         fitstr = 'ASD';
     end
-    if nargin < 4 || isnan(dts)
+    if nargin < 4 || isempty(dts)
         dts = io.getDates(fitdir);
     end    
     
@@ -30,7 +30,9 @@ function vals = fitSummariesByDate(fitdir, dt, fitstr, isNancy)
         if ~isfield(fs.(nms{jj}), fitstr)
             continue;
         end
-        fit = fs.(nms{jj}).(fitstr){end};
+        fits = fs.(nms{jj}).(fitstr);
+        fits = fits(~cellfun(@isempty, fits));
+        fit = fits{end};
 
         val.dt = dt;
         val.type = celltype;

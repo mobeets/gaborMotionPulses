@@ -1,35 +1,38 @@
-function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
-    fitbasedir, figbasedir)
-% fitSTRF(fitBehavior, fitCells, dts, mask, fitbasedir, figbasedir)
+function fitAllSTRFs()
+% fitSTRF(fitBehavior, fitCells, dts, fitMask, fitbasedir, figbasedir)
 % 
 % fits space-time receptive fields for each date in dts, using ASD and ML
 %   if fitBehavior, fits monkey's psychophysical kernel
 %   if fitCells, fits a cell's receptive field
-%   if mask(1), fits using ASD
-%   if mask(2), fits using ASD with grid search
-%   if mask(3), fits using ML
-%   if mask(4), fits using ASD with bilinear space and time weights
+%   if fitMask(1), fits using ASD
+%   if fitMask(2), fits using ASD with grid search
+%   if fitMask(3), fits using ML
+%   if fitMask(4), fits using ASD with bilinear space and time weights
 % 
 % n.b. make sure to add path to github.com/mobeets/mASD
 % 
-    if nargin < 6
-        figbasedir = 'figs-nancy';
-    end
-    if nargin < 5
-        fitbasedir = 'fits-nancy';
-    end
-    if nargin < 4 || isempty(mask)
-        mask = [true false false false]; % [ASD ASD_gs ML ASD_b]
-    end
-    if nargin < 3 || isempty(dts)
-        dts = {};
-%         dts = {'20150401'};
-    end
-    if nargin < 2
-        fitCells = false;
-    end
-    if nargin < 1
-        fitBehavior = true;
+
+    figbasedir = 'figs-nancy';
+    fitbasedir = 'fits-nancy';
+    fitMask = [true false true false]; % [ASD ASD_gs ML ASD_b]
+    fitCells = true;
+    fitBehavior = false;
+    isNancy = true;
+    nfolds = 5;
+    devPct = 1.0; % pct of data used to generate fit, after choosing hyper
+    lbs = [-3 -2 -1 -1]; ubs = [3 10 6 6]; ns = 10*ones(1,4);
+    
+    if isNancy
+        dts = {'20150304a', '20150127' '20150304b', '20150305a', ...
+            '20150305b', '20150305c', '20150306b', '20150306c', ...
+            '20150309', '20150310', '20150312b', '20150313', ...
+            '20150316c', '20150324a', '20150325', '20150326a', ...
+            '20150331', '20150401', '20150402', '20150407a', ...
+            '20150407b', '20150408a', '20150408b'};
+    else
+        dts = {'20130502', '20130514', '20130515', '20130517', ...
+            '20130611', '20140213', '20140218', '20140226', '20140303', ...
+            '20140304', '20140305', '20140306', '20140307', '20140310'};
     end
     
     if ~isempty(figbasedir) && ~exist(figbasedir, 'dir')
@@ -37,24 +40,6 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
     end
     if ~isempty(fitbasedir) && ~exist(fitbasedir, 'dir')
         mkdir(fitbasedir);
-    end
-    
-    isNancy = true;
-    nfolds = 5;
-    devPct = 0.8; % can actually use all data to fit
-    lbs = [-3 -2 -1 -1]; ubs = [3 10 6 6]; ns = 10*ones(1,4);        
-    
-    if isNancy && isempty(dts)
-        dts = {'20150304a', '20150127' '20150304b', '20150305a', ...
-            '20150305b', '20150305c', '20150306b', '20150306c', ...
-            '20150309', '20150310', '20150312b', '20150313', ...
-            '20150316c', '20150324a', '20150325', '20150326a', ...
-            '20150331', '20150401', '20150402', '20150407a', ...
-            '20150407b', '20150408a', '20150408b'};
-    elseif isempty(dts)
-        dts = {'20130502', '20130514', '20130515', '20130517', ...
-            '20130611', '20140213', '20140218', '20140226', '20140303', ...
-            '20140304', '20140305', '20140306', '20140307', '20140310'};
     end
 
     for ii = 1:numel(dts)
@@ -90,14 +75,14 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
 
         %% run on all cells
         if fitCells
-            llstr = 'gauss';
+            llstr = 'poiss';
             
-            if ~strcmpi(llstr, 'gauss') % remove ssq hyper
-                scorestr = 'pseudoRsq';
-                ix = [1 3 4]; lbsc = lbs(ix); ubsc = ubs(ix); nsc = ns(ix);
-            else
+            if strcmpi(llstr, 'gauss')
                 lbsc = lbs; ubsc = ubs; nsc = ns;
                 scorestr = 'rsq';
+            else % remove ssq hyper
+                scorestr = 'pseudoRsq';
+                ix = [1 3 4]; lbsc = lbs(ix); ubsc = ubs(ix); nsc = ns(ix);
             end
             scoreFcn = reg.scoreFcns(scorestr, llstr);
             hyperOpts = struct('lbs', lbsc, 'ubs', ubsc, 'ns', nsc, ...
@@ -122,7 +107,7 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
                     continue;
                 end
                 fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, ...
-                    hyperOpts, figdir, lbl, mask, ...
+                    hyperOpts, figdir, lbl, fitMask, ...
                     foldinds, evalinds);
 
                 if ~isempty(fitdir)
@@ -138,13 +123,12 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
         if fitBehavior
             llstr = 'bern';
             
-            if ~strcmpi(llstr, 'gauss') % remove ssq hyper
-                scorestr = 'pseudoRsq';
-%                 scorestr = 'rsq';
-                ix = [1 3 4]; lbsc = lbs(ix); ubsc = ubs(ix); nsc = ns(ix);
-            else
+            if strcmpi(llstr, 'gauss')
                 lbsc = lbs; ubsc = ubs; nsc = ns;
-                scorestr = 'rsq';                
+                scorestr = 'rsq';
+            else % remove ssq hyper
+                scorestr = 'pseudoRsq';
+                ix = [1 3 4]; lbsc = lbs(ix); ubsc = ubs(ix); nsc = ns(ix);
             end
             scoreFcn = reg.scoreFcns(scorestr, llstr);
             hyperOpts = struct('lbs', lbsc, 'ubs', ubsc, 'ns', nsc, ...
@@ -158,7 +142,7 @@ function fitAllSTRFs(fitBehavior, fitCells, dts, mask, ...
 
             lbl = 'decision';
             fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, hyperOpts, ...
-                figdir, lbl, mask, foldinds, evalinds);
+                figdir, lbl, fitMask, foldinds, evalinds);
             if ~isempty(fitdir)
                 fits.isLinReg = false;
                 fits.foldinds = foldinds;

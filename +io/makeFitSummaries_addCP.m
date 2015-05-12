@@ -115,6 +115,22 @@ function vals = makeFitSummaries_addCP(vals, filterBadScores, filterDecisions)
         vals(ii).Yneglow_count = sum(vals(ii).Yneglow);
         vals(ii).Yres_poslow_var = nanvar(Yres(vals(ii).Yposlow));
         vals(ii).Yres_neglow_var = nanvar(Yres(vals(ii).Yneglow));
+        
+        dps = vals(ii).dirprob;
+        udps = unique(dps);
+        ys = nan(numel(dps),1);
+        for jj = 1:numel(udps)
+            y = nanmean(vals(ii).Y(dps == udps(jj)));
+            ys(jj) = y;
+            vals(ii).(['dps_' num2str((jj))]) = y;
+        end
+        mdl = fitlm(dps, ys);
+        vals(ii).dps_rsq = mdl.Rsquared.Ordinary;
+        vals(ii).dps_m = mdl.Coefficients.Estimate(2);
+        ix = ~isnan(vals(ii).Y);
+        mdl = fitlm(vals(ii).dirprob(ix), vals(ii).Y(ix));
+        vals(ii).dp_rsq = mdl.Rsquared.Ordinary;
+        vals(ii).dp_m = mdl.Coefficients.Estimate(2);
 
     end
 end
