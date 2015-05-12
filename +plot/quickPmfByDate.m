@@ -1,11 +1,11 @@
-function fig = quickPmfByDate(dt, nbins, byPulse)
-    if nargin < 3
+function fig = quickPmfByDate(dt, isNancy, nbins, byPulse)
+    if nargin < 4
         byPulse = false;
     end
-    if nargin < 2
+    if nargin < 3
         nbins = 10;
     end
-    data = io.loadDataByDate(dt);
+    data = io.loadDataByDate(dt, isNancy);
     Y = data.R;
         
     fig = figure; hold on; set(gcf,'color','w');

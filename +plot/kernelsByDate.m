@@ -1,5 +1,6 @@
-function fig = kernelsByDate(dt, fitdir)
-    [vals, data] = io.summaryByDate(dt, fitdir, 1);
+function fig = kernelsByDate(dt, fitdir, isNancy)
+    data = io.loadDataByDate(dt, isNancy);
+    vals = io.summaryByDate(dt, data, fitdir, 1);
     dts = {vals.dt};
     isdt = strcmp(dts, dt);
     nms = {vals(isdt).name};

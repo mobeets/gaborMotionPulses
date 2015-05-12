@@ -1,10 +1,10 @@
-function plotAndSaveSummaries(fitdir, outdir, figext)
+function plotAndSaveSummaries(fitdir, outdir, isNancy, figext)
 % plotAndSaveSummaries(fitdir, outdir, figext)
 % 
 % generates summary plots for all subfolders in fitdir
 % saves figures to outdir with filetype specified by figext
 % 
-    if nargin < 3
+    if nargin < 4
         figext = 'png';
     end
     if ~exist(outdir, 'dir')
@@ -24,11 +24,11 @@ function plotAndSaveSummaries(fitdir, outdir, figext)
         if ~exist(curdir, 'dir')
             mkdir(curdir);
         end        
-        fig = plot.quickPmfByDate(dt);
+        fig = plot.quickPmfByDate(dt, isNancy);
         plot.saveFig(fig, 'pmf', curdir, figext);
-        fig = plot.kernelsByDate(dt, fitdir);
+        fig = plot.kernelsByDate(dt, fitdir, isNancy);
         plot.saveFig(fig, 'kernels', curdir, figext);
-        plot.summaryByCell(dt, nan, fitdir, curdir, figext);
+        plot.summaryByCell(dt, nan, isNancy, fitdir, curdir, figext);
         close all
     end
     

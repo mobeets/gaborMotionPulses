@@ -1,15 +1,15 @@
-function figs = summaryByCell(dt, cellind, fitdir, outdir, figext)
-    if nargin < 5
+function figs = summaryByCell(dt, cellind, isNancy, fitdir, outdir, figext)
+    if nargin < 6
         figext = 'png';
     end
-    if nargin < 4
+    if nargin < 5
         outdir = '';
     end
-    if nargin < 3
+    if nargin < 4
         fitdir = 'fits';
     end
-    data = io.loadDataByDate(dt);
-    vals = io.fitSummaries({dt}, fitdir, 'ASD');
+    data = io.loadDataByDate(dt, isNancy);
+    vs = io.makeFitSummaries(fitdir, isNancy, 'ASD', {dt});
     if nargin < 2 || any(isnan(cellind))
         cellinds = 1:numel(data.neurons);
     else
@@ -20,7 +20,7 @@ function figs = summaryByCell(dt, cellind, fitdir, outdir, figext)
     event1 = data.stim.targchosen;
     event2 = sum(sum(data.stim.pulses, 3), 2) > 0; % 0->neg, 1->pos
     for ii = 1:numel(cellinds)
-        [fig, name] = summaryBySingleCell(vals, data, ...
+        [fig, name] = summaryBySingleCell(vs, data, ...
             event1, event2, cellinds(ii));
         figs = [figs fig];
         if ~isempty(outdir)
@@ -29,22 +29,22 @@ function figs = summaryByCell(dt, cellind, fitdir, outdir, figext)
     end
 end
 
-function [fig, cellName] = summaryBySingleCell(vals, data, event1, ...
+function [fig, cellName] = summaryBySingleCell(vs, data, event1, ...
     event2, cellind)
     
     neuron = data.neurons{cellind};
     targPref = nanmax([neuron.targPref, 1]);
     
     cellName = [neuron.brainArea '_' num2str(cellind)];
-    ind = strcmp({vals.type}, neuron.brainArea) & ...
-        ([vals.cellind] == cellind);
-    wf = vals(ind).mu;
+    ind = strcmp({vs.type}, neuron.brainArea) & ...
+        ([vs.cellind] == cellind);
+    wf = vs(ind).mu;
     [u,s,v] = svd(wf);
     sgn = sign(sum(v(:,1)));
     mu = u(:,1)*s(1)*v(:,1)';
-    sc = vals(ind).score;
-    sep = vals(ind).separability;
-    r = vals(ind).decisionCorrelation;
+    sc = vs(ind).score;
+    sep = vs(ind).separability;
+    r = vs(ind).decisionCorrelation;
     fmt = @(val) sprintf('%0.2f', val);
     
     fig = figure;
