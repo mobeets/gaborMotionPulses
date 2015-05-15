@@ -20,6 +20,7 @@ function plotAndSaveSummaries(fitdir, outdir, isNancy, figext)
     dts = io.getDates(fitdir);
     for ii = 1:numel(dts)
         dt = dts{ii};
+        disp(dt);
         curdir = fullfile(outdir, dt);
         if ~exist(curdir, 'dir')
             mkdir(curdir);

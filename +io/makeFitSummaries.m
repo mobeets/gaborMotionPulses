@@ -21,6 +21,11 @@ end
 function vals = fitSummariesByDate(fitdir, dt, fitstr, isNancy)
     d = io.loadDataByDate(dt, isNancy);
     fs = io.loadFitsByDate(dt, fitdir);
+    if isempty(fs)
+        vals = [];
+        return;
+    end
+    
     nms = fieldnames(fs);
     
     vals = struct([]);

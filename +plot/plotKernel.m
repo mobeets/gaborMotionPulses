@@ -55,7 +55,7 @@ function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn, xLblFcn, yLbl
             ht = title(figLbl);
             set(ht, 'FontSize', titleFontSize);
         end
-        xlabel(xLblFcn(ii)); % acts like a subplot title
+        xlabel(xLblFcn(ii), 'Color', 'k'); % acts like a subplot title
         ylabel(yLblFcn(ii));
     end
     plot.suplabel(figLbl, 't'); 
@@ -70,7 +70,11 @@ function subplotFormat()
     axis square;
     set(gca, 'XTick', []);
     set(gca, 'YTick', []);
-    set(gca, 'LineWidth', 1)
-    box on;
+    set(gca, 'XColor', 'w');
+    set(gca, 'YColor', 'w');
+%     axis off;
+%     set(gca, 'LineWidth', 1)
+%     box on;
+    
 end
 

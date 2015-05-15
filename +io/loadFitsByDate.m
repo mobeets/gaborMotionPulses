@@ -2,6 +2,7 @@ function fits = loadFitsByDate(dt, fitdir)
     if nargin < 2
         fitdir = 'fits';
     end
+    fits = [];
     fs = dir(fullfile(fitdir, dt));
     for ii = 1:numel(fs)
         f = fs(ii);

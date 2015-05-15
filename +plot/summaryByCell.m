@@ -20,7 +20,12 @@ function figs = summaryByCell(dt, cellind, isNancy, fitdir, outdir, figext)
     event1 = data.stim.targchosen;
     event2 = sum(sum(data.stim.pulses, 3), 2) > 0; % 0->neg, 1->pos
     for ii = 1:numel(cellinds)
-        [fig, name] = summaryBySingleCell(vs, data, ...
+        ind = strcmp({vs.type}, data.neurons{cellinds(ii)}.brainArea) & ...
+            ([vs.cellind] == cellinds(ii));
+        if sum(ind) ~= 1
+            continue;
+        end
+        [fig, name] = summaryBySingleCell(vs(ind), data, ...
             event1, event2, cellinds(ii));
         figs = [figs fig];
         if ~isempty(outdir)
@@ -29,22 +34,20 @@ function figs = summaryByCell(dt, cellind, isNancy, fitdir, outdir, figext)
     end
 end
 
-function [fig, cellName] = summaryBySingleCell(vs, data, event1, ...
+function [fig, cellName] = summaryBySingleCell(val, data, event1, ...
     event2, cellind)
     
     neuron = data.neurons{cellind};
     targPref = nanmax([neuron.targPref, 1]);
-    
     cellName = [neuron.brainArea '_' num2str(cellind)];
-    ind = strcmp({vs.type}, neuron.brainArea) & ...
-        ([vs.cellind] == cellind);
-    wf = vs(ind).mu;
+
+    wf = val.mu;
     [u,s,v] = svd(wf);
     sgn = sign(sum(v(:,1)));
     mu = u(:,1)*s(1)*v(:,1)';
-    sc = vs(ind).score;
-    sep = vs(ind).separability;
-    r = vs(ind).decisionCorrelation;
+    sc = val.score;
+    sep = val.separability;
+    r = val.decisionCorrelation;
     fmt = @(val) sprintf('%0.2f', val);
     
     fig = figure;

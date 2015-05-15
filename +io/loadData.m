@@ -3,7 +3,7 @@ function data = loadData(infile)
     [ny, nt, ns] = size(X);
     Xf = permute(X, [1 3 2]);
     X = reshape(Xf, ny, nt*ns);
-    D = asd.sqdist.spaceTime(Xxy, ns, nt);
+    D = asd.sqdist.spaceTime(Xxy, nt);
 	Xxy(:,2) = -Xxy(:,2); % flip y-axis
     
     data.Xf = Xf;

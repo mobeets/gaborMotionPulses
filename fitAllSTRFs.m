@@ -1,26 +1,27 @@
-function fitAllSTRFs()
-% fitSTRF(fitBehavior, fitCells, dts, fitMask, fitbasedir, figbasedir)
-% 
-% fits space-time receptive fields for each date in dts, using ASD and ML
-%   if fitBehavior, fits monkey's psychophysical kernel
-%   if fitCells, fits a cell's receptive field
-%   if fitMask(1), fits using ASD
-%   if fitMask(2), fits using ASD with grid search
-%   if fitMask(3), fits using ML
-%   if fitMask(4), fits using ASD with bilinear space and time weights
+function fitAllSTRFs(runName, isNancy, fullTemporalSmoothing)
+% fitSTRF()
 % 
 % n.b. make sure to add path to github.com/mobeets/mASD
-% 
-
-    figbasedir = 'figs-nancy';
-    fitbasedir = 'fits-nancy';
-    fitMask = [true false true false]; % [ASD ASD_gs ML ASD_b]
+%
+    if isNancy
+        mnkNm = 'nancy';
+    else
+        mnkNm = 'pat';
+    end
+    figbasedir = ['data/figs-' mnkNm '-' runName];
+    fitbasedir = ['data/fits-' mnkNm '-' runName];
+    opts.fullTemporalSmoothing = fullTemporalSmoothing;
+        
+%     figbasedir = 'data/figs-evi-nancy';
+%     fitbasedir = 'data/fits-evi-nancy';
+    fitMask = [false false false false true]; % [ASD_g ASD_gs ML ASD_b ASD]
     fitCells = true;
     fitBehavior = false;
-    isNancy = true;
     nfolds = 5;
     devPct = 1.0; % pct of data used to generate fit, after choosing hyper
     lbs = [-3 -2 -1 -1]; ubs = [3 10 6 6]; ns = 10*ones(1,4);
+%     lbs = [0 0 1 1]; ubs = [0 0 1 1]; ns = 1*ones(1,4);    
+%     lbs(end) = 5e3; ubs(end) = 5e3; ns(end) = 1; % fix delta_t
     
     if isNancy
         dts = {'20150304a', '20150127' '20150304b', '20150305a', ...
@@ -34,6 +35,7 @@ function fitAllSTRFs()
             '20130611', '20140213', '20140218', '20140226', '20140303', ...
             '20140304', '20140305', '20140306', '20140307', '20140310'};
     end
+    dts = {'20150304a'};
     
     if ~isempty(figbasedir) && ~exist(figbasedir, 'dir')
         mkdir(figbasedir);
@@ -41,7 +43,8 @@ function fitAllSTRFs()
     if ~isempty(fitbasedir) && ~exist(fitbasedir, 'dir')
         mkdir(fitbasedir);
     end
-
+    
+    warning off MATLAB:nearlySingularMatrix;
     for ii = 1:numel(dts)
         dt = dts{ii};
         disp('----------------------');
@@ -75,10 +78,11 @@ function fitAllSTRFs()
 
         %% run on all cells
         if fitCells
-            llstr = 'poiss';
+            llstr = 'gauss';
+            fitstr = 'evi';
             
-            if strcmpi(llstr, 'gauss')
-                lbsc = lbs; ubsc = ubs; nsc = ns;
+            if strcmpi(llstr, 'gauss')                
+                lbsc = lbs; ubsc = ubs; nsc = ns;                
                 scorestr = 'rsq';
             else % remove ssq hyper
                 scorestr = 'pseudoRsq';
@@ -86,17 +90,17 @@ function fitAllSTRFs()
             end
             scoreFcn = reg.scoreFcns(scorestr, llstr);
             hyperOpts = struct('lbs', lbsc, 'ubs', ubsc, 'ns', nsc, ...
-                'isLog', true);            
+                'isLog', true);
             
             % full ASD and ML
-            MAP = @(hyper) asd.fitHandle(hyper, data.D, llstr);
+            MAP = @(hyper) asd.fitHandle(hyper, data.D, llstr, fitstr, opts);
             Db = asd.sqdist.space(data.Xxy);
             BMAP = @(hyper) asd.fitHandle(hyper, Db, llstr, ...
                 'bilinear', struct('shape', {{data.ns, data.nt}}));
             ML = @(~) ml.fitHandle(llstr);
 
             cell_inds = 1:size(data.Y_all, 2);
-%             cell_inds = [19];
+%             cell_inds = [2];
             ncells = numel(cell_inds);
             for nn = 1:ncells
                 cell_ind = cell_inds(nn);
@@ -123,7 +127,7 @@ function fitAllSTRFs()
         if fitBehavior
             llstr = 'bern';
             
-            if strcmpi(llstr, 'gauss')
+            if strcmpi(llstr, 'gauss') || strcmp(llstr, 'evi')
                 lbsc = lbs; ubsc = ubs; nsc = ns;
                 scorestr = 'rsq';
             else % remove ssq hyper
@@ -152,4 +156,5 @@ function fitAllSTRFs()
         end
         close all
     end
+    warning on MATLAB:nearlySingularMatrix;
 end

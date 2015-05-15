@@ -18,6 +18,7 @@ function fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, hyperOpts, ...
     fitMapGridSearch = mask(2);
     fitML = mask(3);
     fitMapBilinear = mask(4);
+    fitMapEviOpt = mask(5);
     
     lbs = hyperOpts.lbs; ubs = hyperOpts.ubs; ns = hyperOpts.ns;
     [X, Y, foldinds, evalinds] = dropTrialsIfYIsNan(data.X, data.Y, ...
@@ -28,7 +29,7 @@ function fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, hyperOpts, ...
         hypergrid = exp(tools.gridCartesianProduct(lbs, ubs, ns));
         obj = reg.cvMaxScoreGrid(X, Y, MAP, scoreFcn, hypergrid, ...
             foldinds, evalinds, 'grid');
-        fits.ASD = addFigure(obj, data, [lbl '-ASD'], figdir);
+        fits.ASD = addFigure(obj, data, [lbl '-ASD-g'], figdir);
     end
 
     % MAP estimate on hypergrid with grid search
@@ -38,10 +39,11 @@ function fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, hyperOpts, ...
         fits.ASD_gs = addFigure(obj, data, [lbl '-ASD-gs'], figdir);
     end
 
-    % ML estimate on each hyper in hypergrid
+    % ML estimate
     if fitML
-        obj = reg.cvMaxScoreGrid(X, Y, ML, scoreFcn, [nan nan nan], ...
-            foldinds, evalinds, 'grid');
+%         obj = reg.cvMaxScoreGrid(X, Y, ML, scoreFcn, [nan nan nan], ...
+%             foldinds, evalinds, 'grid');
+        obj = reg.fitToEvalinds(X, Y, evalinds, ML, scoreFcn, nan);
         fits.ML = addFigure(obj, data, [lbl '-ML'], figdir);
     end
     
@@ -52,6 +54,11 @@ function fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, hyperOpts, ...
         obj = reg.cvMaxScoreGrid(X, Y, BMAP, scoreFcn, hypergrid, ...
             foldinds, evalinds, 'grid');
         fits.ASD_b = addFigure(obj, data, [lbl '-ASDb'], figdir);
+    end
+    
+    if fitMapEviOpt
+        obj = reg.fitToEvalinds(X, Y, evalinds, MAP, scoreFcn, nan);
+        fits.ASD = addFigure(obj, data, [lbl '-ASD'], figdir);
     end
 
 end
@@ -90,7 +97,7 @@ function obj = addFigure(obj, data, lbl, figdir)
     obj.shape = [data.ns data.nt];
     if ~isempty(figdir)
         wf = obj.mu;
-        sc = mean(obj.scores);
+        sc = obj.score;
         fig = plot.plotKernel(data.Xxy, wf_fcn(wf, data.ns, data.nt), ...
             nan, fig_lblfcn(obj.label, sc));
         fig_svfcn(fig, obj.label, 'png');        

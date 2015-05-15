@@ -33,7 +33,7 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir)
     [ny, nt, ns] = size(X);
     Xf = permute(X, [1 3 2]); % full stimulus: [ny x ns x nt]
     X = reshape(Xf, ny, ns*nt); % n.b. inverse is reshape(X, ny, ns, nt)
-    D = asd.sqdist.spaceTime(Xxy, ns, nt);
+    D = asd.sqdist.spaceTime(Xxy, nt);
     Ds = asd.sqdist.space(Xxy);
     R = -(stim.targchosen(inds)-1) + 1; % 1->1 (pref), 2->0 (anti-pref)
     
