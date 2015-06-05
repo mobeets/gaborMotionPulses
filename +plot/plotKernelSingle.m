@@ -1,12 +1,15 @@
-function plotKernelSingle(xy, wf, vmax)
-    if nargin < 3
+function plotKernelSingle(xy, wf, vmax, sz)
+    if nargin < 4 || isnan(sz)
+        sz = 200;
+    end
+    if nargin < 3 || isnan(vmax)
         vmax = max(abs(wf(:)));
     end
-    sz = 220;
     clrFcn = plot.colorScheme();
     wf = wf/vmax;
     hold on;
-    axis off; axis square;
+%     axis off;
+    axis equal;
     set(gcf,'color','w');
     for ii = 1:numel(wf)
         clr = clrFcn(wf(ii));

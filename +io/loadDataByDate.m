@@ -1,4 +1,7 @@
-function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir)    
+function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreFrozen)    
+    if nargin < 6
+        ignoreFrozen = true;
+    end    
     if nargin < 2
         isNancy = false;
     end
@@ -27,6 +30,9 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir)
     % load stimulus data
     stim = loadStim(dt, fullfile(basedir, stimdir));    
     inds = stim.goodtrial;
+    if ignoreFrozen
+        inds = inds & ~stim.frozentrials;
+    end
     X = stim.pulses;
     Xxy = stim.gaborXY;
     X = X(inds,:,:); % 1 (pref), -1 (anti-pref)

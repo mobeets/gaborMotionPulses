@@ -10,8 +10,8 @@ function fitSummaries(vals, x, y, z, plotUnity)
     monkey = [vals.isNancy];
     monkeys = unique(monkey);
     
-    clrs = lines(numel(categs));
-    figure; hold on;
+    clrs = 1-spring(numel(categs)+2);
+    hold on;
     
     xs = [vals.(x)];
     ys = [vals.(y)];

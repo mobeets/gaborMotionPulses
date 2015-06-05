@@ -1,4 +1,4 @@
-function fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, hyperOpts, ...
+function fits = fitSTRF(data, ML, MAP, BMAP, eMAP, scoreFcn, hyperOpts, ...
     figdir, lbl, mask, foldinds, evalinds)
 % fits = fitSTRF(data, mapFcn, mlFcn, scFcn, ...
 %     lbs, ubs, ns, figdir, lbl, mask, foldinds, evalinds)
@@ -19,87 +19,73 @@ function fits = fitSTRF(data, ML, MAP, BMAP, scoreFcn, hyperOpts, ...
     fitML = mask(3);
     fitMapBilinear = mask(4);
     fitMapEviOpt = mask(5);
-    
-    lbs = hyperOpts.lbs; ubs = hyperOpts.ubs; ns = hyperOpts.ns;
-    [X, Y, foldinds, evalinds] = dropTrialsIfYIsNan(data.X, data.Y, ...
+        
+    [X, Y, foldinds, evalinds] = io.dropTrialsIfYIsNan(data.X, data.Y, ...
         foldinds, evalinds);
 
     % MAP estimate on each hyper in hypergrid
     if fitMap
-        hypergrid = exp(tools.gridCartesianProduct(lbs, ubs, ns));
+        % hypergrid, exp on appropriate parts as dictated by isLog
+        lbs = hyperOpts.lbs; ubs = hyperOpts.ubs; ns = hyperOpts.ns;
+        hypergrid = tools.gridCartesianProduct(lbs, ubs, ns);
+        isLog = repmat(hyperOpts.isLog, size(hypergrid,1), 1);
+        hypergrid = isLog.*(exp(hypergrid)) + (1-isLog).*hypergrid;
+        
         obj = reg.cvMaxScoreGrid(X, Y, MAP, scoreFcn, hypergrid, ...
             foldinds, evalinds, 'grid');
-        fits.ASD = addFigure(obj, data, [lbl '-ASD-g'], figdir);
+        fits.ASD = plot.plotAndSaveKernel(obj, data, [lbl '-ASD-g'], figdir);
     end
 
     % MAP estimate on hypergrid with grid search
     if fitMapGridSearch
         obj = reg.cvMaxScoreGrid(X, Y, MAP, scoreFcn, nan, ...
             foldinds, evalinds, 'grid-search', hyperOpts);
-        fits.ASD_gs = addFigure(obj, data, [lbl '-ASD-gs'], figdir);
+        fits.ASD_gs = plot.plotAndSaveKernel(obj, data, [lbl '-ASD-gs'], figdir);
     end
 
     % ML estimate
     if fitML
-%         obj = reg.cvMaxScoreGrid(X, Y, ML, scoreFcn, [nan nan nan], ...
-%             foldinds, evalinds, 'grid');
         obj = reg.fitToEvalinds(X, Y, evalinds, ML, scoreFcn, nan);
-        fits.ML = addFigure(obj, data, [lbl '-ML'], figdir);
+        obj.score_noCV = obj.score;
+        objCV = reg.cvMaxScoreGrid(X, Y, ML, scoreFcn, [nan nan], ...
+            foldinds, evalinds, 'grid');
+        obj.score = objCV.score; obj.scores = objCV.scores;
+        obj.score_cvMean = mean(obj.scores);
+        obj.score_cvStd = std(obj.scores);
+        fits.ML = plot.plotAndSaveKernel(obj, data, [lbl '-ML'], figdir);
     end
     
     % MAP estimate using separable space and time weights
     if fitMapBilinear
-        hypergrid = exp(tools.gridCartesianProduct(lbs(1:end-1), ...
-            ubs(1:end-1), ns(1:end-1))); % ignore hyper for time smoothing
-        obj = reg.cvMaxScoreGrid(X, Y, BMAP, scoreFcn, hypergrid, ...
+        % fit hyperparameter under fully smooth temporal filter
+        sMAP = @(hyper) asd.fitHandle(hyper, data.D, ...
+            'gauss', 'evi', struct('fullTemporalSmoothing', true));
+        obj = reg.fitToEvalinds(X, Y, evalinds, sMAP, scoreFcn, nan);
+        hyper = obj.hyper(1:end-1);
+
+        % fit
+        obj = reg.fitToEvalinds(X, Y, evalinds, BMAP, scoreFcn, hyper);
+        obj.score_noCV = obj.score;
+        
+        % cv to score
+        objCV = reg.cvMaxScoreGrid(X, Y, BMAP, scoreFcn, hyper', ...
             foldinds, evalinds, 'grid');
-        fits.ASD_b = addFigure(obj, data, [lbl '-ASDb'], figdir);
+        obj.score = objCV.score; obj.scores = objCV.scores;
+        obj.score_cvMean = mean(obj.scores);
+        obj.score_cvStd = std(obj.scores);
+        fits.ASD_b = plot.plotAndSaveKernel(obj, data, [lbl '-ASDb'], figdir);
     end
     
+    % MAP estimate using evidence optimization (requires gaussian ll)
     if fitMapEviOpt
-        obj = reg.fitToEvalinds(X, Y, evalinds, MAP, scoreFcn, nan);
-        fits.ASD = addFigure(obj, data, [lbl '-ASD'], figdir);
+        obj = reg.fitToEvalinds(X, Y, evalinds, eMAP, scoreFcn, nan);
+        obj.score_noCV = obj.score;
+        objCV = reg.cvMaxScoreGrid(X, Y, MAP, scoreFcn, obj.hyper', ...
+            foldinds, evalinds, 'grid');
+        obj.score = objCV.score; obj.scores = objCV.scores;
+        obj.score_cvMean = mean(obj.scores);
+        obj.score_cvStd = std(obj.scores);
+        fits.ASD = plot.plotAndSaveKernel(obj, data, [lbl '-ASD'], figdir);
     end
 
-end
-%%
-
-function [X, Y, foldinds, evalinds] = dropTrialsIfYIsNan(X, Y, ...
-    foldinds, evalinds)
-    inds = isnan(Y);
-    X = X(~inds,:,:);
-    Y = Y(~inds,:);
-    
-    % remove foldinds relative to longer inds list
-    if numel(inds) > numel(foldinds)
-        f_inds = nan(numel(inds),1);
-        f_inds(evalinds) = foldinds;
-        f_inds(inds) = NaN;
-        foldinds = f_inds(~isnan(f_inds));
-    else
-        foldinds = foldinds(~inds);
-    end
-    
-    evalinds = evalinds(~inds);
-end
-
-function obj = addFigure(obj, data, lbl, figdir)
-% 
-% plots the kernel and saves to png
-% 
-    fig_fnfcn = @(tag, ext) fullfile(figdir, [tag '.' ext]);
-    fig_svfcn = @(fig, tag, ext) hgexport(fig, fig_fnfcn(tag, ext), ...
-        hgexport('factorystyle'), 'Format', ext);
-    fig_lblfcn = @(lbl, sc) [lbl ' sc=' num2str(sprintf('%.2f', sc))];
-    wf_fcn = @(wf, ns, nt) reshape(wf(1:end-1), ns, nt);
-    
-    obj.label = lbl;
-    obj.shape = [data.ns data.nt];
-    if ~isempty(figdir)
-        wf = obj.mu;
-        sc = obj.score;
-        fig = plot.plotKernel(data.Xxy, wf_fcn(wf, data.ns, data.nt), ...
-            nan, fig_lblfcn(obj.label, sc));
-        fig_svfcn(fig, obj.label, 'png');        
-    end
 end
