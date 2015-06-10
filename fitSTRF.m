@@ -20,8 +20,8 @@ function fits = fitSTRF(data, ML, MAP, BMAP, eMAP, scoreFcn, hyperOpts, ...
     fitMapBilinear = mask(4);
     fitMapEviOpt = mask(5);
         
-    [X, Y, foldinds, evalinds] = io.dropTrialsIfYIsNan(data.X, data.Y, ...
-        foldinds, evalinds);
+    [X, Y, foldinds, evalinds] = tools.dropTrialsIfYIsNan(data.X, ...
+        data.Y, foldinds, evalinds);
 
     % MAP estimate on each hyper in hypergrid
     if fitMap
@@ -33,14 +33,20 @@ function fits = fitSTRF(data, ML, MAP, BMAP, eMAP, scoreFcn, hyperOpts, ...
         
         obj = reg.cvMaxScoreGrid(X, Y, MAP, scoreFcn, hypergrid, ...
             foldinds, evalinds, 'grid');
-        fits.ASD = plot.plotAndSaveKernel(obj, data, [lbl '-ASD-g'], figdir);
+        obj.label = [lbl '-ASD-g'];
+        obj.shape = [data.ns data.nt];
+        plot.plotAndSaveKernel(obj, data, figdir);
+        fits.ASD = obj;
     end
 
     % MAP estimate on hypergrid with grid search
     if fitMapGridSearch
         obj = reg.cvMaxScoreGrid(X, Y, MAP, scoreFcn, nan, ...
             foldinds, evalinds, 'grid-search', hyperOpts);
-        fits.ASD_gs = plot.plotAndSaveKernel(obj, data, [lbl '-ASD-gs'], figdir);
+        obj.label = [lbl '-ASD-gs'];
+        obj.shape = [data.ns data.nt];
+        plot.plotAndSaveKernel(obj, data, figdir);
+        fits.ASD_gs = obj;
     end
 
     % ML estimate
@@ -52,7 +58,10 @@ function fits = fitSTRF(data, ML, MAP, BMAP, eMAP, scoreFcn, hyperOpts, ...
         obj.score = objCV.score; obj.scores = objCV.scores;
         obj.score_cvMean = mean(obj.scores);
         obj.score_cvStd = std(obj.scores);
-        fits.ML = plot.plotAndSaveKernel(obj, data, [lbl '-ML'], figdir);
+        obj.label = [lbl '-ML'];
+        obj.shape = [data.ns data.nt];
+        plot.plotAndSaveKernel(obj, data, figdir);
+        fits.ML = obj;
     end
     
     % MAP estimate using separable space and time weights
@@ -73,7 +82,10 @@ function fits = fitSTRF(data, ML, MAP, BMAP, eMAP, scoreFcn, hyperOpts, ...
         obj.score = objCV.score; obj.scores = objCV.scores;
         obj.score_cvMean = mean(obj.scores);
         obj.score_cvStd = std(obj.scores);
-        fits.ASD_b = plot.plotAndSaveKernel(obj, data, [lbl '-ASDb'], figdir);
+        obj.label = [lbl '-ASD-b'];
+        obj.shape = [data.ns data.nt];
+        plot.plotAndSaveKernel(obj, data, figdir);
+        fits.ASDb = obj;
     end
     
     % MAP estimate using evidence optimization (requires gaussian ll)
@@ -85,7 +97,10 @@ function fits = fitSTRF(data, ML, MAP, BMAP, eMAP, scoreFcn, hyperOpts, ...
         obj.score = objCV.score; obj.scores = objCV.scores;
         obj.score_cvMean = mean(obj.scores);
         obj.score_cvStd = std(obj.scores);
-        fits.ASD = plot.plotAndSaveKernel(obj, data, [lbl '-ASD'], figdir);
+        obj.label = [lbl '-ASD'];
+        obj.shape = [data.ns data.nt];
+        plot.plotAndSaveKernel(obj, data, figdir);
+        fits.ASD = obj;
     end
 
 end

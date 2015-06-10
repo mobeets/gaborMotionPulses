@@ -3,3 +3,8 @@ _old
 *.m~
 *.mat
 *.png
+notes/
+papers/
+plots/
+summaries/
+summaries-nancy/

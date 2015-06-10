@@ -1,5 +1,5 @@
 function psthByEvent(data, neuron, event, cellind, lbls)
-    [Z, bins] = io.getPsthByEvent(data.stim, neuron, event);
+    [Z, bins] = tools.getPsthByEvent(data.stim, neuron, event);
     for ii = 1:numel(Z)
         if ii == 1
             lbl = lbls{ii}; % 'pref';

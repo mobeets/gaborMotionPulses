@@ -219,7 +219,7 @@ end
 function val = addSelectivityTests(val, f, d, foldinds)
 
     d.Y = val.Y;
-    [ms, ~, ubs, scs] = io.rankApprox(f, d, foldinds, val.llstr);
+    [ms, ~, ubs, scs] = tools.rankApprox(f, d, foldinds, val.llstr);
 %     scsDelta = [scs(:,2)-scs(:,3) scs(:,2)-scs(:,4) scs(:,1)-scs(:,4) ...
 %             scsDelta scs(:,4)-scsML' scsML'-nullSc];
     val.svd_ms = ms;

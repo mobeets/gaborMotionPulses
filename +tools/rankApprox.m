@@ -26,7 +26,7 @@ function [ms, lbs, ubs, scs] = rankApprox(fit, data, foldinds, llstr)
     scoreFcns = [{nullScoreFcn}, ...
         repmat({rankScoreFcn}, 1, numel(rankFcns)-1)];
     
-    [X, Y, foldinds] = io.dropTrialsIfYIsNan(data.X, data.Y, foldinds);
+    [X, Y, foldinds] = tools.dropTrialsIfYIsNan(data.X, data.Y, foldinds);
     trials = reg.trainAndTestKFolds(X, Y, nan, foldinds);    
 
     if size(fit.hyper,2) > 1
