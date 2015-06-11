@@ -19,7 +19,7 @@ function fits = fitSTRF(data, ML, MAP, BMAP, eMAP, scoreFcn, hyperOpts, ...
     fitML = mask(3);
     fitMapBilinear = mask(4);
     fitMapEviOpt = mask(5);
-        
+    
     [X, Y, foldinds, evalinds] = tools.dropTrialsIfYIsNan(data.X, ...
         data.Y, foldinds, evalinds);
 

@@ -14,10 +14,12 @@ function [obj, scoreObj] = fitSTRF2(data, fitType, llstr, scorestr, ...
     Y = data.Y;
     D = data.D;
     switch fitType
+        case 'Flat'
+            obj = reg.getObj_Flat(X, Y, obj);
         case 'ML'
-            obj = reg.getObj_ML(X, Y, obj);
+            obj = reg.getObj_ML(X, Y, obj);        
     	case 'ASD'
-            obj = reg.getObj_ASD(X, Y, D, scoreObj, obj);
+            obj = reg.getObj_ASD(X, Y, D, scoreObj, obj);        
     end
     obj = reg.fitAndScore(X, Y, obj, scoreObj);
     obj = tools.rmfieldsRegexp(obj, {'Fcn$', 'FcnArgs$'}, true);

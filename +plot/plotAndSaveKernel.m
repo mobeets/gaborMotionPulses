@@ -9,7 +9,7 @@ function plotAndSaveKernel(obj, data, figdir)
     
     if ~isempty(figdir)
         wf = obj.mu;
-        if prod(obj.shape) < wf
+        if prod(obj.shape) < numel(wf)
             wf = wf(1:end-1);
         end
         fig = plot.plotKernel(data.Xxy, reshape(wf, data.ns, data.nt), ...

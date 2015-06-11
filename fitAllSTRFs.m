@@ -116,7 +116,6 @@ function fitAllSTRFs(runName, isNancy, fitType, dts)
             ML = @(~) ml.fitHandle(llstr);
 
             cell_inds = 1:size(data.Y_all, 2);
-%             cell_inds = [5];
             ncells = numel(cell_inds);
             for nn = 1:ncells
                 cell_ind = cell_inds(nn);
@@ -181,7 +180,7 @@ function fitAllSTRFs(runName, isNancy, fitType, dts)
                 tools.updateStruct(dat_fnfcn(lbl), fits);
             end
         end
-%         close all
+        close all
     end
     warning on MATLAB:nearlySingularMatrix;
 end

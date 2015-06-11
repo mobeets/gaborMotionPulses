@@ -20,8 +20,9 @@ function fitAllSTRFs2(runName, isNancy, fitType, dts)
     fitBehavior = ~isempty(strfind(fitType, 'behavior'));
     fitML = ~isempty(strfind(fitType, 'ML'));
     fitASD = ~isempty(strfind(fitType, 'ASD'));
+    fitFlat = ~isempty(strfind(fitType, 'Flat'));
     fitSpaceOnly = ~isempty(strfind(fitType, 'space-only'));
-    if ~fitASD && ~fitML
+    if ~fitASD && ~fitML && ~fitFlat
         fitASD = true;
     end
 
@@ -66,7 +67,6 @@ function fitAllSTRFs2(runName, isNancy, fitType, dts)
         else
             fitdir = '';
         end
-        dat_fnfcn = @(tag) fullfile(fitdir, [tag '.mat']);
                 
         data = io.loadDataByDate(dt, isNancy);
         if fitSpaceOnly
@@ -97,23 +97,9 @@ function fitAllSTRFs2(runName, isNancy, fitType, dts)
                 label = [data.neurons{cell_ind}.brainArea '-' ...
                     num2str(cell_ind)];
                 disp(label);
-
-                if fitASD
-                    obj = fitSTRF2(data, 'ASD', llstr, scorestr, ...
-                        [label '-ASD'], foldinds);
-                    plot.plotAndSaveKernel(obj, data, figdir);
-                    fits.ASD = obj;
-                end
-                if fitML
-                    obj = fitSTRF2(data, 'ML', llstr, scorestr, ...
-                        [label '-ML'], foldinds);
-                    plot.plotAndSaveKernel(obj, data, figdir);
-                    fits.ML = obj;
-                end
-                if ~isempty(fitdir)
-                    tools.updateStruct(dat_fnfcn(label), fits);
-                end
-
+                fitAndSaveSTRF(data, [fitASD fitML fitFlat], ...
+                    {'ASD', 'ML', 'Flat'}, llstr, scorestr, label, ...
+                    foldinds, figdir, fitdir);
             end
         end
         %% run on decision
@@ -123,24 +109,28 @@ function fitAllSTRFs2(runName, isNancy, fitType, dts)
             data.Y = data.R;
             label = 'decision';
             disp(label);
-            
-            if fitASD
-                obj = fitSTRF2(data, 'ASD', llstr, scorestr, ...
-                    [label '-ASD'], foldinds);
-                plot.plotAndSaveKernel(obj, data, figdir);
-                fits.ASD = obj;
-            end
-            if fitML
-                obj = fitSTRF2(data, 'ML', llstr, scorestr, ...
-                    [label '-ML'], foldinds);
-                plot.plotAndSaveKernel(obj, data, figdir);
-                fits.ML = obj;
-            end
-            if ~isempty(fitdir)
-                tools.updateStruct(dat_fnfcn(label), fits);
-            end
+            fitAndSaveSTRF(data, [fitASD fitML fitFlat], ...
+                {'ASD', 'ML', 'Flat'}, llstr, scorestr, label, ...
+                foldinds, figdir, fitdir);
         end
         close all
     end
     warning on MATLAB:nearlySingularMatrix;
+end
+
+function fitAndSaveSTRF(data, fitMask, fitNames, llstr, scorestr, ...
+    label, foldinds, figdir, fitdir)
+
+    dat_fnfcn = @(tag) fullfile(fitdir, [tag '.mat']);
+    for ii = 1:numel(fitMask)
+        if fitMask(ii)
+            obj = fitSTRF2(data, fitNames{ii}, llstr, scorestr, ...
+                [label '-' fitNames{ii}], foldinds);
+            plot.plotAndSaveKernel(obj, data, figdir);
+            fits.(fitNames{ii}) = obj;
+        end
+    end
+    if ~isempty(fitdir)
+        tools.updateStruct(dat_fnfcn(label), fits);
+    end
 end
