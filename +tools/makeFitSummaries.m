@@ -29,7 +29,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
         end
         dval = addStimulusInfo(d);
         
-        [~, foldinds] = reg.trainAndTestKFolds(d.X, d.R, 10);
+        [~, foldinds] = tools.trainAndTestKFolds(d.X, d.R, 10);
         nms = fieldnames(fs);
         for jj = 1:numel(nms)
             if ~isfield(fs.(nms{jj}), fitstr)
@@ -97,6 +97,9 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.fano = nanvar(val.Y)/nanmean(val.Y);
             
             % weights
+            if isfield(val, 'w') && numel(val.w) > numel(val.mu)
+                val.mu = val.w;
+            end
             val.wf = reshape(val.mu(1:end-1), d.ns, d.nt);
             val.b = val.mu(end);
             val = addWeightSubfields(val, targPref);
@@ -116,9 +119,9 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.cp_Yres = tools.AUC(val.Yres(val.C), val.Yres(~val.C));
             
             % separability/rank analyses
-            if ~isSpaceOnly
-                val = addSeparabilityAndRank(val, d);
-            end
+%             if ~isSpaceOnly
+%                 val = addSeparabilityAndRank(val, d);
+%             end
             val = addSelectivityTests(val, f, d, foldinds);
             
             % add nans to any fields not present, ignore the rest
@@ -219,10 +222,11 @@ end
 function val = addSelectivityTests(val, f, d, foldinds)
 
     d.Y = val.Y;
-    [ms, ~, ubs, scs] = tools.rankApprox(f, d, foldinds, val.llstr);
+    [ms, ~, ubs, scs] = tools.rankApprox2(f, d, foldinds, val.llstr);
 %     scsDelta = [scs(:,2)-scs(:,3) scs(:,2)-scs(:,4) scs(:,1)-scs(:,4) ...
 %             scsDelta scs(:,4)-scsML' scsML'-nullSc];
     val.svd_ms = ms;
+    val.svd_ubs = ubs;
     val.svd_scs = mean(scs);
     assert(numel(ms)==9);
     z = -1e-3;

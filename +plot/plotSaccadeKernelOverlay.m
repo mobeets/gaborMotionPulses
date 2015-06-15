@@ -9,14 +9,17 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
         showHyperflow = true;
     end
     
-    cmap = jet(100);
+    
+    cmap = cbrewer('div', 'RdBu', 100, 'pchip');
+%     cmap = jet(100);
     colormap(cmap);
 
     xl = nan;
     if isfield(n, 'delayedsaccades') && ~isempty(n.delayedsaccades)
         if strcmp(n.brainArea, 'LIP')
             contourf(n.delayedsaccades.xax, n.delayedsaccades.yax, ...
-                n.delayedsaccades.RF);
+                n.delayedsaccades.RF, 'LineColor','none');
+            caxis([-0.5 1.5]); % less saturated
             xl = [min(n.delayedsaccades.xax) max(n.delayedsaccades.xax)];
             yl = [min(n.delayedsaccades.yax) max(n.delayedsaccades.yax)];
 %             imagesc(n.delayedsaccades.xax, n.delayedsaccades.yax, ...
@@ -39,6 +42,8 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
     end    
     if strcmp(n.brainArea, 'MT')
         sz = 20;
+    elseif strcmp(n.brainArea, 'LIP')
+        sz = 15;
     else % if contourf shown above
         width = 0.2*norm(median(stim.gaborXY), 2); % in degrees
         sz = sizeToCurUnits(width); % in plot units
@@ -53,7 +58,8 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
 %     plot.plotKernelSingle(stim.gaborXY, wf(:,1), nan, 3*sz);
 %     plot(stim.gaborXY(:,1), stim.gaborXY(:,2), 'ko', 'markersize', sz);
     
-    if showHyperflow && isfield(n, 'hyperflow') && ~isempty(n.hyperflow)
+    if ~strcmp(n.brainArea, 'LIP') && showHyperflow && ...
+            isfield(n, 'hyperflow') && ~isempty(n.hyperflow)
         xl = [min(n.hyperflow.gridx(:)) max(n.hyperflow.gridx(:))];
         yl = [min(n.hyperflow.gridy(:)) max(n.hyperflow.gridy(:))];        
         xs = n.hyperflow.gridx(:);
@@ -65,15 +71,17 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
         dt = diff([median(t1); median(t2)]);
         zs = arrayfun(@(x, y) proj(dt, [x y]), zs1, zs2);
         zs = reshape(zs, numel(unique(xs)), numel(unique(ys)));
-        imagesc(unique(xs), unique(ys), zs);
+        imagesc(unique(xs), unique(ys), -zs);
 %         contourf(unique(xs), unique(ys), zs, ...
 %             'LineWidth', 1, 'LineColor', 'none');
         caxis([min(0, -max(abs(caxis))) max(0, max(abs(caxis)))]);
+        caxis(2*caxis); % less saturated
         
-        keep = arrayfun(@norm, zs1, zs2) >= 2e-2;
-        plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
-            zs1(keep), zs2(keep)), 80, 120, 'HeadStyle', 'plain', ...
-            'LineWidth', 1.5);
+%         keep = arrayfun(@norm, zs1, zs2) >= 2e-2;
+%         plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
+%             zs1(keep), zs2(keep)), 80, 120, 'HeadStyle', 'plain', ...
+%             'LineWidth', 1.5);
+
 %         quiver(xs(keep), ys(keep), zs1(keep), zs2(keep), ...
 %             'k', 'LineWidth', 2);
     end
@@ -91,8 +99,8 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
             xl = [min([xl, t1(:,1)', t2(:,1)']) max([xl, t1(:,1)', t2(:,1)'])];
             yl = [min([yl, t1(:,2)', t2(:,2)']) max([yl, t1(:,2)', t2(:,2)'])];
         end
-        plot(t1(:,1), t1(:,2), '.', 'color', [0.2 0.8 0.2]);
-        plot(t2(:,1), t2(:,2), '.', 'color', [0.2 0.5 0.2]);
+        plot(t1(:,1), t1(:,2), 'o', 'color', [0.2 0.8 0.2]);
+        plot(t2(:,1), t2(:,2), 'o', 'color', [0.2 0.5 0.2]);
     end
     title([lbl lbl1]);
     

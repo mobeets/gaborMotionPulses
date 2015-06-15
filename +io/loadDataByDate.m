@@ -5,26 +5,40 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     if nargin < 2
         isNancy = false;
     end
+%     if nargin < 5 || isempty(spikesdir)
+%         if ~isNancy
+%             spikesdir = 'SingleNeurons';
+%         else
+%             spikesdir = 'nancyNeuronFiles'; 
+%         end
+%     end
+%     if nargin < 4 || isempty(stimdir)
+%         if ~isNancy
+%             stimdir = 'stim';
+%         else
+%             stimdir = 'nancyStimFiles';
+%         end
+%     end
+%     if nargin < 3 || isempty(basedir)
+%         if ~isNancy
+%             basedir = '~/Desktop';
+%         else
+%             basedir = '/Volumes/LKCLAB/Users/Jay';
+%         end
+%     end
+    if isNancy
+        mnkNm = 'nancy';
+    else
+        mnkNm = 'pat';
+    end
     if nargin < 5 || isempty(spikesdir)
-        if ~isNancy
-            spikesdir = 'SingleNeurons';
-        else
-            spikesdir = 'nancyNeuronFiles'; 
-        end
+        spikesdir = [mnkNm 'NeuronFiles'];
     end
     if nargin < 4 || isempty(stimdir)
-        if ~isNancy
-            stimdir = 'stim';
-        else
-            stimdir = 'nancyStimFiles';
-        end
+        stimdir = [mnkNm 'StimFiles'];
     end
     if nargin < 3 || isempty(basedir)
-        if ~isNancy
-            basedir = '~/Desktop';
-        else
-            basedir = '/Volumes/LKCLAB/Users/Jay';
-        end
+        basedir = '/Volumes/LKCLAB/Users/Jay';
     end
     
     % load stimulus data
@@ -61,6 +75,7 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     data.nt = nt;
     data.stim = stim;
     data.neurons = neurons;
+    data.dt = dt;
 end
 
 function stim = loadStim(dt, stimdir)
