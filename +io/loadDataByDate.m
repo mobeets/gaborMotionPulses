@@ -5,27 +5,6 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     if nargin < 2
         isNancy = false;
     end
-%     if nargin < 5 || isempty(spikesdir)
-%         if ~isNancy
-%             spikesdir = 'SingleNeurons';
-%         else
-%             spikesdir = 'nancyNeuronFiles'; 
-%         end
-%     end
-%     if nargin < 4 || isempty(stimdir)
-%         if ~isNancy
-%             stimdir = 'stim';
-%         else
-%             stimdir = 'nancyStimFiles';
-%         end
-%     end
-%     if nargin < 3 || isempty(basedir)
-%         if ~isNancy
-%             basedir = '~/Desktop';
-%         else
-%             basedir = '/Volumes/LKCLAB/Users/Jay';
-%         end
-%     end
     if isNancy
         mnkNm = 'nancy';
     else
@@ -42,7 +21,11 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     end
     
     % load stimulus data
-    stim = loadStim(dt, fullfile(basedir, stimdir));    
+    stim = loadStim(dt, fullfile(basedir, stimdir));
+    if isempty(stim)
+        data = struct();
+        return;
+    end
     inds = stim.goodtrial;
     if ignoreFrozen
         inds = inds & ~stim.frozentrials;
@@ -79,7 +62,10 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
 end
 
 function stim = loadStim(dt, stimdir)
-    stimfiles = io.findFile(stimdir, ['*' dt '_stim.mat'], true, true); 
+    stimfiles = io.findFile(stimdir, ['*' dt '_stim.mat'], true, true);
+    if isempty(stimfiles)
+        stim = struct();
+    end
     stim = load(fullfile(stimdir, stimfiles{1}));
 end
 
@@ -95,6 +81,9 @@ function Y = loadSpikeCounts(neurons, ny)
     Y = nan(ny, numel(neurons));
     for ii = 1:numel(neurons)
         cur = neurons{ii};
+        if ~isequal(size(cur.trialIndex), size(cur.spikeCount))
+            continue;
+        end
         Y(cur.trialIndex, ii) = cur.spikeCount;
     end
 end
