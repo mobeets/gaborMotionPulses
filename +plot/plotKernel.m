@@ -40,11 +40,13 @@ function fig = plotKernel(xy, wf, vmax, figLbl, sz, figSz, clrFcn, xLblFcn, yLbl
     fig = figure;
     ha = plot.tight_subplot(1, nt, [.01 .03], [.1 .01], [.01 .01]);
 
+    clrs = plot.getColors(wf(:));
     wf = wf/vmax; % normalize
     for ii = 1:nt
         axes(ha(ii)); hold on;
         for jj = 1:nw
             clr = clrFcn(wf(jj,ii));
+            clr = clrs((ii-1)*nw+jj,:);
             plot(xy(jj,1), xy(jj,2), 'Marker', '.', 'MarkerSize', sz, ...
                 'Color', clr, 'LineStyle', 'none');
         end

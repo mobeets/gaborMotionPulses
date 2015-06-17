@@ -1,7 +1,7 @@
 function fitAllSTRFs(runName, isNancy, fitType, dts)
 % fitAllSTRFs(runName, isNancy, fitType, dts)
 % 
-% n.b. make sure to add path to github.com/mobeets/mASD
+% n.b. make sure to add path to mASD and cbrewer 
 %
     if nargin < 4
         dts = {};

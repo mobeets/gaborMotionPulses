@@ -7,10 +7,6 @@ function plotAndSaveOverlays(fitdir, isNancy, figdir, cellType, fitstr, ...
     if nargin < 6
         cellsPerFit = 1;
     end
-%     isNancy = true;
-%     fitdir = 'data/cur-nancy/fits';
-%     cellType = 'LIP';
-%     figdir = 'figures/LIP';
 
     fig_fnfcn = @(tag) fullfile(figdir, [tag '.png']);
     fig_svfcn = @(fig, tag) hgexport(fig, fig_fnfcn(tag), ...
@@ -20,6 +16,9 @@ function plotAndSaveOverlays(fitdir, isNancy, figdir, cellType, fitstr, ...
     for ii = 1:numel(dts)
         dt = dts{ii};
         d = io.loadDataByDate(dt, isNancy);
+        if isempty(fieldnames(d))
+            continue;
+        end
         inds = arrayfun(@(n) n.dPrime > 0.5 & ...
             strcmp(n.brainArea, cellType), [d.neurons{:}]);
         if strcmp(cellType, 'LIP')

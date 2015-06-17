@@ -9,10 +9,7 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
         showHyperflow = true;
     end
     
-    
-    cmap = cbrewer('div', 'RdBu', 100, 'pchip');
-%     cmap = jet(100);
-    colormap(cmap);
+    plot.getColors([0 1]);
 
     xl = nan;
     if isfield(n, 'delayedsaccades') && ~isempty(n.delayedsaccades)

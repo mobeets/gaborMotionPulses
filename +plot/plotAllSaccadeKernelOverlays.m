@@ -45,12 +45,14 @@ function fig = plotAllSaccadeKernelOverlays(dt, fitdir, isNancy, ...
             if strcmp(n.brainArea, 'MT')
                 event = event2;
                 lbl = {'-mot', '+mot'};
+                ylab = 'motion dir';
             else
                 event = event1;
                 lbl = {'-chc', '+chc'};
+                ylab = 'choice';
             end
             plot.psthByEvent(d, n, event == targPref, ii, lbl);
-            ylabel('spike rate by choice');
+            ylabel(['spikes/sec by ' ylab]);
         elseif nSubplots > 1 && isfield(n, 'mtrfmap') && ~isempty(n.mtrfmap)
             subplot(numel(cellinds), ixf(jj,2)); hold all;
             thetas = [n.mtrfmap.thetas; n.mtrfmap.thetas(1)]/180*pi;
