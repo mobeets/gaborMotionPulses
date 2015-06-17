@@ -22,7 +22,7 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     
     % load stimulus data
     stim = loadStim(dt, fullfile(basedir, stimdir));
-    if isempty(stim)
+    if isempty(fieldnames(stim))
         data = struct();
         return;
     end
@@ -65,6 +65,7 @@ function stim = loadStim(dt, stimdir)
     stimfiles = io.findFile(stimdir, ['*' dt '_stim.mat'], true, true);
     if isempty(stimfiles)
         stim = struct();
+        return;
     end
     stim = load(fullfile(stimdir, stimfiles{1}));
 end

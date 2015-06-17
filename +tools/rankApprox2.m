@@ -9,16 +9,11 @@ function [ms, lbs, ubs, scs] = rankApprox2(fit, data, foldinds, llstr)
 
 
     % score functions
-    scoreObj = reg.getScoreObj(isLinReg, 'rsq');    
     if ~isLinReg
-%         nullScoreFcn = reg.getScoreObj(isLinReg, 'pctIncorrect');
-        rankScoreFcn = reg.getScoreObj(isLinReg, 'pctIncorrect');
+        scoreObj = reg.getScoreObj(isLinReg, 'pctIncorrect');
     else
-%         nullScoreFcn = reg.getScoreObj(isLinReg, 'tss');
-        rankScoreFcn = reg.getScoreObj(isLinReg, 'rsq');
+        scoreObj = reg.getScoreObj(isLinReg, 'rss');
     end
-    scoreObjML = rankScoreFcn;
-    scoreObjFlat = rankScoreFcn;
 
     % rank-approx functions    
     rankFcn = @(mu, k) reshape(tools.rankKApproximation(...
@@ -29,17 +24,29 @@ function [ms, lbs, ubs, scs] = rankApprox2(fit, data, foldinds, llstr)
         @(mu) rankFcn(mu, 1), ...
         @(mu) rankFcn(mu, 3), ...
         @(mu) rankFcn(mu, 7)};
-    scoreFcns = repmat({rankScoreFcn}, 1, numel(rankFcns));
+    scoreFcns = repmat({scoreObj}, 1, numel(rankFcns));
 
     % fit O.G. and rank-approx models
     ASD = reg.getObj_ASD(X, Y, data.D, nan, ...
         struct('foldinds', foldinds, 'hyper', fit.hyper));
     [~,mus0,~,~] = reg.cvFitScores(X, Y, ASD, scoreObj);
     ML = reg.getObj_ML(X, Y, struct('foldinds', foldinds));
-    [scsML,~,~,~] = reg.cvFitScores(X, Y, ML, scoreObjML);
+    [scsML,~,~,~] = reg.cvFitScores(X, Y, ML, scoreObj);
     Flat = reg.getObj_Flat(X, Y, struct('foldinds', foldinds));
-    [scsFlat,~,~,~] = reg.cvFitScores(X, Y, Flat, scoreObjFlat);
-    [scs, ~] = cvRankApprox(trials, rankFcns, scoreFcns, mus0);
+    [scsFlat,~,~,~] = reg.cvFitScores(X, Y, Flat, scoreObj);
+    
+    fitFcn = ASD.fitFcn;
+    scs = [];
+    ASD.fitFcn = @(X, Y, hyper, D) ...
+        threshMu(fitFcn(X,Y,hyper,D));
+    [sc, ~] = reg.cvFitScores(X, Y, ASD, scoreObj);
+    scs = [scs sc];
+    for ii = [1 3 7]
+        ASD.fitFcn = @(X, Y, hyper, D) ...
+            rankFcn(fitFcn(X,Y,hyper,D), ii);
+        [sc, ~] = reg.cvFitScores(X, Y, ASD, scoreObj);
+        scs = [scs sc];
+    end
     
     % summaries
     scsDelta = scs - repmat(scsFlat, 1, size(scs, 2));
@@ -52,26 +59,5 @@ function [ms, lbs, ubs, scs] = rankApprox2(fit, data, foldinds, llstr)
     ubs = ms + 2*ses;
     
     scs = [scsFlat scsML scs];
-    
-end
-
-function [scores, mus] = cvRankApprox(trials, fitFcns, sObjs, mus0)
-    nfolds = numel(trials);
-    nfcns = numel(fitFcns);
-    scores = nan(nfolds, nfcns);
-    mus = cell(nfolds, nfcns);
-    for ii = 1:nfolds
-        ctrials = trials(ii);
-        mu0 = mus0{ii};
-        wf0 = mu0(1:end-1);
-        b = mu0(end);
-        for jj = 1:nfcns
-            fitFcn = fitFcns{jj};
-            so = sObjs{jj};
-            wf = fitFcn(wf0);
-            mus{ii,jj} = [wf; b];
-            scores(ii, jj) = so.scoreFcn(ctrials.x_train, ...
-                ctrials.y_train, mus{ii,jj}, ctrials);
-        end
-    end
+ 
 end

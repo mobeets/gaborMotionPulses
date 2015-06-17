@@ -1,4 +1,4 @@
-function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)      
+function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
     if nargin < 1
         fitdir = 'fits';
     end
@@ -69,7 +69,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             end
             
             % hypers
-            if all(isnan(val.hyper))
+            if ~isfield(val, 'hyper') || all(isnan(val.hyper))
                 val.hyper = nan(3,1);
             end
             val.dPrime = nan;
@@ -119,10 +119,12 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.cp_Yres = tools.AUC(val.Yres(val.C), val.Yres(~val.C));
             
             % separability/rank analyses
-%             if ~isSpaceOnly
-%                 val = addSeparabilityAndRank(val, d);
-%             end
-            val = addSelectivityTests(val, f, d, foldinds);
+            if ~isSpaceOnly
+                val = addSeparabilityAndRank(val, d);
+            end
+            if isfield(f, 'hyper')
+                val = addSelectivityTests(val, f, d, foldinds);
+            end
             
             % add nans to any fields not present, ignore the rest
             for kk = 1:numel(knownProblemFields)
@@ -222,26 +224,27 @@ end
 function val = addSelectivityTests(val, f, d, foldinds)
 
     d.Y = val.Y;
-    [ms, ~, ubs, scs] = tools.rankApprox2(f, d, foldinds, val.llstr);
+    [ms, lbs, ubs, scs] = tools.rankApprox2(f, d, foldinds, val.llstr);
 %     scsDelta = [scs(:,2)-scs(:,3) scs(:,2)-scs(:,4) scs(:,1)-scs(:,4) ...
 %             scsDelta scs(:,4)-scsML' scsML'-nullSc];
     val.svd_ms = ms;
+    val.svd_lbs = lbs;
     val.svd_ubs = ubs;
     val.svd_scs = mean(scs);
     assert(numel(ms)==9);
     z = -1e-3;
-    val.is_inseparable0 = ubs(1) < z; % ASD rank-1 better than ASD rank-3
-    val.is_inseparable1 = ubs(2) < z; % ASD rank-1 better than ASD
+    val.is_inseparable0 = lbs(1) > -z; % ASD rank-3 better than ASD rank-1
+    val.is_inseparable1 = lbs(2) > -z; % ASD        better than ASD rank-1
     val.is_selective_subfld0 = ubs(3) < z; % thresh(ASD) better than ASD
     val.is_selective_subfld1 = ubs(4) < z; % thresh(ASD) better than null model
-    val.is_selective0 = ubs(5) < z; % ASD rank-1   better than null model
-    val.is_selective1 = ubs(6) < z; % ASD rank-3   better than null model
-    val.is_selective2 = ubs(7) < z; % ASD          better than null model
-    val.is_better_than_ML = ubs(8) < z; % ASD      better than ML
-    val.is_selective_ML = ubs(9) < z; % ML         better than null model    
+    val.is_selective0 = ubs(5) < z; % ASD rank-1    better than null model
+    val.is_selective1 = ubs(6) < z; % ASD rank-3    better than null model
+    val.is_selective2 = ubs(7) < z; % ASD           better than null model
+    val.is_better_than_ML = ubs(8) < z; % ASD       better than ML
+    val.is_selective_ML = ubs(9) < z; % ML          better than null model    
         
-    val.is_inseparable0a = ms(1) < z;
-    val.is_inseparable1a = ms(2) < z;
+    val.is_inseparable0a = ms(1) > -z;
+    val.is_inseparable1a = ms(2) > -z;
     val.is_selective_subfld0a = ms(3) < z;
     val.is_selective_subfld1a = ms(4) < z;
     val.is_selective0a = ms(5) < z;
