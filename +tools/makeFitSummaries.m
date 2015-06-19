@@ -225,34 +225,76 @@ function val = addSelectivityTests(val, f, d, foldinds)
 
     d.Y = val.Y;
     [ms, lbs, ubs, scs] = tools.rankApprox2(f, d, foldinds, val.llstr);
-%     scsDelta = [scs(:,2)-scs(:,3) scs(:,2)-scs(:,4) scs(:,1)-scs(:,4) ...
-%             scsDelta scs(:,4)-scsML' scsML'-nullSc];
     val.svd_ms = ms;
     val.svd_lbs = lbs;
     val.svd_ubs = ubs;
     val.svd_scs = mean(scs);
-    assert(numel(ms)==9);
-    z = -1e-3;
-    val.is_inseparable0 = lbs(1) > -z; % ASD rank-3 better than ASD rank-1
-    val.is_inseparable1 = lbs(2) > -z; % ASD        better than ASD rank-1
-    val.is_selective_subfld0 = ubs(3) < z; % thresh(ASD) better than ASD
-    val.is_selective_subfld1 = ubs(4) < z; % thresh(ASD) better than null model
-    val.is_selective0 = ubs(5) < z; % ASD rank-1    better than null model
-    val.is_selective1 = ubs(6) < z; % ASD rank-3    better than null model
-    val.is_selective2 = ubs(7) < z; % ASD           better than null model
-    val.is_better_than_ML = ubs(8) < z; % ASD       better than ML
-    val.is_selective_ML = ubs(9) < z; % ML          better than null model    
-        
-    val.is_inseparable0a = ms(1) > -z;
-    val.is_inseparable1a = ms(2) > -z;
-    val.is_selective_subfld0a = ms(3) < z;
-    val.is_selective_subfld1a = ms(4) < z;
-    val.is_selective0a = ms(5) < z;
-    val.is_selective1a = ms(6) < z;
-    val.is_selective2a = ms(7) < z;
-    val.is_better_than_MLa = ms(8) < z;
-    val.is_selective_MLa = ms(9) < z;
+
+%     scsDelta = [scsFlatDelta scsNullDelta ...
+%         scsML-scsFlat scsML-scsNull ...
+%         scs(:,3)-scs(:,1) scs(:,2)-scs(:,1) scs(:,3)-scsML];
+
+    names = {'is_better_than_flat_A1', ...
+        'is_better_than_flat_A3', ...
+        'is_better_than_flat_Af', ...
+        'is_better_than_null_A1', ...
+        'is_better_than_null_A3', ...
+        'is_better_than_null_Af', ...
+        'is_better_than_flat_ML', ...
+        'is_better_than_null_ML', ...
+        'is_inseparable_Af', ...
+        'is_inseparable_A3', ...
+        'is_better_than_ML_Af'};
     
+    tests = ubs < -1e-3;
+    assert(numel(names) == numel(tests));
+    for ii = 1:numel(names)
+        val.(names{ii}) = tests(ii);
+    end
+    
+    tests0 = ms < -1e-3;
+    assert(numel(names) == numel(tests0));
+    for ii = 1:numel(names)
+        val.([names{ii} '_mean']) = tests0(ii);
+    end
+    
+%     scsDelta = [scs(:,2)-scs(:,3) scs(:,2)-scs(:,4) scs(:,1)-scs(:,4) ...
+%             scsDelta scs(:,4)-scsML' scsML'-nullSc];
+
+%     val.is_inseparable0 = ubs(1) < z; % ASD rank-3 better than ASD rank-1
+%     val.is_inseparable1 = ubs(2) < z; % ASD        better than ASD rank-1
+%     val.is_selective_subfld0 = ubs(3) < z; % thresh(ASD) better than ASD
+%     val.is_selective_subfld1 = ubs(4) < z; % thresh(ASD) better than null model
+%     val.is_selective0 = ubs(5) < z; % ASD rank-1    better than null model
+%     val.is_selective1 = ubs(6) < z; % ASD rank-3    better than null model
+%     val.is_selective2 = ubs(7) < z; % ASD           better than null model
+%     val.is_better_than_ML = ubs(8) < z; % ASD       better than ML
+%     val.is_selective_ML = ubs(9) < z; % ML          better than null model
+%     val.is_selective_ML1 = ubs(10) < z; % ML        better than null model
+%     
+%     assert(numel(ms)==10);
+%     z = -1e-3;
+%     val.is_inseparable0 = lbs(1) > -z; % ASD rank-3 better than ASD rank-1
+%     val.is_inseparable1 = lbs(2) > -z; % ASD        better than ASD rank-1
+%     val.is_selective_subfld0 = ubs(3) < z; % thresh(ASD) better than ASD
+%     val.is_selective_subfld1 = ubs(4) < z; % thresh(ASD) better than null model
+%     val.is_selective0 = ubs(5) < z; % ASD rank-1    better than null model
+%     val.is_selective1 = ubs(6) < z; % ASD rank-3    better than null model
+%     val.is_selective2 = ubs(7) < z; % ASD           better than null model
+%     val.is_better_than_ML = ubs(8) < z; % ASD       better than ML
+%     val.is_selective_ML = ubs(9) < z; % ML          better than null model
+%     val.is_selective_ML1 = ubs(10) < z; % ML        better than null model
+%         
+%     val.is_inseparable0a = ms(1) > -z;
+%     val.is_inseparable1a = ms(2) > -z;
+%     val.is_selective_subfld0a = ms(3) < z;
+%     val.is_selective_subfld1a = ms(4) < z;
+%     val.is_selective0a = ms(5) < z;
+%     val.is_selective1a = ms(6) < z;
+%     val.is_selective2a = ms(7) < z;
+%     val.is_better_than_MLa = ms(8) < z;
+%     val.is_selective_MLa = ms(9) < z;
+%     
     disp(num2str(mean(scs)));
 
 end

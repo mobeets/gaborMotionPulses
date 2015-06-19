@@ -7,15 +7,11 @@ function plotAndSaveOverlays(fitdir, isNancy, figdir, cellType, fitstr, ...
     if nargin < 6
         cellsPerFit = 1;
     end
-
-    fig_fnfcn = @(tag) fullfile(figdir, [tag '.png']);
-    fig_svfcn = @(fig, tag) hgexport(fig, fig_fnfcn(tag), ...
-        hgexport('factorystyle'), 'Format', 'png');
-
+    
     dts = io.getDates(fitdir);
     for ii = 1:numel(dts)
         dt = dts{ii};
-        d = io.loadDataByDate(dt, isNancy);
+        d = io.loadDataByDate(dt, isNancy);        
         if isempty(fieldnames(d))
             continue;
         end
@@ -23,8 +19,15 @@ function plotAndSaveOverlays(fitdir, isNancy, figdir, cellType, fitstr, ...
             strcmp(n.brainArea, cellType), [d.neurons{:}]);
         if strcmp(cellType, 'LIP')
             inds2 = arrayfun(@(n) ~isempty(n.delayedsaccades), [d.neurons{:}]);
-        else
+        elseif strcmp(cellType, 'MT')
             inds2 = arrayfun(@(n) ~isempty(n.hyperflow), [d.neurons{:}]);
+        elseif strcmp(cellType, 'decision')
+            fs = io.loadFitsByDate(dt, fitdir);
+            f = fs.decision.(fitstr);
+            figure;
+            plot.plotSaccadeKernelOverlay(d.stim, nan, f{end}, true, true);
+            plot.saveFigure([dt '-decision'], figdir);
+            continue;
         end
         ix = 1:numel(d.neurons);
         cellinds = ix(inds & inds2);
@@ -39,7 +42,8 @@ function plotAndSaveOverlays(fitdir, isNancy, figdir, cellType, fitstr, ...
             fig = plot.plotAllSaccadeKernelOverlays(dt, fitdir, isNancy, ...
                 fitstr, cix, 2);
             set(fig, 'Position', [100, 100, 1500, 350]);
-            fig_svfcn(fig, [dt '-' cellType '-' strjoin({num2str(cix)}, ',')]);
+            lbl = [dt '-' cellType '-' strjoin({num2str(cix)}, ',')];
+            plot.saveFigure(lbl, figdir);
         end
     end
     close all

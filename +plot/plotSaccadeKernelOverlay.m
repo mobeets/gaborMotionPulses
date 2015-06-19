@@ -1,27 +1,34 @@
 function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
     if nargin < 6
-        lbl = [n.exname ' - ' f.label ' - ' sprintf('%0.2f', f.score)];
-    end
-    if nargin < 4
-        showTargs = true;        
+        if ~isstruct(n)
+            lbl = [f.label ' = ' sprintf('%0.2f', f.score)];
+        else
+            lbl = [n.exname ' - ' f.label ' = ' sprintf('%0.2f', f.score)];
+        end
     end
     if nargin < 5
         showHyperflow = true;
     end
-    
+    if nargin < 4
+        showTargs = true;        
+    end
     plot.getColors([0 1]);
 
-    xl = nan;
-    if isfield(n, 'delayedsaccades') && ~isempty(n.delayedsaccades)
-        if strcmp(n.brainArea, 'LIP')
-            contourf(n.delayedsaccades.xax, n.delayedsaccades.yax, ...
-                n.delayedsaccades.RF, 'LineColor','none');
-            caxis([-0.5 1.5]); % less saturated
-            xl = [min(n.delayedsaccades.xax) max(n.delayedsaccades.xax)];
-            yl = [min(n.delayedsaccades.yax) max(n.delayedsaccades.yax)];
-%             imagesc(n.delayedsaccades.xax, n.delayedsaccades.yax, ...
-%                 n.delayedsaccades.RF);
-        end
+    t1 = stim.targ1XY;
+    t2 = stim.targ2XY;
+    if isstruct(n) && n.targPref > 1
+        t3 = t1; t1 = t2; t2 = t3;
+    end
+    if ~isstruct(n)
+        xl = nan;
+    elseif strcmp(n.brainArea, 'LIP') && ...
+            isfield(n, 'delayedsaccades') && ~isempty(n.delayedsaccades)
+        [xl, yl] = plotLIP(n);
+    elseif strcmp(n.brainArea, 'MT') && showHyperflow && ...
+            isfield(n, 'hyperflow') && ~isempty(n.hyperflow)
+        [xl, yl] = plotMT(n, t1, t2);
+    else
+        xl = nan;
     end
     
     set(gca, 'YDir', 'normal'); % imagesc flips y-axis by default
@@ -31,56 +38,21 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
         wf = -wf;
     end
     
-    if n.targPref > 1
+    if isstruct(n) && n.targPref > 1
         wf = -wf;
         lbl1 = ' (flipped)';
     else
         lbl1 = '';
-    end    
-    if strcmp(n.brainArea, 'MT')
+    end
+    
+    if ~isstruct(n)
+        width = 0.2*norm(median(stim.gaborXY), 2); % in degrees
+        sz = sizeToCurUnits(width); % in plot units
+        sz = 20;
+    elseif strcmp(n.brainArea, 'MT')
         sz = 20;
     elseif strcmp(n.brainArea, 'LIP')
         sz = 15;
-    else % if contourf shown above
-        width = 0.2*norm(median(stim.gaborXY), 2); % in degrees
-        sz = sizeToCurUnits(width); % in plot units
-    end
-    
-    t1 = stim.targ1XY;
-    t2 = stim.targ2XY;
-    if n.targPref > 1
-        t3 = t1; t1 = t2; t2 = t3;
-    end
-    
-%     plot.plotKernelSingle(stim.gaborXY, wf(:,1), nan, 3*sz);
-%     plot(stim.gaborXY(:,1), stim.gaborXY(:,2), 'ko', 'markersize', sz);
-    
-    if ~strcmp(n.brainArea, 'LIP') && showHyperflow && ...
-            isfield(n, 'hyperflow') && ~isempty(n.hyperflow)
-        xl = [min(n.hyperflow.gridx(:)) max(n.hyperflow.gridx(:))];
-        yl = [min(n.hyperflow.gridy(:)) max(n.hyperflow.gridy(:))];        
-        xs = n.hyperflow.gridx(:);
-        ys = n.hyperflow.gridy(:);
-        zs1 = n.hyperflow.dx;
-        zs2 = n.hyperflow.dy;
-        
-        proj = @(a,b) dot(a,b)/norm(a);
-        dt = diff([median(t1); median(t2)]);
-        zs = arrayfun(@(x, y) proj(dt, [x y]), zs1, zs2);
-        zs = reshape(zs, numel(unique(xs)), numel(unique(ys)));
-        imagesc(unique(xs), unique(ys), -zs);
-%         contourf(unique(xs), unique(ys), zs, ...
-%             'LineWidth', 1, 'LineColor', 'none');
-        caxis([min(0, -max(abs(caxis))) max(0, max(abs(caxis)))]);
-        caxis(2*caxis); % less saturated
-        
-%         keep = arrayfun(@norm, zs1, zs2) >= 2e-2;
-%         plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
-%             zs1(keep), zs2(keep)), 80, 120, 'HeadStyle', 'plain', ...
-%             'LineWidth', 1.5);
-
-%         quiver(xs(keep), ys(keep), zs1(keep), zs2(keep), ...
-%             'k', 'LineWidth', 2);
     end
     
     plot.plotKernelSingle(stim.gaborXY, wf(:,1), nan, 3*sz);
@@ -98,6 +70,7 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
         end
         plot(t1(:,1), t1(:,2), 'o', 'color', [0.2 0.8 0.2]);
         plot(t2(:,1), t2(:,2), 'o', 'color', [0.2 0.5 0.2]);
+        scatter(0, 0, 50, [0.8 0.2 0.2], 'filled');
     end
     title([lbl lbl1]);
     
@@ -105,6 +78,45 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
         xlim(xl); ylim(yl);
     end
 end
+
+function [xl, yl] = plotLIP(n)
+    contourf(n.delayedsaccades.xax, n.delayedsaccades.yax, ...
+        n.delayedsaccades.RF, 'LineColor','none');
+    caxis([-0.5 1.5]); % less saturated
+    xl = [min(n.delayedsaccades.xax) max(n.delayedsaccades.xax)];
+    yl = [min(n.delayedsaccades.yax) max(n.delayedsaccades.yax)];
+%             imagesc(n.delayedsaccades.xax, n.delayedsaccades.yax, ...
+%                 n.delayedsaccades.RF);
+
+end
+
+function [xl, yl] = plotMT(n, t1, t2)
+    xl = [min(n.hyperflow.gridx(:)) max(n.hyperflow.gridx(:))];
+    yl = [min(n.hyperflow.gridy(:)) max(n.hyperflow.gridy(:))];        
+    xs = n.hyperflow.gridx(:);
+    ys = n.hyperflow.gridy(:);
+    zs1 = n.hyperflow.dx;
+    zs2 = n.hyperflow.dy;
+
+    proj = @(a,b) dot(a,b)/norm(a);
+    dt = diff([median(t1); median(t2)]);
+    zs = arrayfun(@(x, y) proj(dt, [x y]), zs1, zs2);
+    zs = reshape(zs, numel(unique(xs)), numel(unique(ys)));
+%         imagesc(unique(xs), unique(ys), -zs);
+    contourf(unique(xs), unique(ys), -zs, ...
+        'LineWidth', 1, 'LineColor', 'none');
+    caxis([min(0, -max(abs(caxis))) max(0, max(abs(caxis)))]);
+    caxis(2*caxis); % less saturated
+
+%         keep = arrayfun(@norm, zs1, zs2) >= 2e-2;
+%         plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
+%             zs1(keep), zs2(keep)), 80, 120, 'HeadStyle', 'plain', ...
+%             'LineWidth', 1.5);
+
+%         quiver(xs(keep), ys(keep), zs1(keep), zs2(keep), ...
+%             'k', 'LineWidth', 2);
+end
+
 
 function sz = sizeToCurUnits(sz0)
     curUnits = get(gca, 'units');

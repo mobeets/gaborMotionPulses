@@ -20,7 +20,12 @@ function showTemporalVectors(va, type, nV, addJitter)
     hold on;
     plot(vals', 'Color', [0.9 0.9 0.9]);
     plot(mean(vals), 'k', 'LineWidth', 3);
-    plot.shadedErrorBar([], mean(vals), 2*se, {'LineWidth', 2});    
+    plot.shadedErrorBar([], mean(vals), 2*se, {'LineWidth', 2});
+    
+    nt = va(1).shape(2);
+    xlim([1 nt]);
+    set(gca, 'xtick', 1:nt);
+    set(gca, 'xticklabel', 1:nt);
 %     ylim([0 1]);
     title(['Temporal vector #' num2str(nV) ' for ' type ' fits']);
 end
