@@ -1,17 +1,29 @@
-isNancy = false;
-fitdir = 'data/evirepb-pat/fits';
-fitstr = 'ASD';
 
-cellsPerFit = 3;
+isNancy = true;
+fitdir = 'data/cur-nancy/fits';
+fitstr = 'ASD';
+cellType = 'LIP';
+
+figdir = 'figures/LIP';
+fig_fnfcn = @(tag) fullfile(figdir, [tag '-plain.png']);
+fig_svfcn = @(fig, tag) hgexport(fig, fig_fnfcn(tag), ...
+    hgexport('factorystyle'), 'Format', 'png');
+
+cellsPerFit = 1;
 
 dts = io.getDates(fitdir);
 for ii = 1:numel(dts)
     dt = dts{ii};
     d = io.loadDataByDate(dt, isNancy);
-    inds = arrayfun(@(n) n.dPrime > 0.5 & ~isempty(n.hyperflow) & ...
-        strcmp(n.brainArea, 'MT'), [d.neurons{:}]);
+    inds = arrayfun(@(n) n.dPrime > 0.5 & ...
+        strcmp(n.brainArea, cellType), [d.neurons{:}]);
+    if strcmp(cellType, 'LIP')
+        inds2 = arrayfun(@(n) ~isempty(n.delayedsaccades), [d.neurons{:}]);
+    else
+        inds2 = arrayfun(@(n) ~isempty(n.hyperflow), [d.neurons{:}]);
+    end
     ix = 1:numel(d.neurons);
-    cellinds = ix(inds);
+    cellinds = ix(inds & inds2);
     nblks = floor(numel(cellinds)/cellsPerFit)+1;
     for jj = 1:nblks
         from = (jj-1)*cellsPerFit+1;
@@ -20,9 +32,13 @@ for ii = 1:numel(dts)
         if isempty(cix)
             continue;
         end
-        plot.plotAllSaccadeKernelOverlays(dt, fitdir, isNancy, fitstr, cix);
+        fig = plot.plotAllSaccadeKernelOverlays(dt, fitdir, isNancy, ...
+            fitstr, cix, true);
+        set(fig, 'Position', [100, 100, 800, 1000]);
+        fig_svfcn(fig, [dt '-' cellType '-' strjoin({num2str(cix)}, ',')]);
     end
 end
+close all
 
 %%
 

@@ -17,7 +17,8 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
         stimdir = [mnkNm 'StimFiles'];
     end
     if nargin < 3 || isempty(basedir)
-        basedir = '/Volumes/LKCLAB/Users/Jay';
+%         basedir = '/Volumes/LKCLAB/Users/Jay';
+        basedir = '/Users/jayhennig/Documents';
     end
     
     % load stimulus data
@@ -26,10 +27,18 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
         data = struct();
         return;
     end
-    inds = stim.goodtrial;
+    
+    neurons = loadNeurons(dt, fullfile(basedir, spikesdir));
+    Y = loadSpikeCounts(neurons, max(stim.trialnumber));
+    frzinds = stim.frozentrials & stim.goodtrial;
+    Yfrz = Y(frzinds,:);
+    Rfrz = -(stim.targchosen(frzinds)-1) + 1;
+    inds = stim.goodtrial;    
     if ignoreFrozen
         inds = inds & ~stim.frozentrials;
     end
+    Y = Y(inds,:);
+    
     X = stim.pulses;
     Xxy = stim.gaborXY;
     X = X(inds,:,:); % 1 (pref), -1 (anti-pref)
@@ -39,17 +48,14 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     D = asd.sqdist.spaceTime(Xxy, nt);
     Ds = asd.sqdist.space(Xxy);
     R = -(stim.targchosen(inds)-1) + 1; % 1->1 (pref), 2->0 (anti-pref)
-    
-    % load cell data
-    neurons = loadNeurons(dt, fullfile(basedir, spikesdir));
-    Y = loadSpikeCounts(neurons, max(stim.trialnumber));
-    Y = Y(inds,:);
-    
+
     % add all to output struct
     data.Xf = Xf;
     data.X = X;
     data.Y_all = Y;
+    data.Y_frz = Yfrz;
     data.R = R;
+    data.R_frz = Rfrz;
     data.D = D;
     data.Ds = Ds;
     data.ndeltas = size(D, 3);

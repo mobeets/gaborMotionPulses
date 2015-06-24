@@ -85,14 +85,17 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             if val.isCell
                 neuron = d.neurons{val.cellind};
                 val.Y = d.Y_all(:,val.cellind);
+                val.Yfrz = d.Y_frz(:,val.cellind);
                 val.dPrime = neuron.dPrime;
                 val.hyper_ssq = val.hyper(2);
-                targPref = neuron.targPref;
+                val.targPref = neuron.targPref;
             else
                 val.Y = d.R;
-                targPref = 1;                
+                val.Yfrz = d.R_frz;
+                val.targPref = 1;
             end
-            val.C = logical(-d.R+2 == targPref);
+            val.C = logical(-d.R+2 == val.targPref);
+            val.Cfrz = logical(-d.R_frz+2 == val.targPref);
             val.ntrials = sum(~isnan(val.Y));
             val.fano = nanvar(val.Y)/nanmean(val.Y);
             
@@ -102,21 +105,29 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             end
             val.wf = reshape(val.mu(1:end-1), d.ns, d.nt);
             val.b = val.mu(end);
-            val = addWeightSubfields(val, targPref);
+            val = addWeightSubfields(val, val.targPref);
+            
+            % compare to decision
+            fd = fs.decision.(fitstr); fd = fd{end};
+            val.wfDec = reshape(fd.mu(1:end-1), d.ns, d.nt);
+            val.wfDec_corr = corr(val.wf(:), val.wfDec(:));
             
             % responses
-            val.Yh = getResponse(d.X, val.mu, val.isLinReg);
+            predFcn = reg.getPredictionFcn(val.isLinReg);
+            zerTrials = val.dirprob == 0;
+            zerC = val.C(zerTrials);
+            val.Yh = predFcn(d.X, val.mu);
             val.Yh0 = val.Yh - val.b;
             val.Yres = val.Y - val.Yh;
-            val.Yzer = val.Y(val.dirprob == 0);
-            val.Ypos = getResponse(d.X, val.muPos, val.isLinReg);
-            val.Yneg = getResponse(d.X, val.muNeg, val.isLinReg);
+            val.Yzer = val.Y(zerTrials);
+            val.Ypos = predFcn(d.X, val.muPos);
+            val.Yneg = predFcn(d.X, val.muNeg);            
             
             % CP
             val.cp_Y = tools.AUC(val.Y(val.C), val.Y(~val.C));
-            val.cp_Yzer = tools.AUC(val.Yzer(val.C(val.dirprob == 0)), ...
-                val.Yzer(~val.C(val.dirprob == 0)));
+            val.cp_Yzer = tools.AUC(val.Yzer(zerC), val.Yzer(~zerC));
             val.cp_Yres = tools.AUC(val.Yres(val.C), val.Yres(~val.C));
+            val.cp_Yfrz = tools.AUC(val.Yfrz(val.Cfrz), val.Yfrz(~val.Cfrz));
             
             % separability/rank analyses
             if ~isSpaceOnly
@@ -171,13 +182,7 @@ function val = addStimulusInfo(d)
     val.dirprob = d.stim.dirprob(inds);
     val.dirstrength = sum(sum(d.stim.pulses(...
         inds,:,:),3),2);
-end
-
-function Yh = getResponse(X, w, isLinReg)
-    Yh = tools.ifNecessaryAddDC(X, w)*w;
-    if ~isLinReg
-        Yh = tools.logistic(Yh);
-    end
+    disp(sum(d.stim.frozentrials & d.stim.goodtrial));
 end
 
 function val = addWeightSubfields(val, targPref)
@@ -194,13 +199,14 @@ function val = addWeightSubfields(val, targPref)
 end
 
 function val = addSeparabilityAndRank(val, d)
-    
+        
     [U, s, V] = svd(val.wf, 0);
     S = diag(s);
     val.separabilities = S/norm(S,1);
     val.separability_index = val.separabilities(1); % norm-1
     val.inseparability_index = 1 - S(1)/norm(S,2); % norm-2 via Linden
     val.svd_rank = val.shape(2)+1 - sum(cumsum(val.separabilities) >= 0.99);
+    predFcn = reg.getPredictionFcn(val.isLinReg);
     
     wf_svdf = @(jj) U(:,jj)*S(jj)*V(:,jj)';
     mu_svdf = @(jj) [reshape(wf_svdf(jj), [], 1); val.mu(end)];
@@ -213,9 +219,9 @@ function val = addSeparabilityAndRank(val, d)
     val.muSvd_1 = mu_svdf(1);
     val.muSvd_2 = mu_svdf(2);
     val.muSvd_3 = mu_svdf(3);
-    val.YhSvd1 = getResponse(d.X, val.muSvd_1, val.isLinReg);
-    val.YhSvd2 = getResponse(d.X, val.muSvd_2, val.isLinReg);
-    val.YhSvd3 = getResponse(d.X, val.muSvd_3, val.isLinReg);
+    val.YhSvd1 = predFcn(d.X, val.muSvd_1);
+    val.YhSvd2 = predFcn(d.X, val.muSvd_2);
+    val.YhSvd3 = predFcn(d.X, val.muSvd_3);
     val.Yh0Svd1 = val.YhSvd1 - val.wf(end);
     val.Yh0Svd2 = val.YhSvd2 - val.wf(end);
     val.Yh0Svd3 = val.YhSvd3 - val.wf(end);
@@ -257,44 +263,6 @@ function val = addSelectivityTests(val, f, d, foldinds)
     for ii = 1:numel(names)
         val.([names{ii} '_mean']) = tests0(ii);
     end
-    
-%     scsDelta = [scs(:,2)-scs(:,3) scs(:,2)-scs(:,4) scs(:,1)-scs(:,4) ...
-%             scsDelta scs(:,4)-scsML' scsML'-nullSc];
-
-%     val.is_inseparable0 = ubs(1) < z; % ASD rank-3 better than ASD rank-1
-%     val.is_inseparable1 = ubs(2) < z; % ASD        better than ASD rank-1
-%     val.is_selective_subfld0 = ubs(3) < z; % thresh(ASD) better than ASD
-%     val.is_selective_subfld1 = ubs(4) < z; % thresh(ASD) better than null model
-%     val.is_selective0 = ubs(5) < z; % ASD rank-1    better than null model
-%     val.is_selective1 = ubs(6) < z; % ASD rank-3    better than null model
-%     val.is_selective2 = ubs(7) < z; % ASD           better than null model
-%     val.is_better_than_ML = ubs(8) < z; % ASD       better than ML
-%     val.is_selective_ML = ubs(9) < z; % ML          better than null model
-%     val.is_selective_ML1 = ubs(10) < z; % ML        better than null model
-%     
-%     assert(numel(ms)==10);
-%     z = -1e-3;
-%     val.is_inseparable0 = lbs(1) > -z; % ASD rank-3 better than ASD rank-1
-%     val.is_inseparable1 = lbs(2) > -z; % ASD        better than ASD rank-1
-%     val.is_selective_subfld0 = ubs(3) < z; % thresh(ASD) better than ASD
-%     val.is_selective_subfld1 = ubs(4) < z; % thresh(ASD) better than null model
-%     val.is_selective0 = ubs(5) < z; % ASD rank-1    better than null model
-%     val.is_selective1 = ubs(6) < z; % ASD rank-3    better than null model
-%     val.is_selective2 = ubs(7) < z; % ASD           better than null model
-%     val.is_better_than_ML = ubs(8) < z; % ASD       better than ML
-%     val.is_selective_ML = ubs(9) < z; % ML          better than null model
-%     val.is_selective_ML1 = ubs(10) < z; % ML        better than null model
-%         
-%     val.is_inseparable0a = ms(1) > -z;
-%     val.is_inseparable1a = ms(2) > -z;
-%     val.is_selective_subfld0a = ms(3) < z;
-%     val.is_selective_subfld1a = ms(4) < z;
-%     val.is_selective0a = ms(5) < z;
-%     val.is_selective1a = ms(6) < z;
-%     val.is_selective2a = ms(7) < z;
-%     val.is_better_than_MLa = ms(8) < z;
-%     val.is_selective_MLa = ms(9) < z;
-%     
     disp(num2str(mean(scs)));
 
 end

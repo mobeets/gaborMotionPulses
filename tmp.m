@@ -1,13 +1,26 @@
 %%
 
-tps = {'is_selective0', 'is_selective1', 'is_selective2', ...
-    'is_inseparable0', 'is_inseparable1', ...
-    'is_better_than_ML', 'is_selective_ML'};
+% tps = {'is_selective0', 'is_selective1', 'is_selective2', ...
+%     'is_inseparable0', 'is_inseparable1', ...
+%     'is_better_than_ML', 'is_selective_ML', 'is_selective_subfld0', ...
+%     'is_selective_subfld1'};
+vtmp = vf;
+
+fns = fieldnames(vtmp);
+ix = logical(cell2mat(cellfun(@(x) numel(strfind(x, 'is_'))>0, ...
+    fns, 'uni', 0)));
+tps = fns(ix);
+
 kds = {'MT', 'LIP', 'decision'};
 % kds = {'decision'};
-kds = {'MT', 'LIP'};
-vtmp = va;
-for ii = 1:numel(tps)
+% kds = {'MT', 'LIP'};
+
+disp('===============');
+disp('===============');
+for ii = 1:numel(tps)    
+    if numel(strfind(tps{ii}, '_mean'))>0
+        continue;
+    end
     disp('------------');
     disp(tps{ii});
     for jj = 1:numel(kds)
