@@ -1,4 +1,4 @@
-function [pss, mdl] = corrs(vs, xnm, ynm, lbl, xlbl, ylbl)
+function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl)
     if nargin < 6
         ylbl = ynm;
     end

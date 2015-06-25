@@ -13,6 +13,8 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
     end
     isSpaceOnly = false;
     knownProblemFields = {'score_noCV', 'muCorrFolds', 'mus'};
+    flipTargPrefNames = {'20150401-LIP_15', ...
+        '20150407b-LIP_2', '20150407b-LIP_4'};
     
     vals = struct([]);
     for ii = 1:numel(dts)
@@ -59,13 +61,11 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
                 val.isLinReg = true;
                 val.isCell = true;
                 val.llstr = 'gauss';
-%                 continue;
             else
                 val.cellind = nan;
                 val.isLinReg = false;
                 val.isCell = false;
                 val.llstr = 'bern';
-%                 continue;
             end
             
             % hypers
@@ -94,6 +94,9 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
                 val.Yfrz = d.R_frz;
                 val.targPref = 1;
             end
+            if sum(strcmp(val.name, flipTargPrefNames)) > 0
+                val.targPref = ~(val.targPref-1)+1; % flip targ pref
+            end
             val.C = logical(-d.R+2 == val.targPref);
             val.Cfrz = logical(-d.R_frz+2 == val.targPref);
             val.ntrials = sum(~isnan(val.Y));
@@ -110,7 +113,11 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             % compare to decision
             fd = fs.decision.(fitstr); fd = fd{end};
             val.wfDec = reshape(fd.mu(1:end-1), d.ns, d.nt);
-            val.wfDec_corr = corr(val.wf(:), val.wfDec(:));
+            wf = val.wf(:);
+            if val.targPref == 2
+                wf = -wf;
+            end
+            val.wfDec_corr = corr(wf, val.wfDec(:));
             
             % responses
             predFcn = reg.getPredictionFcn(val.isLinReg);
@@ -182,7 +189,6 @@ function val = addStimulusInfo(d)
     val.dirprob = d.stim.dirprob(inds);
     val.dirstrength = sum(sum(d.stim.pulses(...
         inds,:,:),3),2);
-    disp(sum(d.stim.frozentrials & d.stim.goodtrial));
 end
 
 function val = addWeightSubfields(val, targPref)
@@ -230,7 +236,7 @@ end
 function val = addSelectivityTests(val, f, d, foldinds)
 
     d.Y = val.Y;
-    [ms, lbs, ubs, scs] = tools.rankApprox2(f, d, foldinds, val.llstr);
+    [ms, lbs, ubs, scs] = tools.rankApprox(f, d, foldinds, val.llstr);
     val.svd_ms = ms;
     val.svd_lbs = lbs;
     val.svd_ubs = ubs;

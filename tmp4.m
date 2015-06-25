@@ -51,7 +51,7 @@ cpn = {'cp_Yres'};%, 'cp_Yzer'};
 cpn = {'cp_Yfrz'};
 tps = {'MT', 'LIP'};
 
-vtmp = vtmp([vtmp.score] >= 0.1);
+% vtmp = vtmp([vtmp.score] >= 0.1);
 
 % vars = cell2mat(cellfun(@(x) var(x(:,1)), {vtmp.wfSvd_U}, 'uni', 0));
 % vtmp = vtmp(vars >= 0.005);
@@ -76,7 +76,7 @@ for jj = 1:numel(cpn)
         
         
         vt0 = vtmp(strcmp({vtmp.type}, tps{ii}));
-%         vt0 = vt0([vt0.cp_Yfrz] > 0 & [vt0.cp_Yfrz] < 1);
+        vt0 = vt0([vt0.cp_Yfrz] > 0 & [vt0.cp_Yfrz] < 1);
         
 %         vt0 = vt0([vt0.(cpn{jj})] >= 0.5);
         dtix = cell2mat(cellfun(@(dt) find(strcmp(dt, ...
@@ -92,7 +92,12 @@ for jj = 1:numel(cpn)
             if numel(vd) == 0
                 continue;
             end
-            crs(kk) = corr(vt0(kk).w, vd.w);
+            w1 = vt0(kk).w;
+            w2 = vd.w;
+            if vt0(kk).targPref == 2
+                w1 = -w1;
+            end
+            crs(kk) = corr(w1, w2);
         end
         crs = crs';
         
@@ -143,6 +148,19 @@ for kk = 1:numel(vr)
         [vr(kk).cp_Yres vr(kk).cp_Yfrz]
     end            
 end
+%%
+vrs = vr([vr.isCell]);
+for ii = 1:numel(vrs)
+    vd = vr(~[vr.isCell] & strcmp({vr.dt}, vrs(ii).dt));
+    w1 = vrs(ii).w;
+    if vrs(ii).targPref == 2
+        w1 = -w1;
+    end
+%     [vrs(ii).wfDec_corr corr(w1, vd.w)]
+%     vrs(ii).wfDec_corr = corr(w1, vd.w);
+    vr(strcmp({vr.name}, vrs(ii).name)).wfDec_corr = corr(w1, vd.w);
+end
+
 %%
 
 vtmp = vr;

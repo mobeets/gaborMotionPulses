@@ -19,12 +19,12 @@ function plotAndSaveKernel(obj, data, figdir, add_dt, add_score)
         isCell = numel(tags) > 2;
         t1 = median(data.stim.targ1XY);
         t2 = median(data.stim.targ2XY);
-%         if isCell && data.neurons{str2num(tags{2})}.targPref == 2
-%             wf = -wf;
-%             t3 = t1;
-%             t1 = t2;
-%             t2 = t3;
-%         end
+        if isCell && data.neurons{str2num(tags{2})}.targPref == 2
+            wf = -wf;
+            t3 = t1;
+            t1 = t2;
+            t2 = t3;
+        end
         lbl = obj.label;
         if add_dt
             lbl = [obj.dt '-' obj.label];
