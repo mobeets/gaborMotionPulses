@@ -102,19 +102,20 @@ function [xl, yl] = plotMT(n, t1, t2)
     dt = diff([median(t1); median(t2)]);
     zs = arrayfun(@(x, y) proj(dt, [x y]), zs1, zs2);
     zs = reshape(zs, numel(unique(xs)), numel(unique(ys)));
-%         imagesc(unique(xs), unique(ys), -zs);
+%     imagesc(unique(xs), unique(ys), -zs);
     contourf(unique(xs), unique(ys), -zs, ...
         'LineWidth', 1, 'LineColor', 'none');
     caxis([min(0, -max(abs(caxis))) max(0, max(abs(caxis)))]);
     caxis(2*caxis); % less saturated
 
-%         keep = arrayfun(@norm, zs1, zs2) >= 2e-2;
+%     keep = arrayfun(@norm, zs1, zs2) >= 2e-2;
+%     keep = arrayfun(@norm, zs1, zs2) >= 0;
 %         plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
 %             zs1(keep), zs2(keep)), 80, 120, 'HeadStyle', 'plain', ...
 %             'LineWidth', 1.5);
 
-%         quiver(xs(keep), ys(keep), zs1(keep), zs2(keep), ...
-%             'k', 'LineWidth', 2);
+%     quiver(xs(keep), ys(keep), zs1(keep), zs2(keep), ...
+%         'k', 'LineWidth', 2);
 end
 
 
