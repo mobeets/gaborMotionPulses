@@ -80,7 +80,7 @@ function fitAllSTRFs(runName, isNancy, fitType, dts)
         %% run on decision
         if fitBehavior
             llstr = 'bern';
-            scorestr = 'pctCorrect';
+            scorestr = 'mcc';
             data.Y = data.R;
             label = 'decision';
             disp(label);

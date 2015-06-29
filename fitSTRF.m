@@ -20,7 +20,7 @@ function [obj, scoreObj] = fitSTRF(data, fitType, llstr, scorestr, ...
         case 'ML'
             obj = reg.getObj_ML(X, Y, obj);        
     	case 'ASD'
-            obj = reg.getObj_ASD(X, Y, D, scoreObj, obj);        
+            obj = reg.getObj_ASD(X, Y, D, scoreObj, obj);
     end
     obj = reg.fitAndScore(X, Y, obj, scoreObj);
     obj = tools.rmfieldsRegexp(obj, {'Fcn$', 'FcnArgs$'}, true);

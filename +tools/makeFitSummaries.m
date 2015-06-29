@@ -61,6 +61,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
                 val.isLinReg = true;
                 val.isCell = true;
                 val.llstr = 'gauss';
+%                 continue;
             else
                 val.cellind = nan;
                 val.isLinReg = false;
@@ -143,6 +144,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             if isfield(f, 'hyper')
                 val = addSelectivityTests(val, f, d, foldinds);
             end
+%             val = compareToPositiveWeights(val, d, foldinds);
             
             % add nans to any fields not present, ignore the rest
             for kk = 1:numel(knownProblemFields)
@@ -185,7 +187,11 @@ end
 
 function val = addStimulusInfo(d)
     val.Xxy = d.Xxy;
-    inds = d.stim.goodtrial & ~d.stim.frozentrials;
+    if isfield(d, 'ix')
+        inds = d.ix;
+    else
+        inds = d.stim.goodtrial & ~d.stim.frozentrials;
+    end
     val.dirprob = d.stim.dirprob(inds);
     val.dirstrength = sum(sum(d.stim.pulses(...
         inds,:,:),3),2);
@@ -233,8 +239,61 @@ function val = addSeparabilityAndRank(val, d)
     val.Yh0Svd3 = val.YhSvd3 - val.wf(end);
 end
 
-function val = addSelectivityTests(val, f, d, foldinds)
+function val = compareToPositiveWeights(val, d, foldinds)
+    if ~strcmp(val.llstr, 'bern')
+        return;
+    end    
+    scoreObj = reg.getScoreObj(false, 'mcc');
+    
+%     foldinds0 = val.foldinds;
+%     X = d.X; Y = d.R; D = d.D;
+%     [X, Y, foldinds0] = tools.dropTrialsIfYIsNan(X, Y, foldinds0);
+%     obj = reg.getObj_ASD(X, Y, D, scoreObj, struct('foldinds', foldinds0));
+%     obj.fitFcnArgFcn = @(obj) {obj.hyper, D, zeros(d.ns*d.nt,1), []};
+%     obj.hyperObj = reg.getHyperObj_grid(X, Y, obj, scoreObj);
+%     obj = reg.fitAndScore(X, Y, obj, scoreObj);
+%     val.wfPos0 = obj.mu;
+%     val.wfPos_scores = obj.scores;
+%     val.wfPos_hyper = obj.hyper;
+    
+    foldinds0 = val.foldinds;
+    X = d.X; Y = d.R; D = d.D;
+    [X, Y, foldinds0] = tools.dropTrialsIfYIsNan(X, Y, foldinds0);
+    obj = struct('foldinds', foldinds0, 'hyper', val.hyper);
+    obj = reg.getObj_ASD(X, Y, D, scoreObj, obj);
+    obj = rmfield(obj, 'hyperObj');
+    obj.fitFcnArgFcn = @(obj) {obj.hyper, D, zeros(d.ns*d.nt,1)};
+    obj = reg.fitAndScore(X, Y, obj, scoreObj);
+    val.wfPos0 = obj.mu;
+    val.wfPos0_scores = obj.scores;
+    val.wfPos0_hyper = obj.hyper;
+    [val.scores; val.wfPos0_scores]
+    
+%     scsDelta = val.scores - val.wfPos_scores;
+%     ms = mean(scsDelta);
+%     ses = std(scsDelta)/sqrt(numel(scsDelta));
+%     lbs = ms - 2*ses;
+%     ubs = ms + 2*ses;
+%     val.wfPos_scsDelta = scsDelta;
+%     val.wfPos_ms = ms;
+%     val.wfPos_lbs = lbs;
+%     val.wfPos_ubs = ubs;
+%     val.is_better_than_pos = val.wfPos_lbs > 0;
+    
+    scsDelta = val.scores - val.wfPos0_scores;
+    ms = mean(scsDelta);
+    ses = std(scsDelta)/sqrt(numel(scsDelta));
+    lbs = ms - 2*ses;
+    ubs = ms + 2*ses;
+    val.wfPos0_scsDelta = scsDelta;
+    val.wfPos0_ms = ms;
+    val.wfPos0_lbs = lbs;
+    val.wfPos0_ubs = ubs;
+    val.is_better_than_pos0 = val.wfPos0_lbs > 0;
+end
 
+function val = addSelectivityTests(val, f, d, foldinds)    
+    
     d.Y = val.Y;
     [ms, lbs, ubs, scs] = tools.rankApprox(f, d, foldinds, val.llstr);
     val.svd_ms = ms;

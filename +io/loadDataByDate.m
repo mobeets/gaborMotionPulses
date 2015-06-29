@@ -25,6 +25,7 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     stim = loadStim(dt, fullfile(basedir, stimdir));
     if isempty(fieldnames(stim))
         data = struct();
+        disp(['ERROR: Could not find ' dt ' in ' fullfile(basedir, stimdir)]);
         return;
     end
     
@@ -33,7 +34,14 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     frzinds = stim.frozentrials & stim.goodtrial;
     Yfrz = Y(frzinds,:);
     Rfrz = -(stim.targchosen(frzinds)-1) + 1;
-    inds = stim.goodtrial;    
+    inds = stim.goodtrial;
+    targds = sqrt(sum((stim.targ1XY - repmat(median(stim.targ1XY), ...
+        size(stim.targ1XY,1),1)).^2,2));
+    inds = inds & (targds < 2);
+    if sum(targds > 2) > 0
+        disp(['WARNING: removing ' num2str(sum(targds > 2)) ...
+            ' trials due to varying target location.']);
+    end
     if ignoreFrozen
         inds = inds & ~stim.frozentrials;
     end
@@ -50,6 +58,7 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     R = -(stim.targchosen(inds)-1) + 1; % 1->1 (pref), 2->0 (anti-pref)
 
     % add all to output struct
+    data.ix = inds;
     data.Xf = Xf;
     data.X = X;
     data.Y_all = Y;
@@ -64,7 +73,8 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     data.nt = nt;
     data.stim = stim;
     data.neurons = neurons;
-    data.dt = dt;
+    data.dt = dt;    
+    
 end
 
 function stim = loadStim(dt, stimdir)
