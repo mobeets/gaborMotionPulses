@@ -1,4 +1,4 @@
-vv = vf;
+vv = vs;
 tps = {'MT', 'LIP', 'decision'};
 
 figure;

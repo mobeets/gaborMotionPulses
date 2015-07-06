@@ -30,8 +30,8 @@ function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl)
 
                 xs = v0.(xnm);
                 ys = v1.(xnm);
-%                 xs = v0.wfSvd_2(:);
-%                 ys = v1.wfSvd_2(:);
+%                 xs = v0.wfSvd_1(:);
+%                 ys = v1.wfSvd_1(:);
 %                 xs = v0.wfSvd_U(:,1);
 %                 ys = v1.wfSvd_U(:,1);
 

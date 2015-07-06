@@ -8,7 +8,8 @@ function plotKernelByName(name, fitdirbase, outdir)
         outdir = 'tmp';
     end
     if nargin < 2
-        fitdirbase = '20150615';
+%         fitdirbase = '20150615';
+        fitdirbase = 'sametargs';
     end
     if ~exist(outdir, 'dir')
         mkdir(outdir);

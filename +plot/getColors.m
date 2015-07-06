@@ -12,7 +12,11 @@ function clrs = getColors(C, loadCmap, cmin, cmax)
     end
     cmap = colormap;
     m = size(cmap,1);
-    cind = fix((C-cmin)/(cmax-cmin)*m)+1;
+    if cmax == cmin
+        cind = round(m/2)*ones(size(C,1),1);
+    else
+        cind = fix((C-cmin)/(cmax-cmin)*m)+1;
+    end
     cind(cind<1) = 1;
     cind(cind>m) = m;
     clrs = cmap(cind,:);

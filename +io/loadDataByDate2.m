@@ -1,4 +1,4 @@
-function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreFrozen)    
+function data = loadDataByDate2(dt, isNancy, basedir, stimdir, spikesdir, ignoreFrozen)    
     if nargin < 6
         ignoreFrozen = true;
     end    
@@ -30,7 +30,8 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     end
     
     neurons = loadNeurons(dt, fullfile(basedir, spikesdir));
-    Y = loadSpikeCounts(neurons, max(stim.trialnumber), stim.timing);
+    [Y, sps] = loadSpikeCounts(neurons, max(stim.trialnumber), stim.timing);
+    
     frzinds = stim.frozentrials & stim.goodtrial;
     Yfrz = Y(frzinds,:);
     Rfrz = -(stim.targchosen(frzinds)-1) + 1;
@@ -42,6 +43,8 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
         inds = inds & ~stim.frozentrials;
     end
     Y = Y(inds,:);
+    sps = sps(inds,:,:);
+    data.sps = sps;
     
     X = stim.pulses;
     Xxy = stim.gaborXY;
@@ -90,26 +93,43 @@ function neurons = loadNeurons(dt, spikesdir)
     end
 end
 
-function Y = loadSpikeCounts(neurons, ny, stimtiming)
-    Y = nan(ny, numel(neurons));
-    Y2 = nan(ny, numel(neurons));
+function [Y, sps] = loadSpikeCounts(neurons, ny, stimtiming, prec)
+    if nargin < 4
+        prec = 20; % bins per second
+    end
+    Y = cell(ny, numel(neurons));
     for ii = 1:numel(neurons)
-        cur = neurons{ii};
-        if ~isequal(size(cur.trialIndex), size(cur.spikeCount))
+        n = neurons{ii};
+        if ~isequal(size(n.trialIndex), size(n.spikeCount))
             continue;
         end
-        sps = cur.spikeTimes;
-        for jj = 1:numel(cur.trialIndex)
-            ti = cur.trialIndex(jj);
+        sps = n.spikeTimes;
+        for jj = 1:numel(n.trialIndex)
+            ti = n.trialIndex(jj);
             tmg = stimtiming(ti);
             t = tmg.plxstart;
             t0 = t + tmg.motionon;
-            t1 = t + tmg.motionoff + 0.3;
-            Y2(ti, ii) = sum(sps >= t0 & sps <= t1);
+            t1 = t + tmg.motionoff;
+            Y{ti,ii} = sps(sps >= t0 & sps <= t1) - t0;
         end
-        Y(cur.trialIndex, ii) = cur.spikeCount;
     end
-    Y = Y2;
+    if nargout < 2
+        return;
+    end
+    tmax = max(cell2mat(cellfun(@(x) max(x), Y(:), 'uni', 0)));
+    bins = 0:(1/prec):ceil(tmax);
+    nbins = numel(bins);
+    sps = nan(ny, numel(neurons), nbins-1);
+    for ii = 1:numel(neurons)
+        for jj = 1:numel(n.trialIndex)
+            ti = n.trialIndex(jj);
+            Y0 = Y{ti,ii};
+            for kk = 1:(nbins-1)
+                sps(ti,ii,kk) = sum(Y0 >= bins(kk) & Y0 <= bins(kk+1));
+            end
+        end
+    end
+    Y = cellfun(@(x) numel(x), Y);
 end
 
 function ix = ignoreDistantTargets(stim, maxDist)

@@ -46,11 +46,14 @@ function fitAllSTRFs(runName, isNancy, fitType, dts)
         fitdir = getOutputDir(fitbasedir, dt);
                 
         data = io.loadDataByDate(dt, isNancy);
+        if size(data.X,1) < 5 % min # of trials
+            continue;
+        end
         if fitSpaceOnly
             data.D = data.Ds;
             data.X = sum(data.Xf, 3);
             data.nt = 1;
-        end        
+        end
         [~, foldinds] = tools.trainAndTestKFolds(data.X, data.R, nfolds);
 
         %% run on all cells
@@ -112,7 +115,7 @@ function fitAndSaveSTRF(data, fitMask, fitNames, llstr, scorestr, ...
         if fitMask(ii)
             obj = fitSTRF(data, fitNames{ii}, llstr, scorestr, ...
                 [label '-' fitNames{ii}], foldinds);
-            plot.plotAndSaveKernel(obj, data, figdir);
+            plot.plotAndSaveKernel(obj, data, figdir, true, true, false);
             fits.(fitNames{ii}) = obj;
         end
     end

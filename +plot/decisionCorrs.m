@@ -5,13 +5,14 @@ function [pss, mdl] = decisionCorrs(vs, tp, ynm)
     vd = vs(~[vs.isCell]);
     vs = vs(strcmp({vs.type}, tp));
     pss = [];
+    lbl = 'w';
     for ii = 1:numel(dts)        
         vdc = vd(strcmp({vd.dt}, dts{ii}));
-        w1 = vdc.w;
+        w1 = vdc.(lbl);
         vsc = vs(strcmp({vs.dt}, dts{ii}));
         xs = nan(1,numel(vsc));
         for jj = 1:numel(vsc)
-            w2 = vsc(jj).w;
+            w2 = vsc(jj).(lbl);
             if vsc(jj).targPref == 2
                 w2 = -w2;
             end

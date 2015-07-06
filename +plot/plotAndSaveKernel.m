@@ -1,7 +1,10 @@
-function plotAndSaveKernel(obj, data, figdir, add_dt, add_score)
+function plotAndSaveKernel(obj, data, figdir, add_dt, add_score, add_trgs)
 % 
 % plots the kernel and saves to png
 % 
+    if nargin < 6
+        add_trgs = true;
+    end
     if nargin < 5
         add_score = false;
     end
@@ -34,11 +37,10 @@ function plotAndSaveKernel(obj, data, figdir, add_dt, add_score)
         else
             lblS = lbl;
         end
-        
-%         if ~isCell
-%             t1 = nan;
-%             t2 = nan;
-%         end
+        if ~add_trgs
+            t1 = nan;
+            t2 = nan;
+        end
 
         plot.plotKernel2(reshape(wf, obj.shape(1), obj.shape(2)), ...
             data.Xxy, nan, [0 0], t1, t2, lblS); 
