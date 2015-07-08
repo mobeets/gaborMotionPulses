@@ -1,4 +1,4 @@
-## Quickstart
+## Setup
 
 1) Clone [gaborMotionPulses](https://github.com/mobeets/gaborMotionPulses) and [mASD](https://github.com/mobeets/mASD) to your home folder.
 
@@ -19,6 +19,8 @@ $ git clone https://github.com/mobeets/mASD.git
 >> addpath ../mASD
 >> addpath ../cbrewer
 ```
+
+## Fit and Visualize
 
 5) Fit ASD, ML, and Flat weights for all cells and behavior.
 
