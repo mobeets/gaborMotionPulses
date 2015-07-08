@@ -95,7 +95,7 @@ end
 
 function [Y, sps] = loadSpikeCounts(neurons, ny, stimtiming, prec)
     if nargin < 4
-        prec = 20; % bins per second
+        prec = 80; % bins per second
     end
     Y = cell(ny, numel(neurons));
     for ii = 1:numel(neurons)
@@ -125,7 +125,7 @@ function [Y, sps] = loadSpikeCounts(neurons, ny, stimtiming, prec)
             ti = n.trialIndex(jj);
             Y0 = Y{ti,ii};
             for kk = 1:(nbins-1)
-                sps(ti,ii,kk) = sum(Y0 >= bins(kk) & Y0 <= bins(kk+1));
+                sps(ti,ii,kk) = sum(Y0 > bins(kk) & Y0 <= bins(kk+1));
             end
         end
     end

@@ -1,10 +1,23 @@
+fitdir = 'sametargs-motdir';
+fitAllSTRFs(fitdir, false, 'cells ASD');
+fitAllSTRFs(fitdir, true, 'cells ASD');
+fitAllSTRFs(fitdir, false, 'behavior ASD');
+fitAllSTRFs(fitdir, true, 'behavior ASD');
+
+%%
+
+fitdir = '20150615';
+vn = tools.makeFitSummaries(['data/' fitdir '-nancy/fits'], true, 'ASD');
+% vp = tools.makeFitSummaries(['data/' fitdir '-pat/fits'], false, 'ASD');
+% vs = [vp vn];
+
 %%
 
 % tps = {'is_selective0', 'is_selective1', 'is_selective2', ...
 %     'is_inseparable0', 'is_inseparable1', ...
 %     'is_better_than_ML', 'is_selective_ML', 'is_selective_subfld0', ...
 %     'is_selective_subfld1'};
-vtmp = vf;
+vtmp = vs;
 
 fns = fieldnames(vtmp);
 ix = logical(cell2mat(cellfun(@(x) numel(strfind(x, 'is_'))>0, ...

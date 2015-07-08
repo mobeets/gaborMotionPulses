@@ -25,26 +25,28 @@ function [dcs, pvs] = lagDcor(d, lags)
     [nt, ~, ~] = size(Y0);
 
     ixType = cellfun(@(n) strcmpi(n.brainArea, 'MT'), d.neurons);
-    ixPref = cellfun(@(n) n.targPref == 1, d.neurons);
-    ixG1 = ixType & ixPref;
-    ixG2 = ixType & ~ixPref;
-%     ixG1 = ixType;
-%     ixG2 = ~ixType;
+%     ixPref = cellfun(@(n) n.targPref == 1, d.neurons);
+%     ixG1 = ixType & ixPref;
+%     ixG2 = ixType & ~ixPref;
+    ixG1 = ixType;
+    ixG2 = ~ixType;
 %     ixG1 = ixType & ~ixPref;
 %     ixG2 = ~ixType & ~ixPref;
-    if sum(ixG1) == 0 || sum(ixG2) == 0
-        return;
-    end    
+%     if sum(ixG1) == 0 || sum(ixG2) == 0
+%         return;
+%     end
     
     nlags = numel(lags);
     dcs = nan(nt,nlags);
-    pvs = nan(nt,nlags);    
+    pvs = nan(nt,nlags);
+    
     for ii = 1:nt
         if mod(ii, 10) == 0
             disp('.');
         end
         s1 = squeeze(Y0(ii,ixG1,:))';
-        s2 = squeeze(Y0(ii,ixG2,:))';        
+%         s2 = squeeze(Y0(ii,ixG2,:))';
+        s2 = zeros(size(s1)); s2(round((1:7)*.15/(1/80)),:) = 1;
         ix = ~any(isnan(s1),2) & ~any(isnan(s2),2);
         if sum(ix) == 0
             continue;

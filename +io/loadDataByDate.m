@@ -36,8 +36,8 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
     Rfrz = -(stim.targchosen(frzinds)-1) + 1;
     inds = stim.goodtrial;
      % each targ1 must be within 2 deg of median targ1, and same for targ2
-    targix = ignoreDistantTargets(stim, 2);
-    inds = inds & targix;
+%     targix = ignoreDistantTargets(stim, 2);
+%     inds = inds & targix;
     if ignoreFrozen
         inds = inds & ~stim.frozentrials;
     end
