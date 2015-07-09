@@ -8,8 +8,8 @@ fitAllSTRFs(fitdir, true, 'behavior ASD');
 
 fitdir = '20150615';
 vn = tools.makeFitSummaries(['data/' fitdir '-nancy/fits'], true, 'ASD');
-% vp = tools.makeFitSummaries(['data/' fitdir '-pat/fits'], false, 'ASD');
-% vs = [vp vn];
+vp = tools.makeFitSummaries(['data/' fitdir '-pat/fits'], false, 'ASD');
+vu = [vp vn];
 
 %%
 

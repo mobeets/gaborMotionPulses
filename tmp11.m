@@ -1,16 +1,16 @@
 dts = unique({vs.dt});
 for ii = 1:numel(dts)
-    v0 = vs(strcmp({vs.dt}, dts{ii}) & strcmp({vs.type}, 'LIP'));
-    v1 = vs(strcmp({vs.dt}, dts{ii}) & strcmp({vs.type}, 'MT'));
+    v0 = vs(strcmp({vs.dt}, dts{ii}) & strcmp({vs.type}, 'MT'));
+    v1 = vs(strcmp({vs.dt}, dts{ii}) & strcmp({vs.type}, 'LIP'));
     
-    if numel(v0) > 0 && numel(v1) > 0
-        disp([dts{ii} ' ' num2str(numel(v0)) ' - ' num2str(numel(v1))]);
-    end
-    
-%     a = sum([v0.targPref] == 1);
-%     if a > 0 && numel(v0) > a
-%         disp([dts{ii} ' ' num2str(a) ' - ' num2str(numel(v0)-a)]);    
+%     if numel(v0) > 0 && numel(v1) > 0
+%         disp([dts{ii} ' ' num2str(numel(v0)) ' - ' num2str(numel(v1))]);
 %     end
+    
+    a = sum([v0.targPref] == 1);
+    if a > 0 && numel(v0) > a
+        disp([dts{ii} ' ' num2str(a) ' - ' num2str(numel(v0)-a)]);    
+    end
     
 end
 
