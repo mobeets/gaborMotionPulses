@@ -1,8 +1,11 @@
-function plotKernelSingle(xy, wf, ~, sz)
+function plotKernelSingle(xy, wf, ~, sz, cmin)
+    if nargin < 5
+        cmin = nan;
+    end
     if nargin < 4 || isnan(sz)
         sz = 200;
     end
-    clrs = plot.getColors(wf);
+    clrs = plot.getColors(wf, true, cmin);
 
     hold on;
 %     axis off;

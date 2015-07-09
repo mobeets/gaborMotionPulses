@@ -37,6 +37,10 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             if ~isfield(fs.(nms{jj}), fitstr)
                 continue;
             end
+            if dval.pctCorrect < 0.7
+                % skip if monkey not above 70% correct
+                continue;
+            end
             
             % load fit
             fs0 = fs.(nms{jj}).(fitstr);
@@ -99,6 +103,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
                 val.targPref = ~(val.targPref-1)+1; % flip targ pref
             end
             val.C = logical(-d.R+2 == val.targPref);
+            val.C0 = logical(d.R);
             val.Cfrz = logical(-d.R_frz+2 == val.targPref);
             val.ntrials = sum(~isnan(val.Y));
             val.fano = nanvar(val.Y)/nanmean(val.Y);
@@ -132,18 +137,22 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.Yneg = predFcn(d.X, val.muNeg);            
             
             % CP
-            val.cp_Y = tools.AUC(val.Y(val.C), val.Y(~val.C));
-            val.cp_Yzer = tools.AUC(val.Yzer(zerC), val.Yzer(~zerC));
-            val.cp_Yres = tools.AUC(val.Yres(val.C), val.Yres(~val.C));
+            C = val.C0;
+            val.cp_Y = tools.AUC(val.Y(C), val.Y(~C));
+            val.cp_Yres = tools.AUC(val.Yres(C), val.Yres(~C));
+            C = val.C;
+            val.cp_Yc = tools.AUC(val.Y(C), val.Y(~C));
+            val.cp_Yresc = tools.AUC(val.Yres(C), val.Yres(~C));
+            val.cp_Yzer = tools.AUC(val.Yzer(zerC), val.Yzer(~zerC));            
             val.cp_Yfrz = tools.AUC(val.Yfrz(val.Cfrz), val.Yfrz(~val.Cfrz));
             
             % separability/rank analyses
-            if ~isSpaceOnly
-                val = addSeparabilityAndRank(val, d);
-            end
-            if isfield(f, 'hyper')
-                val = addSelectivityTests(val, f, d, foldinds);
-            end
+%             if ~isSpaceOnly
+%                 val = addSeparabilityAndRank(val, d);
+%             end
+%             if isfield(f, 'hyper')
+%                 val = addSelectivityTests(val, f, d, foldinds);
+%             end
 %             val = compareToPositiveWeights(val, d, foldinds);
             
             % add nans to any fields not present, ignore the rest
@@ -195,6 +204,8 @@ function val = addStimulusInfo(d)
     val.dirprob = d.stim.dirprob(inds);
     val.dirstrength = sum(sum(d.stim.pulses(...
         inds,:,:),3),2);
+    val.correct = d.stim.correct(inds);
+    val.pctCorrect = mean(val.correct);
 end
 
 function val = addWeightSubfields(val, targPref)

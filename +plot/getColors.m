@@ -2,10 +2,13 @@ function clrs = getColors(C, loadCmap, cmin, cmax)
     if nargin < 2
         loadCmap = true;        
     end
-    if nargin < 3
+    if nargin < 3 || isnan(cmin)
         % diverging colorscheme, so take abs        
         cmax = max(abs(C));
         cmin = -cmax;
+    end
+    if nargin < 4 || isnan(cmax)
+        cmax = -cmin;
     end
     if loadCmap
         colormap(cbrewer('div', 'RdBu', 201, 'pchip'));
