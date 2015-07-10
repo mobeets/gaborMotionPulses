@@ -65,11 +65,15 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
                 val.isLinReg = true;
                 val.isCell = true;
                 val.llstr = 'gauss';
+                val.isLIP = strcmp(val.type, 'LIP');
+                val.isMT = strcmp(val.type, 'MT');
 %                 continue;
             else
                 val.cellind = nan;
                 val.isLinReg = false;
                 val.isCell = false;
+                val.isMT = false;
+                val.isLIP = false;
                 val.llstr = 'bern';
             end
             
@@ -106,6 +110,8 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.C0 = logical(d.R);
             val.Cfrz = logical(-d.R_frz+2 == val.targPref);
             val.ntrials = sum(~isnan(val.Y));
+            zerTrials = val.dirprob == 0;
+            val.nzertrials = sum(zerTrials);
             val.fano = nanvar(val.Y)/nanmean(val.Y);
             
             % weights
@@ -126,8 +132,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.wfDec_corr = corr(wf, val.wfDec(:));
             
             % responses
-            predFcn = reg.getPredictionFcn(val.isLinReg);
-            zerTrials = val.dirprob == 0;
+            predFcn = reg.getPredictionFcn(val.isLinReg);            
             zerC = val.C(zerTrials);
             val.Yh = predFcn(d.X, val.mu);
             val.Yh0 = val.Yh - val.b;
@@ -145,11 +150,12 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.cp_Yresc = tools.AUC(val.Yres(C), val.Yres(~C));
             val.cp_Yzer = tools.AUC(val.Yzer(zerC), val.Yzer(~zerC));            
             val.cp_Yfrz = tools.AUC(val.Yfrz(val.Cfrz), val.Yfrz(~val.Cfrz));
-            
+                                    
             % separability/rank analyses
-%             if ~isSpaceOnly
-%                 val = addSeparabilityAndRank(val, d);
-%             end
+            if ~isSpaceOnly
+                val = addSeparabilityAndRank(val, d);
+            end
+            val = centerOfMass(val);
 %             if isfield(f, 'hyper')
 %                 val = addSelectivityTests(val, f, d, foldinds);
 %             end
@@ -219,6 +225,27 @@ function val = addWeightSubfields(val, targPref)
     val.muPos_norm = norm(muPos,1);
     val.muNeg_norm = norm(muNeg,1);
     val.wrat = val.muNeg_norm / (val.muNeg_norm + val.muPos_norm);
+end
+
+function val = centerOfMass(val)
+
+    xs = val.Xxy;
+    xs = xs - repmat(mean(xs), size(xs,1), 1);
+    xs = xs ./ repmat(var(xs), size(xs,1), 1);
+    ys = val.wfSvd_1(:,1);
+    if sum(ys) < 0
+        ys = -ys;
+    end
+%     ys = ys + abs(min(ys));
+%     ys = abs(ys);
+    ys(ys < 0) = 0;
+    ys = ys / sum(ys);
+
+    xc = (xs(:,1)'*ys);
+    yc = (xs(:,2)'*ys);
+    val.rf_center = [xc yc];
+    val.rf_ecc = sqrt(xc^2 + yc^2);
+
 end
 
 function val = addSeparabilityAndRank(val, d)

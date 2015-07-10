@@ -1,22 +1,33 @@
-function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl)
-    if nargin < 6
+function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
+    xfcn, yfcn)
+% xfcn (yfcn) - how to compare two neurons for x-axis (y-axis)
+%   - default is @corr
+% 
+    if nargin < 8
+        yfcn = @corr;
+    end
+    if nargin < 7
+        xfcn = @corr;
+    end
+    if nargin < 6 || all(isnan(ylbl))
         ylbl = ynm;
     end
-    if nargin < 5
+    if nargin < 5 || all(isnan(xlbl))
         xlbl = xnm;
     end
-    if nargin < 4
+    if nargin < 4 || all(isnan(lbl))
         lbl = '';
     end
     lblfcn = @(x) ['corr(' x '_1, ' x '_2)'];
     xlbl = lblfcn(xlbl);
     ylbl = lblfcn(ylbl);
+    
+    figure;
+    set(gcf, 'color', 'w');
+    subplot(3,1,1); hold on;
 
     dts = unique({vs.dt});
     pss = [];
-    figure;
-    subplot(3,1,1); hold on;
-    set(gca, 'FontSize', 14);
     for ii = 1:numel(dts)
         vts = vs(strcmp({vs.dt}, dts{ii}));
         ps = [];
@@ -41,7 +52,7 @@ function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl)
                 if numel(xs) == 0
                     continue;
                 end
-                p1 = corr(xs, ys);
+                p1 = xfcn(xs, ys);
 
                 xs = v0.(ynm);
                 ys = v1.(ynm);
@@ -51,7 +62,7 @@ function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl)
                 if numel(xs) == 0
                     continue;
                 end
-                p2 = corr(xs, ys);
+                p2 = yfcn(xs, ys);
                 ps = [ps; p1 p2];
             end    
         end
@@ -61,46 +72,27 @@ function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl)
             pss = [pss; ps];
         end
     end
+    xs = pss(:,1);
+    ys = pss(:,2);
 
-    xs = pss(:,1); ys = pss(:,2);
-    mdl = fitlm(xs, ys)
-    plot(mdl, 'marker', '.');
-    legend off;
-    
-    vfcn = @(x) sprintf('%0.1f', x);
-    nbins = 12;
-    bins = linspace(floor(min(xs)),ceil(max(xs)),nbins);
-    [~,ee] = histc(xs, bins);
-    cents = bins(1:end-1) + diff(bins)/2;
-    cents = cents(unique(ee));
-    boxplot(ys, ee, 'positions', cents, 'labels', ...
-        arrayfun(vfcn, cents, 'uni', 0));
-    
-    bs = linspace(floor(min(xs)),ceil(max(xs)), nbins-1);
-    set(gca, 'xtick', bs);
-    set(gca, 'xticklabel', arrayfun(vfcn, bs, 'uni', 0));
-    xlim([floor(min(xs)) ceil(max(xs))]);
-    xl = xlim; xlim(xl*1.1);
-    ylim([floor(min(ys)) ceil(max(ys))]);
-
+    set(gca, 'FontSize', 14);
+    mdl = plot.boxScatterFitPlot(pss(:,1), pss(:,2));
     xlabel(xlbl);
     ylabel(ylbl);
     
-%     vfcn = @(x) sprintf('%0.2f', x);
-%     lbl = ['mean(' xlbl ') = ' vfcn(nanmean(xs)) ...
-%         ', mean(' ylbl ') = ' vfcn(nanmean(ys))];
-    title(lbl);
-    
     subplot(3,1,2); hold on;
+    nbins = 12;
+    set(gca, 'FontSize', 14);
     bins = linspace(floor(min(xs)),ceil(max(xs)),nbins+1);
     hist(xs, bins);
     xlabel(xlbl);
     xlim(1.1*[min(bins) max(bins)]);
+    
     subplot(3,1,3); hold on;
+    set(gca, 'FontSize', 14);
     bins = linspace(floor(min(ys)),ceil(max(ys)),nbins+1);
     hist(ys, bins);
     xlim(1.1*[min(bins) max(bins)]);
     xlabel(ylbl);
     
-%     subplot(3,1,1); hold on;
 end
