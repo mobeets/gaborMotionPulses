@@ -24,6 +24,7 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
     if nargin < 3 || isempty(basedir)
 %         basedir = '/Volumes/LKCLAB/Users/Jay';
         [~, user] = system('echo "$USER"');
+        user(end) = []; % remove empty character that UNIX spits out
         switch user
             case {'jacobyates'}
                 basedir = '~/Dropbox/MatlabCode/Projects/gaborPulseASD/data';
