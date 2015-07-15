@@ -1,41 +1,22 @@
-function [dcs, pvs] = lagDcor(d, lags)
-% LIP
-% 20130515 1 - 1
-% 20150313 1 - 3
-% 20150326a 2 - 6
-% 20150331 1 - 3
-% 20150401 2 - 8
-% 20150407b 3 - 1
+function [dcs, pvs] = lagDcor(A, B, lags)
+% [dcs, pvs] = lagDcor(A, B, lags)
 % 
-% MT
-% 20140304 8 - 1
-% 20140305 3 - 2
-% 20150304a 6 - 1
-% 20150304b 6 - 2
-% 20150305b 1 - 3
-% 20150306b 2 - 3
-% 20150306c 4 - 5
-% 20150310 1 - 2
-% 20150316c 10 - 3
-% 20150324a 6 - 6
-% 20150519 1 - 6
+% computes distance correlations at various lags between 
+%   data in A and B
 % 
-    Y0 = d.sps;
-%     Y0 = d.sps(sign(sum(d.X,2)) == -1, :,:);
-    [nt, ~, ~] = size(Y0);
-
-    ixType = cellfun(@(n) strcmpi(n.brainArea, 'MT'), d.neurons);
-%     ixPref = cellfun(@(n) n.targPref == 1, d.neurons);
-%     ixG1 = ixType & ixPref;
-%     ixG2 = ixType & ~ixPref;
-    ixG1 = ixType;
-    ixG2 = ~ixType;
-%     ixG1 = ixType & ~ixPref;
-%     ixG2 = ~ixType & ~ixPref;
-%     if sum(ixG1) == 0 || sum(ixG2) == 0
-%         return;
-%     end
-    
+% inputs:
+%   A [ntrials x nA x nt]
+%   B [ntrials x nB x nt]
+%   lags [nlags x 1] - row-shifts of A relative to B
+%       where negative lags -> data in A comes prior to data in B
+%       and positive lags -> data in B comes prior to data in A
+% 
+% outputs:
+%   dcs - [ntrials x nlags] - distance correlations
+%   pvs - [ntrials x nlags] - p-values for distance correlations
+%                           from shift permutation test
+% 
+    nt = size(A,1);
     nlags = numel(lags);
     dcs = nan(nt,nlags);
     pvs = nan(nt,nlags);
@@ -44,9 +25,8 @@ function [dcs, pvs] = lagDcor(d, lags)
         if mod(ii, 10) == 0
             disp('.');
         end
-        s1 = squeeze(Y0(ii,ixG1,:))';
-%         s2 = squeeze(Y0(ii,ixG2,:))';
-        s2 = zeros(size(s1)); s2(round((1:7)*.15/(1/80)),:) = 1;
+        s1 = squeeze(A(ii,:,:))';
+        s2 = squeeze(B(ii,:,:))';
         ix = ~any(isnan(s1),2) & ~any(isnan(s2),2);
         if sum(ix) == 0
             continue;
