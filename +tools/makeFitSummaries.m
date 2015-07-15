@@ -146,7 +146,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.Ypos = predFcn(d.X, val.muPos);
             val.Yneg = predFcn(d.X, val.muNeg);
             val.Ylow = val.Y(lowTrials);
-            val = autoRegressModelSpikes(val, 2); % creates val.YhAR
+            val = tools.autoRegressModelSpikes(val, 2); % creates val.YhAR
             val.YresAR = val.Y - val.YhAR;
             
             % CP
