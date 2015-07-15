@@ -146,14 +146,18 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.Ypos = predFcn(d.X, val.muPos);
             val.Yneg = predFcn(d.X, val.muNeg);
             val.Ylow = val.Y(lowTrials);
+            val = autoRegressModelSpikes(val, 2); % creates val.YhAR
+            val.YresAR = val.Y - val.YhAR;
             
             % CP
             C = val.C0; % for signed CP (i.e., both above/below 0.5)
             val.cp_Y = tools.AUC(val.Y(C), val.Y(~C));
             val.cp_Yres = tools.AUC(val.Yres(C), val.Yres(~C));
+            val.cp_YresAR = tools.AUC(val.YresAR(C), val.YresAR(~C));
             C = val.C;
             val.cp_Yc = tools.AUC(val.Y(C), val.Y(~C));
             val.cp_Yresc = tools.AUC(val.Yres(C), val.Yres(~C));
+            val.cp_YresARc = tools.AUC(val.YresAR(C), val.YresAR(~C));
             C = val.Czer;
             val.cp_Yzer = tools.AUC(val.Yzer(C), val.Yzer(~C));
             C = val.Clow;
