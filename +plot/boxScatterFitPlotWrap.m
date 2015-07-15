@@ -12,6 +12,9 @@ function boxScatterFitPlotWrap(vs, xlbl, ylbl, sB, sF, nb)
     set(gcf, 'color', 'w');
     xs = [vs.(xlbl)];
     ys = [vs.(ylbl)];
+    ix = ~isnan(xs) & ~isnan(ys);
+    xs = xs(ix);
+    ys = ys(ix);
     plot.boxScatterFitPlot(xs', ys', sB, sF, nb);
     xlabel(strrep(xlbl, '_', '-'));
     ylabel(strrep(ylbl, '_', '-'));

@@ -28,6 +28,8 @@ function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
 
     dts = unique({vs.dt});
     pss = [];
+    dps = [];
+    nms = {};
     for ii = 1:numel(dts)
         vts = vs(strcmp({vs.dt}, dts{ii}));
         ps = [];
@@ -64,14 +66,28 @@ function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
                 end
                 p2 = yfcn(xs, ys);
                 ps = [ps; p1 p2];
+                if v0.targPref == v1.targPref
+                    dps = [dps; p1 p2 v0.dPrime v1.dPrime v0.cp_Yfrz v1.cp_Yfrz];
+                    nms = [nms; {v0.name, v1.name}];
+                end
             end    
         end
         if numel(ps) > 1
             [~,ix0] = sort(ps(:,1));
-            plot(ps(ix0,1), ps(ix0,2), 'Color', [0.8 0.8 0.8]);
+%             plot(ps(ix0,1), ps(ix0,2), 'Color', [0.8 0.8 0.8]);
             pss = [pss; ps];
         end
     end
+    
+    ix = dps(:,1) > nanmedian(dps(:,1)) & ... % rf-dist
+        dps(:,2) < nanmedian(dps(:,2)) & ... % noise-corr
+        dps(:,3) > nanmedian([vs.dPrime]) & ... % dprime-1
+        dps(:,4) > nanmedian([vs.dPrime]); % dprime-2
+    dps2 = dps(ix,:);
+    nms2 = nms(ix,:);
+    
+    
+    
     xs = pss(:,1);
     ys = pss(:,2);
 

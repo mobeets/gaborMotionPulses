@@ -11,7 +11,15 @@ function mdl = boxScatterFitPlot(xs, ys, showBox, showFit, nbins)
     set(gca, 'FontSize', 14);
     hold on;
     
+    % plot data
     scatter(xs, ys, 20, [0.8 0.8 0.8], 'filled');
+    
+    % smoothed running mean
+%     plot(fit(xs, ys, 'poly4'), '-');
+    [~,idx] = sort(xs);
+    plot(xs(idx), smooth(xs(idx), ys(idx), 0.3, 'loess'), 'r-');
+    
+    % plot model fit
     mdl = fitlm(xs, ys)
     rsq = mdl.Rsquared.Ordinary;
     pval = mdl.Coefficients.pValue(2);
@@ -31,6 +39,7 @@ function mdl = boxScatterFitPlot(xs, ys, showBox, showFit, nbins)
         ', fit r^2 = ' num2str(rsq) ', pval = ' num2str(pval) ...
         ', slope CI = ' num2str(cc)]);
 
+    % plot box-whiskers
     vfcn = @(x) sprintf('%0.1f', x);
     minx = min(xs)-0.01;
     maxx = max(xs)+0.01;
@@ -49,9 +58,9 @@ function mdl = boxScatterFitPlot(xs, ys, showBox, showFit, nbins)
     bs = linspace(floor(min(xs)),ceil(max(xs)), nbins-1);
     set(gca, 'xtick', bs);
     set(gca, 'xticklabel', arrayfun(vfcn, bs, 'uni', 0));
-    xlim([floor(min(xs)) ceil(max(xs))]);
+%     xlim([floor(min(xs)) ceil(max(xs))]);
     xl = xlim; xlim(xl*1.1);
-    ylim([floor(min(ys)) ceil(max(ys))]);
+%     ylim([floor(min(ys)) ceil(max(ys))]);
     
     box off;
     

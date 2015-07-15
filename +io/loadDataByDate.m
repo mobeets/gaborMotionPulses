@@ -1,4 +1,9 @@
-function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreFrozen)    
+function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
+    spikesdir, ignoreFrozen, ignoreEarlyRepeats)
+% 
+    if nargin < 7
+        ignoreEarlyRepeats = true;
+    end
     if nargin < 6
         ignoreFrozen = true;
     end    
@@ -38,6 +43,9 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
      % each targ1 must be within 2 deg of median targ1, and same for targ2
 %     targix = ignoreDistantTargets(stim, 2);
 %     inds = inds & targix;
+    if ignoreEarlyRepeats
+        inds = inds & trialsWithoutRepeatStimStrengths(stim);
+    end
     if ignoreFrozen
         inds = inds & ~stim.frozentrials;
     end
@@ -55,6 +63,7 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, spikesdir, ignoreF
 
     % add all to output struct
     data.ix = inds;
+    data.ixfrz = frzinds;
     data.Xf = Xf;
     data.X = X;
     data.Y_all = Y;
@@ -98,18 +107,36 @@ function Y = loadSpikeCounts(neurons, ny, stimtiming)
         if ~isequal(size(cur.trialIndex), size(cur.spikeCount))
             continue;
         end
-        sps = cur.spikeTimes;
-        for jj = 1:numel(cur.trialIndex)
-            ti = cur.trialIndex(jj);
-            tmg = stimtiming(ti);
-            t = tmg.plxstart;
-            t0 = t + tmg.motionon;
-            t1 = t + tmg.motionoff + 0.3;
-            Y2(ti, ii) = sum(sps >= t0 & sps <= t1);
-        end
+%         sps = cur.spikeTimes;
+%         for jj = 1:numel(cur.trialIndex)
+%             ti = cur.trialIndex(jj);
+%             tmg = stimtiming(ti);
+%             t = tmg.plxstart;
+%             t0 = t + tmg.motionon;
+%             t1 = t + tmg.motionoff + 0.2;
+%             Y2(ti, ii) = sum(sps >= t0 & sps <= t1);
+%         end
         Y(cur.trialIndex, ii) = cur.spikeCount;
     end
-    Y = Y2;
+%     Y = Y2;
+end
+
+function ix = trialsWithoutRepeatStimStrengths(stim)
+    st = abs(sum(sum(stim.pulses, 3), 2));
+    ix = true(size(st));
+    if numel(st) < 100
+        return;
+    end
+    st = st(1:100); % only consider first 100 trials
+    us = unique(st(1:10));    
+    if numel(us) < 3 % only two stim strengths used
+        % look for repeats of these 1-2 strengths, ignore until past
+        for ii = 1:numel(us)
+            st(st==us(ii)) = inf;
+        end
+        ix0 = find(st ~= inf, 1);
+        ix(1:ix0-1) = false;
+    end    
 end
 
 function ix = ignoreDistantTargets(stim, maxDist)

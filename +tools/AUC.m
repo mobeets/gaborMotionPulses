@@ -2,7 +2,7 @@ function cp = AUC(A, B, dim)
 % cp = AUC(A, B, DIM)
 %
 % returns the area under the roc curve for discriminating the two groups
-% using a given criterion
+% using any criterion
 % 
 % A, B - target and null distributions
 % If A, B are matrices:
@@ -11,7 +11,7 @@ function cp = AUC(A, B, dim)
 % Jay Hennig (2/1/2011, 3/17/2015)
 % 
     if nargin < 3
-        if size(A,1) == 1
+        if max(size(A,1), size(B,1)) == 1
             dim = 1;
         else
             dim = 2;

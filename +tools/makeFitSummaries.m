@@ -106,13 +106,19 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             if sum(strcmp(val.name, flipTargPrefNames)) > 0
                 val.targPref = ~(val.targPref-1)+1; % flip targ pref
             end
-            val.C = logical(-d.R+2 == val.targPref);
-            val.C0 = logical(d.R);
-            val.Cfrz = logical(-d.R_frz+2 == val.targPref);
-            val.ntrials = sum(~isnan(val.Y));
             zerTrials = val.dirprob == 0;
             val.nzertrials = sum(zerTrials);
+            val.ntrials = sum(~isnan(val.Y));
+            % lowest 20% of full distribution for both monkeys' sessions
+            lowTrials = abs(val.dirstrength)/prod(val.shape) < 0.1;%0.015;
+            val.nlowmottrials = sum(lowTrials);
             val.fano = nanvar(val.Y)/nanmean(val.Y);
+            
+            val.C = logical(-d.R+2 == val.targPref);
+            val.C0 = logical(d.R); % uncorrected for targPref
+            val.Cfrz = logical(-d.R_frz+2 == val.targPref);
+            val.Czer = val.C(zerTrials);
+            val.Clow = val.C(lowTrials);
             
             % weights
             if isfield(val, 'w') && numel(val.w) > numel(val.mu)
@@ -132,25 +138,28 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.wfDec_corr = corr(wf, val.wfDec(:));
             
             % responses
-            predFcn = reg.getPredictionFcn(val.isLinReg);            
-            zerC = val.C(zerTrials);
+            predFcn = reg.getPredictionFcn(val.isLinReg);
             val.Yh = predFcn(d.X, val.mu);
             val.Yh0 = val.Yh - val.b;
             val.Yres = val.Y - val.Yh;
             val.Yzer = val.Y(zerTrials);
             val.Ypos = predFcn(d.X, val.muPos);
-            val.Yneg = predFcn(d.X, val.muNeg);            
+            val.Yneg = predFcn(d.X, val.muNeg);
+            val.Ylow = val.Y(lowTrials);
             
             % CP
-            C = val.C0;
+            C = val.C0; % for signed CP (i.e., both above/below 0.5)
             val.cp_Y = tools.AUC(val.Y(C), val.Y(~C));
             val.cp_Yres = tools.AUC(val.Yres(C), val.Yres(~C));
             C = val.C;
             val.cp_Yc = tools.AUC(val.Y(C), val.Y(~C));
             val.cp_Yresc = tools.AUC(val.Yres(C), val.Yres(~C));
-            val.cp_Yzer = tools.AUC(val.Yzer(zerC), val.Yzer(~zerC));            
-            val.cp_Yfrz = tools.AUC(val.Yfrz(val.Cfrz), val.Yfrz(~val.Cfrz));
-                                    
+            C = val.Czer;
+            val.cp_Yzer = tools.AUC(val.Yzer(C), val.Yzer(~C));
+            C = val.Clow;
+            val.cp_Ylow = tools.AUC(val.Ylow(C), val.Ylow(~C));
+            val = frzTrialWeightedCP(val, d); % nancy has multiple seeds
+
             % separability/rank analyses
             if ~isSpaceOnly
                 val = addSeparabilityAndRank(val, d);
@@ -207,11 +216,36 @@ function val = addStimulusInfo(d)
     else
         inds = d.stim.goodtrial & ~d.stim.frozentrials;
     end
+    val.ix = inds;
+    val.ixfrz = d.ixfrz;
     val.dirprob = d.stim.dirprob(inds);
     val.dirstrength = sum(sum(d.stim.pulses(...
         inds,:,:),3),2);
     val.correct = d.stim.correct(inds);
     val.pctCorrect = mean(val.correct);
+end
+
+function val = frzTrialWeightedCP(val, d)    
+    X = d.stim.pulses(val.ixfrz,:,:);
+    Y = val.Yfrz;
+    C = val.Cfrz;
+    ix = ~isnan(Y); X = X(ix,:,:); Y = Y(ix); C = C(ix);
+    val.nfrz = sum(ix);
+    
+    [~,ix,ic] = unique(mean(X, 3), 'rows');
+    cpfrz = zeros(numel(ix),1);
+    nf = zeros(numel(ix),1);
+    for ii = 1:numel(ix)
+        y = Y(ic == ix(ii));
+        c = C(ic == ix(ii));
+        nf(ii) = sum(ic == ix(ii));
+        if sum(c) == 0 || sum(~c) == 0
+            continue;
+        end
+        cpfrz(ii) = tools.AUC(y(c), y(~c));        
+    end
+    val.cp_Yfrz = (nf'*cpfrz)/sum(nf);    
+    val.nfrz_full = nf';
 end
 
 function val = addWeightSubfields(val, targPref)
@@ -229,23 +263,25 @@ end
 
 function val = centerOfMass(val)
 
+    % normalized stimulus location
     xs = val.Xxy;
-    xs = xs - repmat(mean(xs), size(xs,1), 1);
-    xs = xs ./ repmat(var(xs), size(xs,1), 1);
-    ys = val.wfSvd_1(:,1);
-    if sum(ys) < 0
-        ys = -ys;
-    end
-%     ys = ys + abs(min(ys));
-%     ys = abs(ys);
-    ys(ys < 0) = 0;
-    ys = ys / sum(ys);
+    xs = zscore(xs);
+%     xs = xs - repmat(mean(xs), size(xs,1), 1);
+%     xs = xs ./ repmat(var(xs), size(xs,1), 1);
 
+    % thresholded spatial RF
+    ys = val.wfSvd_1(:,1);
+    ys = ys*sign(sum(ys)); % make positive
+    ys(ys < 0) = 0; % ignore subfields
+    ys = ys / sum(ys); % normalize so we can use as weights
+    
+    % mean of location weighted by RF strength
     xc = (xs(:,1)'*ys);
     yc = (xs(:,2)'*ys);
+    [theta, rho] = cart2pol(xc, yc);
     val.rf_center = [xc yc];
-    val.rf_ecc = sqrt(xc^2 + yc^2);
-
+    val.rf_ecc = rho;
+    val.rf_theta = theta;
 end
 
 function val = addSeparabilityAndRank(val, d)
