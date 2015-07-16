@@ -17,7 +17,21 @@ vn = tools.makeFitSummaries(['data/' fitdir '-nancy/fits'], true, 'ASD');
 vp = tools.makeFitSummaries(['data/' fitdir '-pat/fits'], false, 'ASD');
 vy = [vp vn];
 
-% 20150305a-decision
+%%
+
+nms = {vw.name};
+vy2 = [];
+vw2 = [];
+for ii = 1:numel(nms)
+    v1 = vw(strcmp({vw.name}, nms{ii}));
+    v2 = vx(strcmp({vx.name}, nms{ii}));
+    if numel(v1) ~= 1 || numel(v2) ~= 1
+        disp(num2str([numel(v1) numel(v2)]));
+        continue;
+    end
+    vw2 = [vw2 v1];
+    vy2 = [vy2 v2];
+end
 
 %%
 

@@ -29,9 +29,8 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
             case {'jacobyates'}
                 basedir = '~/Dropbox/MatlabCode/Projects/gaborPulseASD/data';
             otherwise
-                basedir = '/Users/jayhennig/Documents';
+                basedir = '~/Documents';
         end
-        
     end
     
     % load stimulus data
