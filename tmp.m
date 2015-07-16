@@ -1,15 +1,23 @@
-fitdir = 'sametargs-motdir';
+fitdir = '20150713';
 fitAllSTRFs(fitdir, false, 'cells ASD');
 fitAllSTRFs(fitdir, true, 'cells ASD');
 fitAllSTRFs(fitdir, false, 'behavior ASD');
 fitAllSTRFs(fitdir, true, 'behavior ASD');
+%%
+fitdir = '20150715-space-only';
+fitAllSTRFs(fitdir, false, 'cells ASD space-only');
+fitAllSTRFs(fitdir, true, 'cells ASD space-only');
 
 %%
 
-fitdir = '20150615';
+fitdir = '20150713';
+% fitdir = '20150615';
+% fitdir = '20150715-space-only';
 vn = tools.makeFitSummaries(['data/' fitdir '-nancy/fits'], true, 'ASD');
 vp = tools.makeFitSummaries(['data/' fitdir '-pat/fits'], false, 'ASD');
-vu = [vp vn];
+vy = [vp vn];
+
+% 20150305a-decision
 
 %%
 

@@ -9,7 +9,7 @@ vu = [vp vn];
 
 %% pairwise plots
 
-Yh = 'Ylow';
+Yh = 'Yres';
 % vut = vu([vu.nzertrials] >= 30);
 
 % noise-correlation vs. distance of RF centers
@@ -30,9 +30,11 @@ plot.saveFigure('MT - noise-corr vs. rf-corr', 'tmp', gcf);
 
 %% CP plots
 
-cpY = 'cp_Ylow';
+cpY = 'cp_YresARc';
+% cpY = 'cp_Ylow'
+% vut = vu;
 % vut = vu([vu.nzertrials] >= 30);
-vut = vu(arrayfun(@(v) all(v.nlowmottrials > 30), vu));
+% vut = vu(arrayfun(@(v) all(v.nlowmottrials > 30), vu));
 % vut = vut(round([vut.(cpY)]) ~= [vut.(cpY)]);
 
 % plot.boxScatterFitPlotWrap(vu([vu.isMT]), 'dPrime', cpY);

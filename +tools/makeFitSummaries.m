@@ -129,13 +129,15 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val = addWeightSubfields(val, val.targPref);
             
             % compare to decision
-            fd = fs.decision.(fitstr); fd = fd{end};
-            val.wfDec = reshape(fd.mu(1:end-1), d.ns, d.nt);
-            wf = val.wf(:);
-            if val.targPref == 2
-                wf = -wf;
+            if isfield(fs, 'decision')
+                fd = fs.decision.(fitstr); fd = fd{end};
+                val.wfDec = reshape(fd.mu(1:end-1), d.ns, d.nt);
+                wf = val.wf(:);
+                if val.targPref == 2
+                    wf = -wf;
+                end
+                val.wfDec_corr = corr(wf, val.wfDec(:));
             end
-            val.wfDec_corr = corr(wf, val.wfDec(:));
             
             % responses
             predFcn = reg.getPredictionFcn(val.isLinReg);
@@ -161,12 +163,16 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             C = val.Czer;
             val.cp_Yzer = tools.AUC(val.Yzer(C), val.Yzer(~C));
             C = val.Clow;
-            val.cp_Ylow = tools.AUC(val.Ylow(C), val.Ylow(~C));
-            val = frzTrialWeightedCP(val, d); % nancy has multiple seeds
+            if any(~isnan(val.Ylow(C))) && any(~isnan(val.Ylow(~C)))
+                val.cp_Ylow = tools.AUC(val.Ylow(C), val.Ylow(~C));
+            else
+                val.cp_Ylow = nan;
+            end
+            val = frzTrialWeightedCP(val, d); % check for multiple seeds
 
             % separability/rank analyses
             if ~isSpaceOnly
-                val = addSeparabilityAndRank(val, d);
+                val = addSeparabilityAndRank(val, d);                
             end
             val = centerOfMass(val);
 %             if isfield(f, 'hyper')
@@ -274,7 +280,11 @@ function val = centerOfMass(val)
 %     xs = xs ./ repmat(var(xs), size(xs,1), 1);
 
     % thresholded spatial RF
-    ys = val.wfSvd_1(:,1);
+    if isfield(val, 'wfSvd_1')
+        ys = val.wfSvd_1(:,1);
+    else
+        ys = val.w;
+    end
     ys = ys*sign(sum(ys)); % make positive
     ys(ys < 0) = 0; % ignore subfields
     ys = ys / sum(ys); % normalize so we can use as weights

@@ -3,18 +3,58 @@ for ii = 1:numel(dts)
     v0 = vs(strcmp({vs.dt}, dts{ii}) & strcmp({vs.type}, 'MT'));
     v1 = vs(strcmp({vs.dt}, dts{ii}) & strcmp({vs.type}, 'LIP'));
     
-%     if numel(v0) > 0 && numel(v1) > 0
-%         disp([dts{ii} ' ' num2str(numel(v0)) ' - ' num2str(numel(v1))]);
-%     end
     
-    a = sum([v0.targPref] == 1);
-    if a > 0 && numel(v0) > a
-        disp([dts{ii} ' ' num2str(a) ' - ' num2str(numel(v0)-a)]);    
+    if numel(v0) > 0 && numel(v1) > 0
+        disp([dts{ii} ' ' num2str(numel(v0)*numel(v1)) ', ' num2str(numel(v0)) ' - ' num2str(numel(v1))]);
     end
+    
+%     a = sum([v0.targPref] == 1);
+%     if a > 0 && numel(v0) > a
+%         disp([dts{ii} ' ' num2str(a) ' - ' num2str(numel(v0)-a)]);    
+%     end
     
 end
 
 %%
+
+% LIP
+% 20130515 1 - 1
+% 20150313 1 - 3
+% 20150326a 2 - 6
+% 20150331 1 - 3
+% 20150401 2 - 8
+% 20150407b 3 - 1
+% 
+% MT
+% 20140304 8 - 1
+% 20140305 3 - 2
+% 20150304a 6 - 1
+% 20150304b 6 - 2
+% 20150305b 1 - 3
+% 20150306b 2 - 3
+% 20150306c 4 - 5
+% 20150310 1 - 2
+% 20150316c 10 - 3
+% 20150324a 6 - 6
+% 20150519 1 - 6
+% 
+
+Y0 = d.sps;
+[nt, ~, ~] = size(Y0);
+
+ixType = cellfun(@(n) strcmpi(n.brainArea, 'MT'), d.neurons);
+%     ixPref = cellfun(@(n) n.targPref == 1, d.neurons);
+%     ixG1 = ixType & ixPref;
+%     ixG2 = ixType & ~ixPref;
+ixG1 = ixType;
+ixG2 = ~ixType;
+%     ixG1 = ixType & ~ixPref;
+%     ixG2 = ~ixType & ~ixPref;
+%     if sum(ixG1) == 0 || sum(ixG2) == 0
+%         return;
+%     end
+A = squeeze(Y0(:,ixG1,:));
+B = squeeze(Y0(:,ixG2,:));
 
 dts = {'20140304', '20140305', '20150304a', '20150304b', '20150305b', '20150306b', '20150306c', '20150310', '20150316c', '20150324a', '20150519'};
 dts = {'20130515',  '20150313', '20150326a', '20150331', '20150401', '20150407b'};
