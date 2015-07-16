@@ -5,22 +5,32 @@ plot.saveFigure('exampleOverlayProjection', figDir, gcf, 'pdf');
 
 %% example hyperflow with arrows and no contourf
 
-exampleCellMT = '20140304-MT_3';
-vMT = vuMT(strcmp({vuMT.name}, exampleCellMT));
-d = io.loadDataByDate(vMT.dt, vMT.isNancy);
-n = d.neurons{vMT.cellind};
-t1 = d.stim.targ1XY; t2 = d.stim.targ2XY;
-figure;
-hold on;
-set(gcf, 'color', 'w');
-axis off;
-plot.getColors([0 1]);
-plot.plotHyperflowMT(n, t1, t2, false);
-scatter(t1(:,1), t1(:,2), 50, [0.2 0.8 0.2], 'filled');
-scatter(t2(:,1), t2(:,2), 50, [0.2 0.5 0.2], 'filled');
-axis equal;
-
-plot.saveFigure('exampleOverlay', figDir, gcf, 'pdf');
+% exampleCellMT = '20140304-MT_3';
+exampleCells = [cellstr(num2str((1:7)', '20140304-MT_%d')); cellstr(num2str((1:2)', '20140307-MT_%d')); cellstr(num2str((1:10)', '20150324a-MT_%d'))];
+for kCell = 1:numel(exampleCells)
+    exampleCellMT = exampleCells{kCell};
+    vMT = vuMT(strcmp({vuMT.name}, exampleCellMT));
+    if isempty(vMT)
+        continue
+    end
+    d = io.loadDataByDate(vMT.dt, vMT.isNancy);
+    n = d.neurons{vMT.cellind};
+    if isempty(n.hyperflow)
+        continue
+    end
+    t1 = d.stim.targ1XY; t2 = d.stim.targ2XY;
+    figure;
+    hold on;
+    set(gcf, 'color', 'w');
+    axis off;
+    plot.getColors([0 1]);
+    plot.plotHyperflowMT(n, t1, t2, false);
+%     scatter(t1(:,1), t1(:,2), 50, [0.2 0.8 0.2], 'filled');
+%     scatter(t2(:,1), t2(:,2), 50, [0.2 0.5 0.2], 'filled');
+%     axis equal;
+    
+    plot.saveFigure(sprintf('exampleOverlay%s', exampleCellMT), figDir, gcf, 'pdf');
+end
 
 %%
 
@@ -28,8 +38,10 @@ showTargs = false;
 showHyperflow = true;
 contourNoQuiver = true;
 
-exampleCells = {'20140305-MT_1', '20140218-MT_1', '20140304-MT_3', ...
-    '20150324a-MT_4', '20150324a-MT_5', '20150324a-MT_6'};
+% exampleCells = cellstr(num2str((1:7)', '20140304-MT_%d'));
+exampleCells = [cellstr(num2str((1:7)', '20140304-MT_%d')); cellstr(num2str((1:2)', '20140307-MT_%d')); cellstr(num2str((1:30)', '20150324a-MT_%d'))];
+% exampleCells = {'20140305-MT_1', '20140218-MT_1', '20140304-MT_3', ...
+%     '20150324a-MT_4', '20150324a-MT_5', '20150324a-MT_6'};
 
 for ii = 1:numel(exampleCells)
     vMT = vuMT(strcmp({vuMT.name}, exampleCells{ii}));

@@ -22,7 +22,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
         if isempty(fs)
             continue;
         end
-        continue;
+%         continue;
         d = io.loadDataByDate(dt, isNancy);
         if isSpaceOnly
             d.X = sum(d.Xf, 3);

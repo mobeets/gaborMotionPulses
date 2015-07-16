@@ -11,7 +11,7 @@ vuMT = vu([vu.isMT]);
 %%
 
 figBaseDir = '~/Dropbox/gaborMotionPulseASD/figures/';
-dirNames = arrayfun(@(x) dir(fullfile(fdir, ...
+dirNames = arrayfun(@(x) dir(fullfile(figBaseDir, ...
     ['Figure0' num2str(x) '*'])), 1:5, 'uni', 0);
 figDirFcn = @(num) fullfile(figBaseDir, dirNames{num}.name);
 
