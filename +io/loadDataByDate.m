@@ -23,7 +23,15 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
     end
     if nargin < 3 || isempty(basedir)
 %         basedir = '/Volumes/LKCLAB/Users/Jay';
-        basedir = '/Users/jayhennig/Documents';
+        [~, user] = system('echo "$USER"');
+        user(end) = []; % remove empty character that UNIX spits out
+        switch user
+            case {'jacobyates'}
+                basedir = '~/Dropbox/MatlabCode/Projects/gaborPulseASD/data';
+            otherwise
+                basedir = '/Users/jayhennig/Documents';
+        end
+        
     end
     
     % load stimulus data
