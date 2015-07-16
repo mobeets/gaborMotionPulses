@@ -142,6 +142,22 @@ function sc = getMeanCellScore(X, Y, scoreFcn, nfolds, nshuffles)
         sc = nan;
         return;
     end
-    sc0 = decode.estimate(X, Y, scoreFcn, nfolds, nshuffles);
+    sc0 = estimate(X, Y, scoreFcn, nfolds, nshuffles);
     sc = nanmean(sc0(:));
 end
+
+function scs = estimate(X, Y, scoreFcn, nfolds, nshuffles)
+    scs = nan(nshuffles, nfolds);
+    for jj = 1:nshuffles
+        ix = crossvalind('Kfold', Y, nfolds);
+        for ii = 1:nfolds
+            test = (ix == ii); train = ~test;
+            [b, dev, stats] = glmfit(X(train,:), Y(train), ...
+                'binomial', 'logit');
+            % use classify( , ,group, 'linear');
+            Yh = glmval(b, X(test,:), 'logit');
+            scs(jj,ii) = scoreFcn(Y(test), round(Yh));
+        end
+    end
+end
+

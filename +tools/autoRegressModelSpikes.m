@@ -20,7 +20,7 @@ function v = autoRegressModelSpikes(v, nlags, nfolds, nshuffles)
 %     scores = estimate(X, Y, scoreFcn, nfolds, nshuffles);
 %     sc1 = nanmean(scores(:));
     sc1 = scoreFcn(Yh1, Y0);
-    disp(num2str([sc0 sc1]));
+%     disp(num2str([sc0 sc1]));
     
     v.YhAR = nan(size(v.Y));
     v.YhAR(ix) = Yh1;
