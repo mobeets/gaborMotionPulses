@@ -8,7 +8,6 @@ axis off;
 plot.getColors([0 1]);
 imagesc(C);
 
-
 % Create arrow
 annotation(fig,'arrow',[0.469367588932806 0.408928571428571],...
     [0.464982778415614 0.292857142857143],'LineWidth',4);

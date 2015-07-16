@@ -1,10 +1,14 @@
-function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
-    if nargin < 6
+function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, ...
+    contourNoQuiver, lbl)
+    if nargin < 7
         if ~isstruct(n)
             lbl = [f.label ' = ' sprintf('%0.2f', f.score)];
         else
             lbl = [n.exname ' - ' f.label ' = ' sprintf('%0.2f', f.score)];
         end
+    end
+    if nargin < 6
+        contourNoQuiver = true;
     end
     if nargin < 5
         showHyperflow = true;
@@ -15,18 +19,15 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
     plot.getColors([0 1]);
 
     t1 = stim.targ1XY;
-    t2 = stim.targ2XY;
-    if isstruct(n) && n.targPref > 1
-        t3 = t1; t1 = t2; t2 = t3;
-    end
+    t2 = stim.targ2XY;    
     if ~isstruct(n)
         xl = nan;
     elseif strcmp(n.brainArea, 'LIP') && ...
             isfield(n, 'delayedsaccades') && ~isempty(n.delayedsaccades)
-        [xl, yl] = plotLIP(n);
+        [xl, yl] = plot.plotDelayedSaccadesLIP(n);
     elseif strcmp(n.brainArea, 'MT') && showHyperflow && ...
             isfield(n, 'hyperflow') && ~isempty(n.hyperflow)
-        [xl, yl] = plotMT(n, t1, t2);
+        [xl, yl] = plot.plotHyperflowMT(n, t1, t2, contourNoQuiver);
     else
         xl = nan;
     end
@@ -59,6 +60,9 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
     plot(stim.gaborXY(:,1), stim.gaborXY(:,2), ...
         'ko', 'markersize', sz, 'LineWidth', 2);
     
+    if isstruct(n) && n.targPref > 1
+        t3 = t1; t1 = t2; t2 = t3;
+    end
     if showTargs        
         if var(t1,1) == 0
             t1 = t1 + 0.1*randn(size(t1));
@@ -78,46 +82,6 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, lbl)
         xlim(xl); ylim(yl);
     end
 end
-
-function [xl, yl] = plotLIP(n)
-    contourf(n.delayedsaccades.xax, n.delayedsaccades.yax, ...
-        n.delayedsaccades.RF, 'LineColor','none');
-    caxis([-0.5 1.5]); % less saturated
-    xl = [min(n.delayedsaccades.xax) max(n.delayedsaccades.xax)];
-    yl = [min(n.delayedsaccades.yax) max(n.delayedsaccades.yax)];
-%             imagesc(n.delayedsaccades.xax, n.delayedsaccades.yax, ...
-%                 n.delayedsaccades.RF);
-
-end
-
-function [xl, yl] = plotMT(n, t1, t2)
-    xl = [min(n.hyperflow.gridx(:)) max(n.hyperflow.gridx(:))];
-    yl = [min(n.hyperflow.gridy(:)) max(n.hyperflow.gridy(:))];        
-    xs = n.hyperflow.gridx(:);
-    ys = n.hyperflow.gridy(:);
-    zs1 = n.hyperflow.dx;
-    zs2 = n.hyperflow.dy;
-
-    proj = @(a,b) dot(a,b)/norm(a);
-    dt = diff([median(t1); median(t2)]);
-    zs = arrayfun(@(x, y) proj(dt, [x y]), zs1, zs2);
-    zs = reshape(zs, numel(unique(xs)), numel(unique(ys)));
-%     imagesc(unique(xs), unique(ys), -zs);
-    contourf(unique(xs), unique(ys), -zs, ...
-        'LineWidth', 1, 'LineColor', 'none');
-    caxis([min(0, -max(abs(caxis))) max(0, max(abs(caxis)))]);
-    caxis(2*caxis); % less saturated
-
-%     keep = arrayfun(@norm, zs1, zs2) >= 2e-2;
-%     keep = arrayfun(@norm, zs1, zs2) >= 0;
-%         plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
-%             zs1(keep), zs2(keep)), 80, 120, 'HeadStyle', 'plain', ...
-%             'LineWidth', 1.5);
-
-%     quiver(xs(keep), ys(keep), zs1(keep), zs2(keep), ...
-%         'k', 'LineWidth', 2);
-end
-
 
 function sz = sizeToCurUnits(sz0)
     curUnits = get(gca, 'units');

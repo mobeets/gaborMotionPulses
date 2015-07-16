@@ -15,7 +15,6 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
     knownProblemFields = {'score_noCV', 'muCorrFolds', 'mus'};
     flipTargPrefNames = {'20150401-LIP_15', ...
         '20150407b-LIP_2', '20150407b-LIP_4'};
-    
     vals = struct([]);
     for ii = 1:numel(dts)
         dt = dts{ii};
@@ -23,6 +22,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
         if isempty(fs)
             continue;
         end
+        continue;
         d = io.loadDataByDate(dt, isNancy);
         if isSpaceOnly
             d.X = sum(d.Xf, 3);
@@ -252,7 +252,8 @@ function val = frzTrialWeightedCP(val, d)
         if sum(c) == 0 || sum(~c) == 0
             continue;
         end
-        cpfrz(ii) = tools.AUC(y(c), y(~c));        
+        cpfrz(ii) = tools.AUC(y(c), y(~c));
+                
     end
     val.cp_Yfrz = (nf'*cpfrz)/sum(nf);    
     val.nfrz_full = nf';

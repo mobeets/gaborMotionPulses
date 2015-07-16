@@ -1,4 +1,5 @@
-function [scs, scsP, scsA] = main(vs, scoreFcn, nfolds, nshuffles)
+function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
+    predictChoice, scoreFcn, nfolds, nshuffles)
 % vs - struct array of all data, from tools.makeFitSummaries()
 % scoreFcn - function handle @(Y, Yh) ...;
 % 
@@ -8,16 +9,21 @@ function [scs, scsP, scsA] = main(vs, scoreFcn, nfolds, nshuffles)
 % 
 % dt cell1 cell2 cellScore mnkScore
 % 
-    if nargin < 4
+    if nargin < 5
         nshuffles = 10;
     end
-    if nargin < 3
+    if nargin < 4
         nfolds = 10;
     end
-    if nargin < 2
+    if nargin < 3
         scoreFcn = @(Y, Yh) mean(Y == Yh);
     end
-    predictChoice = false;
+    if nargin < 3
+        predictChoice = false;
+    end
+    if nargin < 2
+        useAllCells = false;
+    end
 
     dts = unique({vs.dt});
     scs = struct(); % singles
@@ -43,18 +49,20 @@ function [scs, scsP, scsA] = main(vs, scoreFcn, nfolds, nshuffles)
             Y = (Y == 1); % correct choice
         end
         mnkScore = scoreFcn(Y, Ym);
-        
-%         Ys = nan(numel(cells),numel(Y));
-%         for mm = 1:numel(cells)
-%             Ys(mm,:) = cells(mm).Y;
-%         end
-%         scsA(e).dt = dts{ii};
-%         scsA(e).mnkScore = mnkScore;
-%         scsA(e).score = getMeanCellScore(Ys', Y, scoreFcn, ...
-%             nfolds, nshuffles);
-%         scsA(e).ncells = numel(cells);
-%         e = e+1;
-%         continue;
+
+        if useAllCells
+            Ys = nan(numel(cells),numel(Y));
+            for mm = 1:numel(cells)
+                Ys(mm,:) = cells(mm).Y;
+            end
+            scsA(e).dt = dts{ii};
+            scsA(e).mnkScore = mnkScore;
+            scsA(e).score = getMeanCellScore(Ys', Y, scoreFcn, ...
+                nfolds, nshuffles);
+            scsA(e).ncells = numel(cells);
+            e = e+1;
+            continue;
+        end
 %         
         for jj = 1:numel(cells)
             Xc1 = cells(jj).Y;

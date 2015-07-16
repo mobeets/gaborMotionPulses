@@ -1,5 +1,5 @@
 function fig = plotAllSaccadeKernelOverlays(dt, fitdir, isNancy, ...
-    fitstr, cellinds, nSubplots)
+    fitstr, cellinds, nSubplots, showTargs, showHyperflow, contourNoQuiver)
 % 
 % Great MT Overlays:
 %     20140304-2
@@ -11,6 +11,15 @@ function fig = plotAllSaccadeKernelOverlays(dt, fitdir, isNancy, ...
 %     20150324a-13
 %     20150324a-14
 % 
+    if nargin < 9
+        contourNoQuiver = true;
+    end
+    if nargin < 8
+        showHyperflow = true;
+    end
+    if nargin < 7
+        showTargs = true;
+    end
     if nargin < 6
         nSubplots = 1;
     end
@@ -37,7 +46,8 @@ function fig = plotAllSaccadeKernelOverlays(dt, fitdir, isNancy, ...
         end
         f = fs.(nm).(fitstr);
         subplot(numel(cellinds),nSubplots, ixf(jj,1)); hold on;
-        plot.plotSaccadeKernelOverlay(d.stim, n, f{end}, true, true);
+        plot.plotSaccadeKernelOverlay(d.stim, n, f{end}, ...
+            showTargs, showHyperflow, contourNoQuiver);
         
         if nSubplots > 1 && showPsth
             subplot(numel(cellinds), 2, ixf(jj,2)); hold on;            

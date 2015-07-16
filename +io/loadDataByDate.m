@@ -8,7 +8,7 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
         ignoreFrozen = true;
     end    
     if nargin < 2
-        isNancy = false;
+        isNancy = str2num(dt(4)) > 4;
     end
     if isNancy
         mnkNm = 'nancy';

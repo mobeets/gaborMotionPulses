@@ -1,16 +1,13 @@
-function psthByEvent(data, neuron, event, cellind, lbls)
-    secsPerBin = 0.02;
+function psthByEvent(data, neuron, event, cellind, lbls, secsPerBin)
+    if nargin < 6
+        secsPerBin = 0.035;
+    end
     [Z, bins] = tools.getPsthByEvent(data.stim, neuron, event, 1.35, ...
         secsPerBin, 0.01);
     for ii = 1:numel(Z)
-        if ii == 1
-            lbl = lbls{ii}; % 'pref';
-        else
-            lbl = lbls{ii}; % 'anti';
-        end
         plot(bins*1000, (1/secsPerBin)*Z{ii}, '-', ...
             'Color', 'k', 'LineWidth', ii, ...
-            'DisplayName', lbl);
+            'DisplayName', lbls{ii});
     end
     xlim([min(bins)*1000, max(bins)*1000]);
     legend('Location', 'NorthEastOutside');
