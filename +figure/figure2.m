@@ -16,7 +16,7 @@ saveas(h(1), fullfile(figDir, sprintf('trialCompare%d.pdf', exampleCellMT)))
 
 figure(h(3))
 set(h(3), 'PaperSize', [4 4], 'PaperPosition', [0 0 4 4])
-saveas(h(3), fullfile(figDir, sprintf('MotionDirSensitivity%d.pdf', exampleCellMT)))
+saveas(h(3), fullfile(figDir, sprintf('MotionDirSensitivity%s.pdf', exampleCellMT)))
 
 %%
 figure(110); clf
@@ -40,6 +40,14 @@ saveas(gcf, fullfile(figDir, sprintf('stimulus%d.pdf', exampleCellMT)))
 %% r-sq before and after AR-2 model
 
 figure;
-set(gca, 'FontSize', 14);
+set(gca, 'FontSize', 5);
 set(gcf, 'color', 'w');
-plot.fitSummaries(vuMT, 'score', 'score_AR');
+plot.fitSummaries(vuMT, 'b', 'score_AR', nan, false);
+xlim([0 100])
+hold on
+plot([5 5], ylim, 'k')
+% ylim([0 1])
+xlabel('Mean Spike Rate')
+ylabel('r^2')
+set(gcf, 'PaperSize', [4 4], 'PaperPosition', [0 0 4 4])
+saveas(gcf, fullfile(figDir, 'rsquared.pdf'))
