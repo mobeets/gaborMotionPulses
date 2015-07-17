@@ -66,9 +66,10 @@ function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
                 end
                 p2 = yfcn(xs, ys);
                 ps = [ps; p1 p2];
+                nms = [nms; {v0.name, v1.name}];
                 if v0.targPref == v1.targPref
                     dps = [dps; p1 p2 v0.dPrime v1.dPrime v0.cp_Yfrz v1.cp_Yfrz];
-                    nms = [nms; {v0.name, v1.name}];
+%                     nms = [nms; {v0.name, v1.name}];
                 end
             end    
         end
@@ -78,16 +79,7 @@ function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
             pss = [pss; ps];
         end
     end
-    
-    ix = dps(:,1) > nanmedian(dps(:,1)) & ... % rf-dist
-        dps(:,2) < nanmedian(dps(:,2)) & ... % noise-corr
-        dps(:,3) > nanmedian([vs.dPrime]) & ... % dprime-1
-        dps(:,4) > nanmedian([vs.dPrime]); % dprime-2
-    dps2 = dps(ix,:);
-    nms2 = nms(ix,:);
-    
-    
-    
+
     xs = pss(:,1);
     ys = pss(:,2);
 

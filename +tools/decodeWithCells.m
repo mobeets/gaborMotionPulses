@@ -9,13 +9,13 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
 % 
 % dt cell1 cell2 cellScore mnkScore
 % 
-    if nargin < 5
+    if nargin < 6
         nshuffles = 10;
     end
-    if nargin < 4
+    if nargin < 5
         nfolds = 10;
     end
-    if nargin < 3
+    if nargin < 4
         scoreFcn = @(Y, Yh) mean(Y == Yh);
     end
     if nargin < 3
@@ -36,7 +36,7 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
         if numel(dec) == 0
             continue;
         end
-        cells = vc([vc.isCell]);
+        cells = vc([vc.isMT]);
         if numel(cells) == 0
             continue;
         end

@@ -1,12 +1,14 @@
 %% load data
 
 if figure5_reGenData
-    [~, scsP, ~] = decodeWithCells(vuMT, false, false);
-    [~, ~, scsA] = decodeWithCells(vuMT, true, false);
+    [~, scsP, ~] = tools.decodeWithCells(vu, false, false);
+    [~, ~, scsA] = tools.decodeWithCells(vu, true, false);
+    save('data/decodeScs2.mat', 'scs', 'scsP');
+    save('data/allCells2.mat', 'scsA');
 else
-    x = load('data/allCells.mat');
+    x = load('data/allCells2.mat');
     scsA = x.scsA;
-    x = load('data/decodeScs.mat');
+    x = load('data/decodeScs2.mat');
     scsP = x.scsP;
     scsP = scsP(~strcmp({scsP.dt}, '20150304a'));
 end

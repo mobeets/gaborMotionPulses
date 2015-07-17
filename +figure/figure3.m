@@ -42,6 +42,8 @@ contourNoQuiver = true;
 exampleCells = [cellstr(num2str((1:7)', '20140304-MT_%d')); cellstr(num2str((1:2)', '20140307-MT_%d')); cellstr(num2str((1:30)', '20150324a-MT_%d'))];
 % exampleCells = {'20140305-MT_1', '20140218-MT_1', '20140304-MT_3', ...
 %     '20150324a-MT_4', '20150324a-MT_5', '20150324a-MT_6'};
+% exampleCells = {'20150519-MT_5', '20150519-MT_6'};
+% exampleCells = {'20150304b-MT_14', '20150304b-MT_8'};
 
 for ii = 1:numel(exampleCells)
     vMT = vuMT(strcmp({vuMT.name}, exampleCells{ii}));
