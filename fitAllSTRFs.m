@@ -65,9 +65,9 @@ function fitAllSTRFs(runName, isNancy, fitType, dts)
             ncells = numel(cell_inds);
             for jj = 1:ncells
                 cell_ind = cell_inds(jj);
-                if data.neurons{cell_ind}.dPrime < 0.4
-                    continue;
-                end
+%                 if data.neurons{cell_ind}.dPrime < 0.4
+%                     continue;
+%                 end
                 data.Y = data.Y_all(:,cell_ind); % choose cell for analysis
                 if sum(~isnan(data.Y)) == 0
                     continue;

@@ -15,12 +15,11 @@ function [xl, yl] = plotHyperflowMT(n, t1, t2, contourNoQuiver)
     zs = reshape(zs, numel(unique(xs)), numel(unique(ys)));    
     if contourNoQuiver
         contourf(unique(xs), unique(ys), -zs, ...
-        'LineWidth', 1, 'LineColor', 'none');
-        caxis([min(0, -max(abs(caxis))) max(0, max(abs(caxis)))]);
+        'LineWidth', 1, 'LineColor', 'none');        
         caxis(2*caxis); % less saturated
     else
         imagesc(unique(xs), unique(ys), -zs);
-%         keep = arrayfun(@norm, zs1, zs2) >= 2e-2;
+%         keep = arrayfun(@norm, zs1, zs2) >= 2e-2;        
         keep = arrayfun(@norm, zs1, zs2) >= 0;
         plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
             zs1(keep), zs2(keep)), 80, 120, 'HeadStyle', 'plain', ...
@@ -28,4 +27,5 @@ function [xl, yl] = plotHyperflowMT(n, t1, t2, contourNoQuiver)
         quiver(xs(keep), ys(keep), zs1(keep), zs2(keep), ...
             'k', 'LineWidth', 2);
     end
+    caxis([min(0, -max(abs(caxis))) max(0, max(abs(caxis)))]);
 end

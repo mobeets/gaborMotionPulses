@@ -26,14 +26,8 @@ function v = autoRegressModelSpikes(v, nlags, nfolds, nshuffles)
     v.YhAR(ix) = Yh1;
     v.score_AR = sc1;
     v.AR_nlags = nlags;
+    v.AR_weights = mdl.Coefficients.Estimate';
 
-end
-
-function Yhfrz = getFrozenPrediction(v)
-    Yfrz = v.Yfrz;
-    predFcn = reg.getPredictionFcn(v.isLinReg);
-    X2 = d.stim.pulses(d.stim.goodtrial,:,:);
-    Yhfrz = predFcn(X2, v.mu);
 end
 
 function [X, Y] = makeLagMats(Yh, Y0, nlags)

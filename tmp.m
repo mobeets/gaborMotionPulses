@@ -1,4 +1,4 @@
-fitdir = '20150713';
+fitdir = '20150716';
 fitAllSTRFs(fitdir, false, 'cells ASD');
 fitAllSTRFs(fitdir, true, 'cells ASD');
 fitAllSTRFs(fitdir, false, 'behavior ASD');
@@ -10,7 +10,7 @@ fitAllSTRFs(fitdir, true, 'cells ASD space-only');
 
 %%
 
-fitdir = '20150713';
+fitdir = '20150716';
 % fitdir = '20150615';
 % fitdir = '20150715-space-only';
 vn = tools.makeFitSummaries(['data/' fitdir '-nancy/fits'], true, 'ASD');

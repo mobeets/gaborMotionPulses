@@ -14,7 +14,8 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
     isSpaceOnly = false;
     knownProblemFields = {'score_noCV', 'muCorrFolds', 'mus'};
     flipTargPrefNames = {'20150401-LIP_15', ...
-        '20150407b-LIP_2', '20150407b-LIP_4'};
+        '20150407b-LIP_2', '20150407b-LIP_4', ...
+        '20150304a-MT_5', '20150518-MT_5'};
     vals = struct([]);
     for ii = 1:numel(dts)
         dt = dts{ii};
@@ -22,7 +23,6 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
         if isempty(fs)
             continue;
         end
-        continue;
         d = io.loadDataByDate(dt, isNancy);
         if isSpaceOnly
             d.X = sum(d.Xf, 3);
@@ -62,6 +62,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.type = nm{1};
             if numel(nm) > 1
                 val.cellind = str2num(nm{2});
+                val.id = d.neurons{val.cellind}.id;
                 val.isLinReg = true;
                 val.isCell = true;
                 val.llstr = 'gauss';
@@ -70,6 +71,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
 %                 continue;
             else
                 val.cellind = nan;
+                val.id = nan;
                 val.isLinReg = false;
                 val.isCell = false;
                 val.isMT = false;
