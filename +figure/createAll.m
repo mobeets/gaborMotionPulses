@@ -6,7 +6,22 @@ ff = @(mnkNm) fullfile(fitbasedir, [fitdir '-' mnkNm], 'fits');
 vp = tools.makeFitSummaries(ff('pat'), false, 'ASD');
 vn = tools.makeFitSummaries(ff('nancy'), true, 'ASD');
 vu = [vp vn];
-vuMT = vu([vu.isMT]);
+
+%% filter fit data
+
+nMT = sum([vu.isMT]);
+
+% ignore sessions where monkey's pctCorrect < 75%
+vu = vu([vu.pctCorrect] >= 0.75);
+
+vuMT = vu([vu.isMT]); nMT = numel(vuMT);
+% ignore cells with dPrime < 0.4
+vuMT = vuMT([vuMT.dPrime] >= 0.4);
+% ignore cells with ntrials < 100
+vuMT = vuMT([vuMT.ntrials] >= 100);
+
+warning(['Removing ' num2str(nMT-numel(vuMT)) ' of ' ...
+    num2str(nMT) ' MT cells.']);
 
 %%
 
