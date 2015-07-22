@@ -29,6 +29,6 @@ function plotKernelByName(name, fitdirbase, outdir)
 
     d = io.loadDataByDate(dt, isNancy);
     fs = io.loadFitsByDate(dt, fitdir);
-    f = fs.(lbl).ASD{end};
-    plot.plotAndSaveKernel(f, d, outdir, true, true);
+    f = fs.(lbl).ASD{end}; 
+    plot.plotAndSaveKernel(f, d, outdir, true, true, false);
 end

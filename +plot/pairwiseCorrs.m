@@ -1,26 +1,29 @@
 function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
-    xfcn, yfcn)
+    xfcn, yfcn, pairPredFcn)
 % xfcn (yfcn) - how to compare two neurons for x-axis (y-axis)
 %   - default is @corr
+% pairPredFcn - given a pair of neurons, returns bool of whether to include
+%   them or ignore
 % 
+    if nargin < 9
+        pairPredFcn = @(v0, v1) true;
+    end
     if nargin < 8
         yfcn = @corr;
     end
     if nargin < 7
         xfcn = @corr;
     end
+    lblfcn = @(x) ['corr(' x '_1, ' x '_2)'];
     if nargin < 6 || all(isnan(ylbl))
-        ylbl = ynm;
+        ylbl = lblfcn(ynm);
     end
     if nargin < 5 || all(isnan(xlbl))
-        xlbl = xnm;
+        xlbl = lblfcn(xnm);
     end
     if nargin < 4 || all(isnan(lbl))
         lbl = '';
     end
-    lblfcn = @(x) ['corr(' x '_1, ' x '_2)'];
-    xlbl = lblfcn(xlbl);
-    ylbl = lblfcn(ylbl);
     
     figure;
     set(gcf, 'color', 'w');
@@ -65,11 +68,12 @@ function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
                     continue;
                 end
                 p2 = yfcn(xs, ys);
-                ps = [ps; p1 p2];
-                nms = [nms; {v0.name, v1.name}];
-                if v0.targPref == v1.targPref
-                    dps = [dps; p1 p2 v0.dPrime v1.dPrime v0.cp_Yfrz v1.cp_Yfrz];
-%                     nms = [nms; {v0.name, v1.name}];
+%                 ps = [ps; p1 p2];
+                
+                if pairPredFcn(v0, v1)
+                    ps = [ps; p1 p2];
+%                     dps = [dps; p1 p2 v0.dPrime v1.dPrime v0.cp_Yfrz v1.cp_Yfrz];
+                    nms = [nms; {v0.name, v1.name}];
                 end
             end    
         end
@@ -79,12 +83,20 @@ function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
             pss = [pss; ps];
         end
     end
-
+    
+%     ix = dps(:,1) > nanmedian(dps(:,1)) & ... % rf-dist
+%         dps(:,2) < nanmedian(dps(:,2)) & ... % noise-corr
+%         dps(:,3) > nanmedian([vs.dPrime]) & ... % dprime-1
+%         dps(:,4) > nanmedian([vs.dPrime]); % dprime-2
+%     dps2 = dps(ix,:);
+%     nms2 = nms(ix,:);
+%     
+    
     xs = pss(:,1);
     ys = pss(:,2);
 
     set(gca, 'FontSize', 14);
-    mdl = plot.boxScatterFitPlot(pss(:,1), pss(:,2));
+    mdl = plot.boxScatterFitPlot(pss(:,1), pss(:,2), false, false);
     xlabel(xlbl);
     ylabel(ylbl);
     

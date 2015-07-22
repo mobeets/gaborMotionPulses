@@ -16,6 +16,9 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
     flipTargPrefNames = {'20150401-LIP_15', ...
         '20150407b-LIP_2', '20150407b-LIP_4', ...
         '20150304a-MT_5', '20150518-MT_5'};
+    ignoreMTCells = {'20150407a_25', '20150407a_26', '20150407a_28', ...
+        '20150407a_30', '20150407a_31', '20150407a_32', '20140304_14', ...
+        '20140307_06', '20140307_08'};
     vals = struct([]);
     for ii = 1:numel(dts)
         dt = dts{ii};
@@ -40,7 +43,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             if dval.pctCorrect < 0.7
                 % skip if monkey not above 70% correct
                 continue;
-            end
+            end            
             
             % load fit
             fs0 = fs.(nms{jj}).(fitstr);
@@ -62,6 +65,10 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.type = nm{1};
             if numel(nm) > 1
                 val.cellind = str2num(nm{2});
+                if any(strcmp([val.dt '_' val.cellind], ignoreMTCells))
+                    warning(['Ignoring MT cell ' val.dt '_' val.cellind]);
+                    continue;
+                end
                 val.id = d.neurons{val.cellind}.id;
                 val.isLinReg = true;
                 val.isCell = true;
@@ -150,7 +157,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.Ypos = predFcn(d.X, val.muPos);
             val.Yneg = predFcn(d.X, val.muNeg);
             val.Ylow = val.Y(lowTrials);
-            val = tools.autoRegressModelSpikes(val, 2); % creates val.YhAR
+            val = tools.autoRegressModelSpikes(val, 4); % creates val.YhAR
             val.YresAR = val.Y - val.YhAR;
             
             % CP
@@ -278,25 +285,26 @@ function val = centerOfMass(val)
 
     % normalized stimulus location
     xs = val.Xxy;
-    xs = zscore(xs);
-%     xs = xs - repmat(mean(xs), size(xs,1), 1);
-%     xs = xs ./ repmat(var(xs), size(xs,1), 1);
+%     xs = zscore(xs);
 
     % thresholded spatial RF
     if isfield(val, 'wfSvd_1')
         ys = val.wfSvd_1(:,1);
     else
+        warning('Cannot use wfSvd_1 for centerOfMass. Using w instead.');
         ys = val.w;
     end
     ys = ys*sign(sum(ys)); % make positive
     ys(ys < 0) = 0; % ignore subfields
     ys = ys / sum(ys); % normalize so we can use as weights
+    [~,idx] = max(ys);
     
     % mean of location weighted by RF strength
     xc = (xs(:,1)'*ys);
     yc = (xs(:,2)'*ys);
     [theta, rho] = cart2pol(xc, yc);
     val.rf_center = [xc yc];
+    val.rf_center2 = xs(idx,:);
     val.rf_ecc = rho;
     val.rf_theta = theta;
 end

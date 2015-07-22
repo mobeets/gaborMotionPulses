@@ -1,7 +1,11 @@
-function plotAndSaveKernel(obj, data, figdir, add_dt, add_score, add_trgs)
+function plotAndSaveKernel(obj, data, figdir, add_dt, add_score, ...
+    add_trgs, muFcn)
 % 
 % plots the kernel and saves to png
 % 
+    if nargin < 7
+        muFcn = @(v) v.mu;
+    end
     if nargin < 6
         add_trgs = true;
     end
@@ -14,7 +18,7 @@ function plotAndSaveKernel(obj, data, figdir, add_dt, add_score, add_trgs)
     fig_lblfcn = @(lbl, sc) [lbl ' sc=' num2str(sprintf('%.2f', sc))];
     
     if ~isempty(figdir)
-        wf = obj.mu;
+        wf = muFcn(obj);
         if prod(obj.shape) < numel(wf)
             wf = wf(1:end-1);
         end
@@ -41,9 +45,11 @@ function plotAndSaveKernel(obj, data, figdir, add_dt, add_score, add_trgs)
             t1 = nan;
             t2 = nan;
         end
-
-        plot.plotKernel2(reshape(wf, obj.shape(1), obj.shape(2)), ...
-            data.Xxy, nan, [0 0], t1, t2, lblS); 
+        
+        if numel(wf) == prod(obj.shape)
+            wf = reshape(wf, obj.shape(1), obj.shape(2));
+        end
+        plot.plotKernel2(wf, data.Xxy, nan, [0 0], t1, t2, lblS);
         plot.saveFigure(lbl, figdir);
     end
 end

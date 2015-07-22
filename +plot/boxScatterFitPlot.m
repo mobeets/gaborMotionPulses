@@ -16,8 +16,8 @@ function mdl = boxScatterFitPlot(xs, ys, showBox, showFit, nbins)
     
     % smoothed running mean
 %     plot(fit(xs, ys, 'poly4'), '-');
-    [~,idx] = sort(xs);
-    plot(xs(idx), smooth(xs(idx), ys(idx), 0.3, 'loess'), 'r-');
+%     [~,idx] = sort(xs);
+%     plot(xs(idx), smooth(xs(idx), ys(idx), 0.3, 'loess'), 'r-');
     
     % plot model fit
     mdl = fitlm(xs, ys)

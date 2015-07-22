@@ -1,40 +1,56 @@
 %% load data
 
 if figure5_reGenData
-    [~, scsP, ~] = tools.decodeWithCells(vu, false, false);
-    [~, ~, scsA] = tools.decodeWithCells(vu, true, false);
-    save('data/decodeScs2.mat', 'scs', 'scsP');
-    save('data/allCells2.mat', 'scsA');
+    vut = [vuMT_var vu(~[vu.isCell])];
+%     vut = vu;
+    [scs, scsP, ~] = tools.decodeWithCells(vut, false, false);
+    [~, ~, scsA] = tools.decodeWithCells(vut, true, false);
+%     save('data/decodeScs3.mat', 'scs', 'scsP');
+%     save('data/allCells3.mat', 'scsA');
 else
-    x = load('data/allCells2.mat');
+    x = load('data/allCells3.mat');
     scsA = x.scsA;
-    x = load('data/decodeScs2.mat');
+    x = load('data/decodeScs3.mat');
     scsP = x.scsP;
     scsP = scsP(~strcmp({scsP.dt}, '20150304a'));
 end
 
 % remove outliers in improvement
-Ynm = 'pairImprovement';
-ys = [scsP.(Ynm)];
-scsP = scsP(~isnan(ys));
-ix = zscore([scsP.(Ynm)]) < 3;
-scsP = scsP(ix);
+% Ynm = 'pairImprovement';
+% ys = [scsP.(Ynm)];
+% scsP = scsP(~isnan(ys));
+% ix = zscore([scsP.(Ynm)]) < 3;
+% scsP = scsP(ix);
 
 %% cellScore vs. rfCorr (same-sign and opposite-sign rfCorr)
 
-Xnm = 'rfDist';
+Xnm = 'rfDist3';
+% Xnm = 'noiseCorrLow';
 Ynm = 'pairImprovement';
+% Ynm = 'pairImprovePctLeft';
 ys = [scsP.(Ynm)];
 miny = min(ys)-0.01;
 maxy = max(ys)+0.01;
 
-plot.boxScatterFitPlotWrap(scsP(sign([scsP.rfCorr])<0), Xnm, Ynm, false);
-xlabel('rfDist (opposite sign rfCorr)');
-ylim([miny maxy]);
+ys = [scsP.(Ynm)];
+ix = abs(zscore([scsP.(Ynm)])) < 2;
+scsP0 = scsP(ix);
 
-plot.boxScatterFitPlotWrap(scsP(sign([scsP.rfCorr])>0), Xnm, Ynm, false);
-xlabel('rfDist (same sign rfCorr)');
+% scsP0 = scsP([scsP.rfDist] <= 1);
+% ix = sign([scsP0.rfCorr])<0;
+% ix = [scsP.cell1_targPref]==[scsP.cell2_targPref];
+
+plot.boxScatterFitPlotWrap(scsP0, Xnm, Ynm, true);
+xlabel(Xnm);
 ylim([miny maxy]);
+% 
+% plot.boxScatterFitPlotWrap(scsP(ix), Xnm, Ynm, true);
+% xlabel([Xnm ' (opposite sign rfCorr)']);
+% ylim([miny maxy]);
+% 
+% plot.boxScatterFitPlotWrap(scsP(~ix), Xnm, Ynm, true);
+% xlabel([Xnm ' (same sign rfCorr)']);
+% ylim([miny maxy]);
 
 %% cellScore vs. mnkScore
 

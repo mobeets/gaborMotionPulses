@@ -10,10 +10,10 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
 % dt cell1 cell2 cellScore mnkScore
 % 
     if nargin < 6
-        nshuffles = 10;
+        nshuffles = 20;
     end
     if nargin < 5
-        nfolds = 10;
+        nfolds = 20;
     end
     if nargin < 4
         scoreFcn = @(Y, Yh) mean(Y == Yh);
@@ -63,15 +63,17 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
             e = e+1;
             continue;
         end
-%         
+%         Ynm = 'YhAR';
+        Ynm = 'Y';
+
         for jj = 1:numel(cells)
-            Xc1 = cells(jj).Y;
+            Xc1 = cells(jj).(Ynm);
             scs(c).dt = dts{ii};
             scs(c).cell = cells(jj).name;
             scs(c).score = getMeanCellScore(Xc1, Y, scoreFcn, ...
                 nfolds, nshuffles);
             scs(c).mnkScore = mnkScore;
-            scs(c).dPrime = cells(jj).dPrime;
+            scs(c).dPrime = cells(jj).dPrime;            
             ncA = cells(jj).rf_center;
             c = c+1;
             
@@ -79,8 +81,12 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
                 continue;
             end
             for kk = jj+1:numel(cells)
-                Xc2 = cells(kk).Y;
+                Xc2 = cells(kk).(Ynm);
+                
                 scsP(d).dt = dts{ii};
+                scsP(d).stim = Y;
+                scsP(d).cell1_Y = Xc1;
+                scsP(d).cell2_Y = Xc2;
                 scsP(d).cell1 = cells(jj).name;
                 scsP(d).cell2 = cells(kk).name;
                 scsP(d).score = getMeanCellScore([Xc1 Xc2], Y, ...
@@ -99,6 +105,8 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
                     'Yzer', 30);
                 scsP(d).noiseCorrLow = noiseCorr(cells(jj), cells(kk), ...
                     'Ylow', 30);
+                scsP(d).noiseCorrAR = noiseCorr(cells(jj), cells(kk), ...
+                    'YresAR', 30);
 
                 scsP(d).noiseCorrZerRfCorr = scsP(d).noiseCorrZer * scsP(d).rfCorr;
                 scsP(d).noiseCorrLowRfCorr = scsP(d).noiseCorrLow * scsP(d).rfCorr;
@@ -160,11 +168,13 @@ function scs = estimate(X, Y, scoreFcn, nfolds, nshuffles)
         ix = crossvalind('Kfold', Y, nfolds);
         for ii = 1:nfolds
             test = (ix == ii); train = ~test;
-            [b, dev, stats] = glmfit(X(train,:), Y(train), ...
-                'binomial', 'logit');
-            % use classify( , ,group, 'linear');
-            Yh = glmval(b, X(test,:), 'logit');
-            scs(jj,ii) = scoreFcn(Y(test), round(Yh));
+            C = classify(X(test,:), X(train,:), Y(train), 'linear');
+            scs(jj,ii) = scoreFcn(Y(test), C);
+%             [b, dev, stats] = glmfit(X(train,:), Y(train), ...
+%                 'binomial', 'logit');
+%             % use classify( , ,group, 'linear');
+%             Yh = glmval(b, X(test,:), 'logit');
+%             scs(jj,ii) = scoreFcn(Y(test), round(Yh));
         end
     end
 end
