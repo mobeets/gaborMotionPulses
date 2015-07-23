@@ -9,7 +9,8 @@ function plotKernelByName(name, fitdirbase, outdir)
     end
     if nargin < 2
 %         fitdirbase = '20150615';
-        fitdirbase = 'sametargs';
+        fitdirbase = '20150716';
+%         fitdirbase = 'sametargs';
     end
     if ~exist(outdir, 'dir')
         mkdir(outdir);

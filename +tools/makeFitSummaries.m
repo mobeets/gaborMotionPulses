@@ -107,10 +107,12 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
                 val.dPrime = neuron.dPrime;
                 val.hyper_ssq = val.hyper(2);
                 val.targPref = neuron.targPref;
+                val.electrodeDepth = neuron.electrodeDepth;
             else
                 val.Y = d.R;
                 val.Yfrz = d.R_frz;
                 val.targPref = 1;
+                val.electrodeDepth = nan;
             end
             if sum(strcmp(val.name, flipTargPrefNames)) > 0
                 val.targPref = ~(val.targPref-1)+1; % flip targ pref
@@ -284,8 +286,8 @@ end
 function val = centerOfMass(val)
 
     % normalized stimulus location
-    xs = val.Xxy;
-%     xs = zscore(xs);
+    xs0 = val.Xxy;
+    xs = zscore(xs0);
 
     % thresholded spatial RF
     if isfield(val, 'wfSvd_1')
@@ -302,8 +304,12 @@ function val = centerOfMass(val)
     % mean of location weighted by RF strength
     xc = (xs(:,1)'*ys);
     yc = (xs(:,2)'*ys);
+    xc0 = (xs0(:,1)'*ys);
+    yc0 = (xs0(:,2)'*ys);
+    
     [theta, rho] = cart2pol(xc, yc);
     val.rf_center = [xc yc];
+    val.rf_center0 = [xc0 yc0];
     val.rf_center2 = xs(idx,:);
     val.rf_ecc = rho;
     val.rf_theta = theta;

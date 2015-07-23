@@ -97,10 +97,16 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
                 scsP(d).rfCorr = corr(cells(jj).w(:), cells(kk).w(:));
                 scsP(d).rfDist = sqrt((ncB(1)-ncA(1))^2 + ...
                     (ncB(2) - ncA(2))^2);
+                max_dist = sqrt(max(max(asd.sqdist.space(cells(jj).Xxy))));
+                scsP(d).rfDist_norm = scsP(d).rfDist/max_dist;
                 scsP(d).cell1_dPrime = cells(jj).dPrime;
                 scsP(d).cell2_dPrime = cells(kk).dPrime;
+                scsP(d).cell1_sep = cells(jj).separability_index;
+                scsP(d).cell2_sep = cells(kk).separability_index;
                 scsP(d).cell1_targPref = cells(jj).targPref;
                 scsP(d).cell2_targPref = cells(kk).targPref;
+                scsP(d).sameTarg = scsP(d).cell1_targPref == scsP(d).cell2_targPref;
+                scsP(d).sameCorr = scsP(d).rfCorr > 0;
                 scsP(d).noiseCorrZer = noiseCorr(cells(jj), cells(kk), ...
                     'Yzer', 30);
                 scsP(d).noiseCorrLow = noiseCorr(cells(jj), cells(kk), ...

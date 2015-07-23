@@ -1,4 +1,4 @@
-function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
+function [pss, mdl, nms] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
     xfcn, yfcn, pairPredFcn)
 % xfcn (yfcn) - how to compare two neurons for x-axis (y-axis)
 %   - default is @corr
@@ -58,6 +58,7 @@ function [pss, mdl] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
                     continue;
                 end
                 p1 = xfcn(xs, ys);
+                p1 = p1/sqrt(max(max(asd.sqdist.space(v0.Xxy))));
 
                 xs = v0.(ynm);
                 ys = v1.(ynm);

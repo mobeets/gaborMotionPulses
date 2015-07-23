@@ -49,7 +49,7 @@ function plotAndSaveKernel(obj, data, figdir, add_dt, add_score, ...
         if numel(wf) == prod(obj.shape)
             wf = reshape(wf, obj.shape(1), obj.shape(2));
         end
-        plot.plotKernel2(wf, data.Xxy, nan, [0 0], t1, t2, lblS);
+        plot.plotKernel2(wf, data.Xxy, nan, [0 0], t1, t2, lblS);        
         plot.saveFigure(lbl, figdir);
     end
 end

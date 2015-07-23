@@ -5,8 +5,11 @@ if figure5_reGenData
 %     vut = vu;
     [scs, scsP, ~] = tools.decodeWithCells(vut, false, false);
     [~, ~, scsA] = tools.decodeWithCells(vut, true, false);
+    scsP2 = tools.decodeWithCellsAndShuffle(scsP, 10);
 %     save('data/decodeScs3.mat', 'scs', 'scsP');
 %     save('data/allCells3.mat', 'scsA');
+%     save('data/decodeScsShuffled.mat', 'scsP2');    
+
 else
     x = load('data/allCells3.mat');
     scsA = x.scsA;
@@ -15,42 +18,43 @@ else
     scsP = scsP(~strcmp({scsP.dt}, '20150304a'));
 end
 
-% remove outliers in improvement
-% Ynm = 'pairImprovement';
-% ys = [scsP.(Ynm)];
-% scsP = scsP(~isnan(ys));
-% ix = zscore([scsP.(Ynm)]) < 3;
-% scsP = scsP(ix);
+Z = num2cell((scsP2(:,1) - mean(scsP2(:,2:end),2)));
+[scsP.scoreGainWithShuffle] = Z{:};
 
 %% cellScore vs. rfCorr (same-sign and opposite-sign rfCorr)
 
-Xnm = 'rfDist3';
+Xnm = 'rfDist_norm';
 % Xnm = 'noiseCorrLow';
-Ynm = 'pairImprovement';
-% Ynm = 'pairImprovePctLeft';
+% Xnm = 'noiseCorrAR';
+% Ynm = 'pairImprovement';
+Ynm = 'pairImprovePctLeft';
 ys = [scsP.(Ynm)];
 miny = min(ys)-0.01;
 maxy = max(ys)+0.01;
 
 ys = [scsP.(Ynm)];
-ix = abs(zscore([scsP.(Ynm)])) < 2;
+ix = abs(zscore([scsP.(Ynm)])) < 2.5;
 scsP0 = scsP(ix);
+
+% ixc = [scsP0.cell1_sep] > 0.6 & [scsP0.cell2_sep] > 0.6;
+sum(~ixc)
+scsP0 = scsP0(ixc);
 
 % scsP0 = scsP([scsP.rfDist] <= 1);
 % ix = sign([scsP0.rfCorr])<0;
-% ix = [scsP.cell1_targPref]==[scsP.cell2_targPref];
+ix = [scsP0.cell1_targPref]==[scsP0.cell2_targPref];
 
-plot.boxScatterFitPlotWrap(scsP0, Xnm, Ynm, true);
-xlabel(Xnm);
+% plot.boxScatterFitPlotWrap(scsP0, Xnm, Ynm, true);
+% xlabel(Xnm);
+% ylim([miny maxy]);
+ 
+plot.boxScatterFitPlotWrap(scsP0(ix), Xnm, Ynm, true);
+xlabel([Xnm ' (same sign rfCorr)']);
 ylim([miny maxy]);
-% 
-% plot.boxScatterFitPlotWrap(scsP(ix), Xnm, Ynm, true);
-% xlabel([Xnm ' (opposite sign rfCorr)']);
-% ylim([miny maxy]);
-% 
-% plot.boxScatterFitPlotWrap(scsP(~ix), Xnm, Ynm, true);
-% xlabel([Xnm ' (same sign rfCorr)']);
-% ylim([miny maxy]);
+
+plot.boxScatterFitPlotWrap(scsP0(~ix), Xnm, Ynm, true);
+xlabel([Xnm ' (diff sign rfCorr)']);
+ylim([miny maxy]);
 
 %% cellScore vs. mnkScore
 

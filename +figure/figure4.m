@@ -12,17 +12,20 @@ vut = vuMT_var;
 % set(gcf, 'PaperSize', [4 6], 'PaperPosition', [0 0 4 6])
 % plot.saveFigure('MT - noise-corr vs. rf-center', figDir, gcf, 'pdf');
 
-%%
+vut2 = vut([vut.separability_index]>0.6);
+% getWf = @(v) v.wfSvd_U(:,1)*sign(sum(v.wfSvd_U(:,1)));
 getWf = @(v) v.w(:);
 sameTarg = @(v0, v1) v0.targPref == v1.targPref;
 sameCorr = @(v0, v1) corr(getWf(v0), getWf(v1)) > 0;
+[pss, mdl, nms] = plot.pairwiseCorrs(vut2, 'rf_center', Yh, ...
+    nan, 'dist(rfCenter_1, rfCenter_2) for same targPref', ...
+    nan, @(x,y) norm(x-y,2), @corr, sameCorr);
+
 diffTarg = @(v0, v1) v0.targPref ~= v1.targPref;
 diffCorr = @(v0, v1) corr(getWf(v0), getWf(v1)) < 0;
-
-plot.pairwiseCorrs(vut, 'dPrime', Yh, nan, '', nan, @(x,y) x+y, @corr, ...
-    sameTarg);
-plot.pairwiseCorrs(vut, 'dPrime', Yh, nan, '', nan, @(x,y) x+y, @corr, ...
-    diffTarg);
+[pss, mdl, nms] = plot.pairwiseCorrs(vut2, 'rf_center', Yh, ...
+    nan, 'dist(rfCenter_1, rfCenter_2) for opposite targPref', ...
+    nan, @(x,y) norm(x-y,2), @corr, diffCorr);
 
 %% noise-correlation vs. RF similarity
 plot.pairwiseCorrs(vut, 'w', Yh);
@@ -43,18 +46,3 @@ plot.saveFigure(['MT - ' cpY ' vs. rf-eccentricity'], figDir, gcf);
 plot.boxScatterFitPlotWrap(vut, 'rf_ecc', 'dPrime', ...
     false, false, 6);
 
-%% noise-correlation vs. distance of RF centers
-
-% getWf = @(v) v.wfSvd_U(:,1)*sign(sum(v.wfSvd_U(:,1)));
-getWf = @(v) v.w(:);
-sameTarg = @(v0, v1) v0.targPref == v1.targPref;
-sameCorr = @(v0, v1) corr(getWf(v0), getWf(v1)) > 0;
-plot.pairwiseCorrs(vut, 'rf_center', Yh, ...
-    nan, 'dist(rfCenter_1, rfCenter_2) for same targPref', ...
-    nan, @(x,y) norm(x-y,2), @corr, sameCorr);
-
-diffTarg = @(v0, v1) v0.targPref ~= v1.targPref;
-diffCorr = @(v0, v1) corr(getWf(v0), getWf(v1)) < 0;
-plot.pairwiseCorrs(vut, 'rf_center', Yh, ...
-    nan, 'dist(rfCenter_1, rfCenter_2) for opposite targPref', ...
-    nan, @(x,y) norm(x-y,2), @corr, diffCorr);
