@@ -46,8 +46,8 @@ function [pss, mdl, nms] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
 
                 xs = v0.(xnm);
                 ys = v1.(xnm);
-%                 xs = v0.wfSvd_1(:);
-%                 ys = v1.wfSvd_1(:);
+%                 xs = v0.wfSvd_1(:,1);
+%                 ys = v1.wfSvd_1(:,1);
 %                 xs = v0.wfSvd_U(:,1);
 %                 ys = v1.wfSvd_U(:,1);
 
@@ -58,7 +58,7 @@ function [pss, mdl, nms] = pairwiseCorrs(vs, xnm, ynm, lbl, xlbl, ylbl, ...
                     continue;
                 end
                 p1 = xfcn(xs, ys);
-                p1 = p1/sqrt(max(max(asd.sqdist.space(v0.Xxy))));
+
 
                 xs = v0.(ynm);
                 ys = v1.(ynm);

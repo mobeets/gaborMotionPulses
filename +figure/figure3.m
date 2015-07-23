@@ -7,11 +7,13 @@ plot.saveFigure('exampleOverlayProjection', figDir, gcf, 'pdf');
 
 % exampleCellMT = '20140304-MT_3';
 exampleCells = [cellstr(num2str((1:7)', '20140304-MT_%d')); cellstr(num2str((1:2)', '20140307-MT_%d')); cellstr(num2str((1:10)', '20150324a-MT_%d'))];
+exampleCells = {'20150324a-MT_13'};
+
 for kCell = 1:numel(exampleCells)
     exampleCellMT = exampleCells{kCell};
     vMT = vuMT(strcmp({vuMT.name}, exampleCellMT));
     if isempty(vMT)
-        continue
+        continue;
     end
     d = io.loadDataByDate(vMT.dt, vMT.isNancy);
     n = d.neurons{vMT.cellind};
@@ -24,12 +26,12 @@ for kCell = 1:numel(exampleCells)
     set(gcf, 'color', 'w');
     axis off;
     plot.getColors([0 1]);
-    plot.plotHyperflowMT(n, t1, t2, false);
+    plot.plotHyperflowMT(n, t1, t2, true);
 %     scatter(t1(:,1), t1(:,2), 50, [0.2 0.8 0.2], 'filled');
 %     scatter(t2(:,1), t2(:,2), 50, [0.2 0.5 0.2], 'filled');
 %     axis equal;
     
-    plot.saveFigure(sprintf('exampleOverlay%s', exampleCellMT), figDir, gcf, 'pdf');
+%     plot.saveFigure(sprintf('exampleOverlay%s', exampleCellMT), figDir, gcf, 'pdf');
 end
 
 %%
@@ -58,7 +60,7 @@ for ii = 1:numel(exampleCells)
     plot.plotSaccadeKernelOverlay(d.stim, n, vMT, showTargs, ...
         showHyperflow, contourNoQuiver);
     axis off;
-    plot.saveFigure(['hyperflowRF_' vMT.name], figDir, gcf, 'pdf');
+%     plot.saveFigure(['hyperflowRF_' vMT.name], figDir, gcf, 'pdf');
 
     % PSTH split by motion direction
     figure; hold on;
@@ -69,5 +71,5 @@ for ii = 1:numel(exampleCells)
     plot.psthByEvent(d, n, event == targPref, ii, {'-mot', '+mot'});
     ylabel('spikes/sec by motion dir');
             
-    plot.saveFigure(['psthByMot_' vMT.name], figDir, gcf, 'pdf');
+%     plot.saveFigure(['psthByMot_' vMT.name], figDir, gcf, 'pdf');
 end

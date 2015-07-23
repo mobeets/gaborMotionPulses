@@ -56,6 +56,8 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
                 Ys(mm,:) = cells(mm).Y;
             end
             scsA(e).dt = dts{ii};
+            scsA(e).stim = Y;
+            scsA(e).Ys = Ys;
             scsA(e).mnkScore = mnkScore;
             scsA(e).score = getMeanCellScore(Ys', Y, scoreFcn, ...
                 nfolds, nshuffles);
@@ -85,8 +87,7 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
                 
                 scsP(d).dt = dts{ii};
                 scsP(d).stim = Y;
-                scsP(d).cell1_Y = Xc1;
-                scsP(d).cell2_Y = Xc2;
+                scsP(d).Ys = [Xc1 Xc2];
                 scsP(d).cell1 = cells(jj).name;
                 scsP(d).cell2 = cells(kk).name;
                 scsP(d).score = getMeanCellScore([Xc1 Xc2], Y, ...

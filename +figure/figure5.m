@@ -5,10 +5,11 @@ if figure5_reGenData
 %     vut = vu;
     [scs, scsP, ~] = tools.decodeWithCells(vut, false, false);
     [~, ~, scsA] = tools.decodeWithCells(vut, true, false);
-    scsP2 = tools.decodeWithCellsAndShuffle(scsP, 10);
+    [scs0, scs1] = tools.decodeWithCellsAndShuffle(scsP, 10);
+    [scs3, scs4] = tools.decodeWithCellsAndShuffle(scsA, 10);
 %     save('data/decodeScs3.mat', 'scs', 'scsP');
 %     save('data/allCells3.mat', 'scsA');
-%     save('data/decodeScsShuffled.mat', 'scsP2');    
+%     save('data/decodeScsShuffled.mat', 'scs0', 'scs1');
 
 else
     x = load('data/allCells3.mat');
@@ -18,7 +19,7 @@ else
     scsP = scsP(~strcmp({scsP.dt}, '20150304a'));
 end
 
-Z = num2cell((scsP2(:,1) - mean(scsP2(:,2:end),2)));
+Z = num2cell((scs0 - mean(scs1, 2)));
 [scsP.scoreGainWithShuffle] = Z{:};
 
 %% cellScore vs. rfCorr (same-sign and opposite-sign rfCorr)
@@ -75,8 +76,8 @@ plot(xlim, xlim, 'k--');
 figure; hold on; set(gca, 'FontSize', 14); set(gca, 'color', 'white');
 for ii = 1:numel(scsA)
     cix = scsA(ii).ncells;
-    scatter(scsA(ii).ncells, scsA(ii).score, 50, clrs(cix,:), 'filled');
-    scatter(scsA(ii).ncells, scsA(ii).score, 50, 'k');
+    scatter(scsA(ii).ncells, scsA(ii).Z, 50, clrs(cix,:), 'filled');
+    scatter(scsA(ii).ncells, scsA(ii).Z, 50, 'k');
 end
 xlabel('ncells');
 ylabel('score');
