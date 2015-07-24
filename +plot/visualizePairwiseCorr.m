@@ -7,6 +7,12 @@ function S = visualizePairwiseCorr(r, c)
 
 cmap = lines;
 
+ix0=~any(isnan(r),2);
+ix1=~any(isnan(c),2);
+ix = ix0&ix1;
+r = r(ix,:);
+c = c(ix);
+
 % get group mean and covariances
 mu1 = mean(r(c, :)); sig1 = cov(r(c, :));
 mu2 = mean(r(~c, :)); sig2 = cov(r(~c, :));
@@ -77,9 +83,10 @@ cnt1 = reshape([cnt1; cnt1], [], 1); cnt1([1 2 end]) = 0;
 cnt2 = reshape([cnt2; cnt2], [], 1); cnt2([1 2 end]) = 0;
 % build rotation matrix
 theta = cart2pol(-fld(1), fld(2));
+s = sign(theta);
 R = [-cos(theta) sin(theta); sin(theta) cos(theta)];
-X1 = [bins(:) -cnt1(:)]*R;
-X2 = [bins(:) -cnt2(:)]*R;
+X1 = [bins(:) s*cnt1(:)]*R;
+X2 = [bins(:) s*cnt2(:)]*R;
 
 ab = x0;
 plot(X1(:,1)+ab, q(ab)+ X1(:,2), 'Color', cmap(2,:));
