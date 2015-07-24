@@ -1,5 +1,5 @@
 
-Ynm = 'scoreGainWithShuffle';
+Ynm = 'scoreGainWithCorrs';
 
 ix = abs(zscore([scsP.(Ynm)])) < 2;
 figure; hist(zscore([scsP.(Ynm)]));
@@ -13,27 +13,29 @@ ix2a = (ix&~ix1); % same dir, anti-corr
 ix2b = (~ix&ix1); % opp dir, pos-cor
 ix2 = ix2a | ix2b;
 
-xnm = 'rfDist3';
+% xnm = 'rfDist_norm';
 % xnm = 'rfCorr';
-% xnm = 'noiseCorrAR';
+xnm = 'noiseCorrAR';
 % ynm = 'noiseCorrAR';
-ynm = 'rfCorr';
-% ynm = 'scoreGainWithShuffle';
+% ynm = 'rfCorr';
+ynm = 'scoreGainWithCorrs';
+znm = 'rfCorr';
 
 figure; hold on; set(gca, 'FontSize', 14); set(gcf, 'color', 'w');
 t1 = scsP0(ix2a);
 t2 = scsP0(ix2b);
 t3 = scsP0(~ix2 & ~ix);
 t4 = scsP0(~ix2 & ix);
-scatter([t3.(xnm)], [t3.(ynm)], 80, 'r');
-scatter([t1.(xnm)], [t1.(ynm)], 80, 'b');
-scatter([t2.(xnm)], [t2.(ynm)], 'r', 'filled');
-scatter([t4.(xnm)], [t4.(ynm)], 'b', 'filled');
-h = legend('diff       dir, (-) sig-corr', 'same dir, (-) sig-corr', 'diff       dir, (+) sig-corr', 'same dir, (+) sig-corr');
-set(h, 'Location', 'NorthEastOutside');
+scatter3([t3.(xnm)], [t3.(ynm)], [t3.(znm)], 'r', 'filled');
+scatter3([t2.(xnm)], [t2.(ynm)], [t2.(znm)], 80, 'r');
+scatter3([t1.(xnm)], [t1.(ynm)], [t1.(znm)], 80, 'b');
+scatter3([t4.(xnm)], [t4.(ynm)], [t4.(znm)], 'b', 'filled');
+h = legend('diff dir, (-) corr', 'diff dir, (+) corr', 'same dir, (-) corr', 'same dir, (+) corr');
+set(h, 'Location', 'NortheastOutside');
 set(gcf, 'Position', [600 600 800 400]);
 xlabel(xnm);
 ylabel(ynm);
+zlabel(znm);
 
 %%
 

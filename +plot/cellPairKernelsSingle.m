@@ -12,18 +12,18 @@ function cellPairKernelsSingle(vu, n0, n1, dt)
     
     figure;
     subplot(1,2,1); hold on;
-    title(v0.name);
+    title(v0.name, 'FontSize', 14);
     plot.plotKernelSingle(v0.Xxy, v0.wfSvd_1(:,1), nan, aptrSz);
     axis off;  
     scatter(v0.rf_center0(:,1), v0.rf_center0(:,2), cntrSz, 'r', ...
         'LineWidth', 2);
 
     subplot(1,2,2); hold on;
-    title(v0.name);
+    title(v1.name, 'FontSize', 14);
     plot.plotKernelSingle(v1.Xxy, v1.wfSvd_1(:,1), nan, aptrSz);
     axis off;
     scatter(v1.rf_center0(:,1), v1.rf_center0(:,2), cntrSz, 'r', ...
         'LineWidth', 2);
-    set(gcf, 'Position', [0 300 200 150]);
+    set(gcf, 'Position', [0 300 245 150]);
     
 end

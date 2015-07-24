@@ -5,22 +5,38 @@ if figure5_reGenData
 %     vut = vu;
     [scs, scsP, ~] = tools.decodeWithCells(vut, false, false);
     [~, ~, scsA] = tools.decodeWithCells(vut, true, false);
-    [scs0, scs1] = tools.decodeWithCellsAndShuffle(scsP, 10);
-    [scs3, scs4] = tools.decodeWithCellsAndShuffle(scsA, 10);
-%     save('data/decodeScs3.mat', 'scs', 'scsP');
-%     save('data/allCells3.mat', 'scsA');
-%     save('data/decodeScsShuffled.mat', 'scs0', 'scs1');
+    [scs0, scs1] = tools.decodeWithCellsAndShuffle({scsP.stim}, ...
+        {scsP.Ys}, 10);
+    [scs3, scs4] = tools.decodeWithCellsAndShuffle({scsA.stim}, ...
+        {scsA.Ys}, 10);
+    save('data/decodeScs.mat', 'scs', 'scsP');
+    save('data/allCells.mat', 'scsA');
+    save('data/decodeScsShuffled_scsP.mat', 'scs0', 'scs1');
+    save('data/decodeScsShuffled_scsA.mat', 'scs3', 'scs4');
 
 else
-    x = load('data/allCells3.mat');
+    x = load('data/allCells.mat');
     scsA = x.scsA;
-    x = load('data/decodeScs3.mat');
+    x = load('data/decodeScs.mat');
     scsP = x.scsP;
-    scsP = scsP(~strcmp({scsP.dt}, '20150304a'));
+    x = load('data/decodeScsShuffled_scsP.mat');
+    scs0 = x.scs0; scs1 = x.scs1;
+    x = load('data/decodeScsShuffled_scsA.mat');
+    scs3 = x.scs3; scs4 = x.scs4;
 end
-
-Z = num2cell((scs0 - mean(scs1, 2)));
-[scsP.scoreGainWithShuffle] = Z{:};
+%%
+Z1 = num2cell((scs0 - mean(scs1, 2)));
+Z1a = num2cell(scs0);
+Z1b = num2cell(mean(scs1, 2));
+[scsP.scoreGainWithCorrs] = Z1{:};
+[scsP.scoreNoShuffle] = Z1a{:};
+[scsP.scoreWithShuffle] = Z1b{:};
+Z2 = num2cell((scs3 - mean(scs4, 2)));
+Z2a = num2cell(scs3);
+Z2b = num2cell(mean(scs4, 2));
+[scsA.scoreGainWithCorrs] = Z2{:};
+[scsA.scoreNoShuffle] = Z2a{:};
+[scsA.scoreWithShuffle] = Z2b{:};
 
 %% cellScore vs. rfCorr (same-sign and opposite-sign rfCorr)
 

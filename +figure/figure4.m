@@ -28,13 +28,13 @@ diffCorr = @(v0, v1) corr(getWf(v0), getWf(v1)) < 0;
     nan, @(x,y) norm(x-y,2), @corr, diffCorr);
 
 %% noise-correlation vs. RF similarity
-plot.pairwiseCorrs(vut, 'w', Yh);
+[a,b,c] = plot.pairwiseCorrs(vut, 'w', Yh);
 set(gcf, 'PaperSize', [4 6], 'PaperPosition', [0 0 4 6])
 plot.saveFigure('MT - noise-corr vs. rf-corr', figDir, gcf, 'pdf');
 
 %% CP vs. dPrime
 
-plot.boxScatterFitPlotWrap(vut, 'dPrime', cpY);
+m = plot.boxScatterFitPlotWrap(vut, 'dPrime', cpY);
 plot.saveFigure(['MT - ' cpY ' vs. dPrime'], figDir, gcf);
 
 %% CP vs. rfEcc

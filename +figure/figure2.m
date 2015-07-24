@@ -1,6 +1,6 @@
 %% Single Cell Prediction Comparison
 
-exampleCellMT = '20140307-MT_3';
+exampleCellMT = '20140305-MT_2';
 vMT = vuMT(strcmp({vuMT.name}, exampleCellMT));
 d = io.loadDataByDate(vMT.dt, vMT.isNancy);
 goodCells = find([vuMT.dPrime] > 1);

@@ -1,4 +1,4 @@
-function boxScatterFitPlotWrap(vs, xlbl, ylbl, sB, sF, nb)
+function m = boxScatterFitPlotWrap(vs, xlbl, ylbl, sB, sF, nb)
     if nargin < 4
         sB = true;
     end
@@ -15,7 +15,7 @@ function boxScatterFitPlotWrap(vs, xlbl, ylbl, sB, sF, nb)
     ix = ~isnan(xs) & ~isnan(ys);
     xs = xs(ix);
     ys = ys(ix);
-    plot.boxScatterFitPlot(xs', ys', sB, sF, nb);
+    m = plot.boxScatterFitPlot(xs', ys', sB, sF, nb);
     xlabel(strrep(xlbl, '_', '-'));
     ylabel(strrep(ylbl, '_', '-'));
 end
