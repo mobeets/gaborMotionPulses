@@ -57,7 +57,7 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
             end
             scsA(e).dt = dts{ii};
             scsA(e).stim = Y;
-            scsA(e).Ys = Ys;
+            scsA(e).Ys = Ys';
             scsA(e).mnkScore = mnkScore;
             scsA(e).score = getMeanCellScore(Ys', Y, scoreFcn, ...
                 nfolds, nshuffles);

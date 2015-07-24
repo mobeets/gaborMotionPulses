@@ -14,7 +14,7 @@ function [scs0, scsSh] = decodeWithCellsAndShuffle(X, Y, nshuffles)
             disp([num2str(ii) ' of ' num2str(numel(X))]);
         end
         x = X{ii};
-        ys = Y{ii}';
+        ys = Y{ii};
         ix = x == 1;
         x = [x(ix); x(~ix)];
         ys = [ys(ix,:); ys(~ix,:)];
