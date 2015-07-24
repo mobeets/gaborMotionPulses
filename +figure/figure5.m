@@ -24,19 +24,48 @@ else
     x = load('data/decodeScsShuffled_scsA.mat');
     scs3 = x.scs3; scs4 = x.scs4;
 end
-%%
-Z1 = num2cell((scs0 - mean(scs1, 2)));
-Z1a = num2cell(scs0);
-Z1b = num2cell(mean(scs1, 2));
+
+%% sorry this is messy...
+
+Z1a = scs0;
+Z1b = mean(scs1, 2);
+Z1 = Z1a - Z1b;
+Z1s = (std(scs1')/sqrt(size(scs1,2)))';
+Z1_lb = Z1a - (Z1b+2*Z1s);
+Z1_ub = Z1a - (Z1b-2*Z1s);
+
+Z1 = num2cell(Z1);
+Z1a = num2cell(Z1a);
+Z1b = num2cell(Z1b);
+Z1s = num2cell(Z1s);
+Z1_lb = num2cell(Z1_lb);
+Z1_ub = num2cell(Z1_ub);
+
 [scsP.scoreGainWithCorrs] = Z1{:};
 [scsP.scoreNoShuffle] = Z1a{:};
 [scsP.scoreWithShuffle] = Z1b{:};
-Z2 = num2cell((scs3 - mean(scs4, 2)));
-Z2a = num2cell(scs3);
-Z2b = num2cell(mean(scs4, 2));
-[scsA.scoreGainWithCorrs] = Z2{:};
-[scsA.scoreNoShuffle] = Z2a{:};
-[scsA.scoreWithShuffle] = Z2b{:};
+[scsP.scoreGainWithCorrs_lb] = Z1_lb{:};
+[scsP.scoreGainWithCorrs_ub] = Z1_ub{:};
+
+Z1a = scs0;
+Z1b = mean(scs1, 2);
+Z1 = Z1a - Z1b;
+Z1s = (std(scs1')/sqrt(size(scs1,2)))';
+Z1_lb = Z1a - (Z1b+2*Z1s);
+Z1_ub = Z1a - (Z1b-2*Z1s);
+
+Z1 = num2cell(Z1);
+Z1a = num2cell(Z1a);
+Z1b = num2cell(Z1b);
+Z1s = num2cell(Z1s);
+Z1_lb = num2cell(Z1_lb);
+Z1_ub = num2cell(Z1_ub);
+
+[scsA.scoreGainWithCorrs] = Z1{:};
+[scsA.scoreNoShuffle] = Z1a{:};
+[scsA.scoreWithShuffle] = Z1b{:};
+[scsA.scoreGainWithCorrs_lb] = Z1_lb{:};
+[scsA.scoreGainWithCorrs_ub] = Z1_ub{:};
 
 %% cellScore vs. rfCorr (same-sign and opposite-sign rfCorr)
 

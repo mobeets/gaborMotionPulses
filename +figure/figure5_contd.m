@@ -18,7 +18,7 @@ ix2 = ix2a | ix2b;
 xnm = 'noiseCorrAR';
 % ynm = 'noiseCorrAR';
 % ynm = 'rfCorr';
-ynm = 'scoreGainWithCorrs';
+ynm = 'scoreGainWithCorrs_ub';
 znm = 'rfCorr';
 
 figure; hold on; set(gca, 'FontSize', 14); set(gcf, 'color', 'w');
@@ -36,6 +36,8 @@ set(gcf, 'Position', [600 600 800 400]);
 xlabel(xnm);
 ylabel(ynm);
 zlabel(znm);
+plot(xlim, [0 0], 'k--');
+plot([0 0], ylim, 'k--');
 
 %%
 
