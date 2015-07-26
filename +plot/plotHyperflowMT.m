@@ -1,4 +1,4 @@
-function [xl, yl] = plotHyperflowMT(n, t1, t2, contourNoQuiver)
+function [xl, yl] = plotHyperflowMT(n, t1, t2, plotMode)
     if n.targPref > 1
         t3 = t2; t2 = t1; t1 = t3;
     end
@@ -13,19 +13,23 @@ function [xl, yl] = plotHyperflowMT(n, t1, t2, contourNoQuiver)
     dt = diff([median(t1); median(t2)]);
     zs = arrayfun(@(x, y) proj(dt, [x y]), zs1, zs2);
     zs = reshape(zs, numel(unique(xs)), numel(unique(ys)));    
-    if contourNoQuiver
+    switch plotMode
+        case 1 % contour no quiver
         contourf(unique(xs), unique(ys), -zs, ...
-        'LineWidth', 1, 'LineColor', 'none');        
+        'LineWidth', 1, 'LineColor', 'none'); hold on
         caxis(2*caxis); % less saturated
-    else
-        imagesc(unique(xs), unique(ys), -zs);
+        case {2,0} % annotation quiver
+        imagesc(unique(xs), unique(ys), -zs);  hold on
 %         keep = arrayfun(@norm, zs1, zs2) >= 2e-2;        
         keep = arrayfun(@norm, zs1, zs2) >= 0;
         plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
-            zs1(keep), zs2(keep)), 80, 120, 'HeadStyle', 'plain', ...
-            'LineWidth', 1.5);
-%         quiver(xs(keep), ys(keep), zs1(keep), zs2(keep), ...
-%             'k', 'LineWidth', 2);
+            zs1(keep), zs2(keep)), 50, 50, 'HeadStyle', 'plain', ...
+            'LineWidth', .5);
+        case 3 % for svg graphics
+            imagesc(unique(xs), unique(ys), -zs);  hold on
+            keep = arrayfun(@norm, zs1, zs2) >= 0;
+            quiver(xs(keep), ys(keep), zs1(keep), zs2(keep), ...
+                'k', 'LineWidth', 2);
     end
     caxis([min(0, -max(abs(caxis))) max(0, max(abs(caxis)))]);
 end
