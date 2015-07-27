@@ -82,7 +82,7 @@ ys = [scsP.(Ynm)];
 ix = abs(zscore([scsP.(Ynm)])) < 2.5;
 scsP0 = scsP(ix);
 
-% ixc = [scsP0.cell1_sep] > 0.6 & [scsP0.cell2_sep] > 0.6;
+ixc = [scsP0.cell1_sep] > 0.6 & [scsP0.cell2_sep] > 0.6;
 sum(~ixc)
 scsP0 = scsP0(ixc);
 
