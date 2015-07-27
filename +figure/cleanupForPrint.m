@@ -52,10 +52,12 @@ for kChild = 1:length(fc)
         case 'matlab.graphics.axis.Axes'
             
             set(gcf,'currentaxes',fc(kChild))
-            xt = get(fc(kChild), 'Xtick');
-            xlim(xt([1 end]));
-            yt = get(fc(kChild), 'Ytick');
-            ylim(yt([1 end]));
+            if strcmp(get(gca, 'Visible'), 'on')
+                xt = get(fc(kChild), 'Xtick');
+                xlim(xt([1 end]));
+                yt = get(fc(kChild), 'Ytick');
+                ylim(yt([1 end]));
+            end
             
             
             ac = get(fc(kChild),'children');
