@@ -37,14 +37,24 @@ plot.saveFigure('MT - noise-corr vs. rf-corr', figDir, gcf, 'pdf');
 m = plot.boxScatterFitPlotWrap(vut, 'dPrime', cpY);
 plot.saveFigure(['MT - ' cpY ' vs. dPrime'], figDir, gcf);
 
-%% CP vs. rfEcc
+%% RF eccentricity vs. CP
 plot.boxScatterFitPlotWrap(vut, 'rf_ecc', cpY, ...
-    true, true, 6);
+    true, false, 6);
+set(gca, 'Xtick', [0 .5 1 1.5])
+hold on
+plot([0 1.5], [.5 .5], 'k:')
+figure.cleanupForPrint(gcf, 'PaperSize', [25 25], 'FontSize', 8)
 plot.saveFigure(['MT - ' cpY ' vs. rf-eccentricity'], figDir, gcf);
 
 %% dPrime vs. rfEcc
 plot.boxScatterFitPlotWrap(vut, 'rf_ecc', 'dPrime', ...
-    false, false, 6);
+    true, false, 6);
+set(gca, 'Xtick', [0 .5 1 1.5])
+hold on
+figure.cleanupForPrint(gcf, 'PaperSize', [25 25], 'FontSize', 8)
+axis off
+title('')
+plot.saveFigure(['MT - ' 'dPrime' ' vs. rf-eccentricity'], figDir, gcf);
 
 %%
 
