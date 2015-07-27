@@ -5,7 +5,8 @@ function S = visualizePairwiseCorr(r, c)
 %   spikeCount = [nTrials x 2]
 %   Condition  = [nTrials x 1] logical condition
 
-cmap = lines;
+cmap = lines(2);
+cmap = flipud(cmap);
 
 ix0=~any(isnan(r),2);
 ix1=~any(isnan(c),2);
@@ -18,8 +19,9 @@ mu1 = mean(r(c, :)); sig1 = cov(r(c, :));
 mu2 = mean(r(~c, :)); sig2 = cov(r(~c, :));
 mu  = mean(r);
 
-scatter(r(c,1), r(c,2), 5, cmap(2,:)); hold on
-scatter(r(~c,1), r(~c,2), 5, cmap(1,:));
+sd = .4; % add a little jitter so spikes aren't integer less than 1 spike jitter
+scatter(r(c,1)+randn(size(r(c,1)))*sd, r(c,2)+randn(size(r(c,1)))*sd, 5, cmap(2,:)); hold on
+scatter(r(~c,1)+randn(size(r(~c,1)))*sd, r(~c,2)+randn(size(r(~c,1)))*sd, 5, cmap(1,:));
 
 plotellipse(mu1, sig1, 1, 'Color', cmap(2,:));
 plotellipse(mu2, sig2, 1, 'Color', cmap(1,:));
@@ -92,8 +94,10 @@ ab = x0;
 plot(X1(:,1)+ab, q(ab)+ X1(:,2), 'Color', cmap(2,:));
 plot(X2(:,1)+ab, q(ab)+ X2(:,2), 'Color', cmap(1,:));
 xlabel('Neuron 1')
-xlabel('Neuron 2')
+ylabel('Neuron 2')
 title('')
+xlim([min(r(:,1))-std(r(:,1)) max(r(:,1))+std(r(:,1))])
+ylim([min(r(:,2))-std(r(:,2)) max(r(:,2))+std(r(:,2))]); %([min(min(r))-min(std(r)) max(max(r))-max(std(r))])
 
 function [h,el] = plotellipse(mu, covmat, r, varargin)
 % h = plotellipse(mu, covmat, stdev, varargin);
