@@ -1,6 +1,10 @@
-function [xl, yl] = plotHyperflowMT(n, t1, t2, plotMode)
+function [xl, yl] = plotHyperflowMT(n, t1, t2, plotMode, arrowHeadWidthLength)
     if n.targPref > 1
         t3 = t2; t2 = t1; t1 = t3;
+    end
+    
+    if ~exist('arrowHeadWidthLength', 'var')
+        arrowHeadWidthLength = [60 140];
     end
     xl = [min(n.hyperflow.gridx(:)) max(n.hyperflow.gridx(:))];
     yl = [min(n.hyperflow.gridy(:)) max(n.hyperflow.gridy(:))];        
@@ -23,7 +27,7 @@ function [xl, yl] = plotHyperflowMT(n, t1, t2, plotMode)
 %         keep = arrayfun(@norm, zs1, zs2) >= 2e-2;        
         keep = arrayfun(@norm, zs1, zs2) >= 0;
         plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
-            zs1(keep), zs2(keep)), 50, 50, 'HeadStyle', 'plain', ...
+            zs1(keep), zs2(keep)), arrowHeadWidthLength(1), arrowHeadWidthLength(2), 'HeadStyle', 'cback1', ...
             'LineWidth', .5);
         case 3 % for svg graphics
             imagesc(unique(xs), unique(ys), -zs);  hold on
