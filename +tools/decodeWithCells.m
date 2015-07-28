@@ -114,14 +114,19 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
                     'Ylow', 30);
                 scsP(d).noiseCorrAR = noiseCorr(cells(jj), cells(kk), ...
                     'YresAR', 30);
-                scsP(d).noiseCorrAR_R = noiseCorr(cells(jj), cells(kk), ...
-                    'YresAR', 30, scsP(d).stim > 0);
-                scsP(d).noiseCorrAR_L = noiseCorr(cells(jj), cells(kk), ...
-                    'YresAR', 30, scsP(d).stim <= 0);
-                scsP(d).noiseCorrAR_mx = max([scsP(d).noiseCorrAR_L, ...
-                    scsP(d).noiseCorrAR_R]);
-                scsP(d).noiseCorrAR_mn = min([scsP(d).noiseCorrAR_L, ...
-                    scsP(d).noiseCorrAR_R]);
+                
+                % split by stimulus dir                
+                X = scsP(d).stim;
+                Y1 = cells(jj).Y;
+                Y2 = cells(jj).Y;
+                ix = X > 0;
+                [nc, ps] = tools.noiseCorr(Y1, Y2, 30, ix);
+                scsP(d).noiseCorr_pavg = nanmean(ps);
+                scsP(d).noiseCorr_R = nc(1);
+                scsP(d).noiseCorr_L = nc(2);
+                scsP(d).noiseCorr_mx = nanmax(nc);
+                scsP(d).noiseCorr_mn = nanmin(nc);
+                scsP(d).noiseCorr_avg = nanmean(nc);
 
                 scsP(d).noiseCorrZerRfCorr = scsP(d).noiseCorrZer * scsP(d).rfCorr;
                 scsP(d).noiseCorrLowRfCorr = scsP(d).noiseCorrLow * scsP(d).rfCorr;
@@ -186,7 +191,8 @@ function scs = estimate(X, Y, scoreFcn, nfolds, nshuffles)
         ix = crossvalind('Kfold', Y, nfolds);
         for ii = 1:nfolds
             test = (ix == ii); train = ~test;
-            C = classify(X(test,:), X(train,:), Y(train), 'linear');
+            [C,~,~,~,c] = classify(X(test,:), X(train,:), Y(train), ...
+                'linear');
             scs(jj,ii) = scoreFcn(Y(test), C);
 %             [b, dev, stats] = glmfit(X(train,:), Y(train), ...
 %                 'binomial', 'logit');

@@ -2,8 +2,11 @@
 Ynm = 'scoreGainWithCorrs';
 
 ix = abs(zscore([scsP.(Ynm)])) < 2;
-figure; hist(zscore([scsP.(Ynm)]));
+% figure; hist(zscore([scsP.(Ynm)]));
 scsP0 = scsP(ix);
+
+% 
+% scsP0 = scsP0([scsP0.noiseCorr_pavg] < 0.05);
 
 %%
 
@@ -55,8 +58,12 @@ ix2 = ix2a | ix2b;
 
 % xnm = 'rfDist_norm';
 % xnm = 'rfCorr';
-xnm = 'noiseCorrAR';
+% xnm = 'sigNoiseAngleDev';
+% xnm = 'noiseCorr_slope';
+xnm = 'noiseCorr_avg';
+% xnm = 'noiseCorrAR';
 % ynm = 'noiseCorrAR';
+% ynm = 'noiseCorr_avg';
 % ynm = 'rfCorr';
 ynm = 'scoreGainWithCorrs_lb';
 % ynm = 'scoreOverDiagLinear';

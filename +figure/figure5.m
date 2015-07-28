@@ -26,8 +26,13 @@ else
 end
 
 %%
+
+vut = [vuMT_var vu(~[vu.isCell])];
+[scs, scsP, ~] = tools.decodeWithCells(vut, false, false);
 [scs0, scs1] = tools.decodeWithCellsAndShuffle({scsP.stim}, ...
-    {scsP.Ys}, 20);
+    {scsP.Ys}, 10);
+save('data/decodeScs_all_2.mat', 'scs', 'scsP');
+save('data/decodeScsShuffled_scsP_all_2.mat', 'scs0', 'scs1');
 
 %% sorry this is messy...
 
