@@ -9,7 +9,7 @@ function vu = filterData(vu)
     vuMT = vu([vu.isMT]);
 
     % ignore cells with dPrime < 0.4
-    vuMT = vuMT([vuMT.dPrime] >= 0.4);
+%     vuMT = vuMT([vuMT.dPrime] >= 0.4);
 
     % ignore cells with ntrials < 100
     vuMT = vuMT([vuMT.ntrials] >= 100);

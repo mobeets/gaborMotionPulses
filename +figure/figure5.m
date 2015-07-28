@@ -2,17 +2,17 @@
 
 if figure5_reGenData
     vut = [vuMT_var vu(~[vu.isCell])];
-%     vut = vu;
+%     vut = vuMT;
     [scs, scsP, ~] = tools.decodeWithCells(vut, false, false);
-    [~, ~, scsA] = tools.decodeWithCells(vut, true, false);
     [scs0, scs1] = tools.decodeWithCellsAndShuffle({scsP.stim}, ...
         {scsP.Ys}, 10);
+    [~, ~, scsA] = tools.decodeWithCells(vut, true, false);    
     [scs3, scs4] = tools.decodeWithCellsAndShuffle({scsA.stim}, ...
         {scsA.Ys}, 10);
-    save('data/decodeScs.mat', 'scs', 'scsP');
-    save('data/allCells.mat', 'scsA');
-    save('data/decodeScsShuffled_scsP.mat', 'scs0', 'scs1');
-    save('data/decodeScsShuffled_scsA.mat', 'scs3', 'scs4');
+    save('data/decodeScs_all.mat', 'scs', 'scsP');
+    save('data/allCells_all.mat', 'scsA');
+    save('data/decodeScsShuffled_scsP_all.mat', 'scs0', 'scs1');
+    save('data/decodeScsShuffled_scsA_all.mat', 'scs3', 'scs4');
 
 else
     x = load('data/allCells.mat');
@@ -24,6 +24,10 @@ else
     x = load('data/decodeScsShuffled_scsA.mat');
     scs3 = x.scs3; scs4 = x.scs4;
 end
+
+%%
+[scs0, scs1] = tools.decodeWithCellsAndShuffle({scsP.stim}, ...
+    {scsP.Ys}, 20);
 
 %% sorry this is messy...
 
@@ -105,11 +109,11 @@ ylim([miny maxy]);
 %% cellScore vs. mnkScore
 
 clrs = cbrewer('seq', 'Blues', max([scsA.ncells]), 'pchip');
-figure; hold on; set(gca, 'FontSize', 14); set(gca, 'color', 'white');
+figure; hold on; set(gca, 'FontSize', 20); set(gcf, 'color', 'white');
 for ii = 1:numel(scsA)
     cix = scsA(ii).ncells;
-    scatter(scsA(ii).mnkScore, scsA(ii).score, 50, clrs(cix,:), 'filled');
-    scatter(scsA(ii).mnkScore, scsA(ii).score, 50, 'k');
+    scatter(scsA(ii).mnkScore, scsA(ii).score, 100, clrs(cix,:), 'filled');
+    scatter(scsA(ii).mnkScore, scsA(ii).score, 100, 'k');
 end
 xlabel('mnkScore');
 ylabel('score');
@@ -121,8 +125,8 @@ plot(xlim, xlim, 'k--');
 figure; hold on; set(gca, 'FontSize', 14); set(gca, 'color', 'white');
 for ii = 1:numel(scsA)
     cix = scsA(ii).ncells;
-    scatter(scsA(ii).ncells, scsA(ii).Z, 50, clrs(cix,:), 'filled');
-    scatter(scsA(ii).ncells, scsA(ii).Z, 50, 'k');
+    scatter(scsA(ii).ncells, scsA(ii).score, 50, clrs(cix,:), 'filled');
+    scatter(scsA(ii).ncells, scsA(ii).score, 50, 'k');
 end
 xlabel('ncells');
 ylabel('score');

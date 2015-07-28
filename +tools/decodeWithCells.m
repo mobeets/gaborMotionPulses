@@ -114,6 +114,14 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
                     'Ylow', 30);
                 scsP(d).noiseCorrAR = noiseCorr(cells(jj), cells(kk), ...
                     'YresAR', 30);
+                scsP(d).noiseCorrAR_R = noiseCorr(cells(jj), cells(kk), ...
+                    'YresAR', 30, scsP(d).stim > 0);
+                scsP(d).noiseCorrAR_L = noiseCorr(cells(jj), cells(kk), ...
+                    'YresAR', 30, scsP(d).stim <= 0);
+                scsP(d).noiseCorrAR_mx = max([scsP(d).noiseCorrAR_L, ...
+                    scsP(d).noiseCorrAR_R]);
+                scsP(d).noiseCorrAR_mn = min([scsP(d).noiseCorrAR_L, ...
+                    scsP(d).noiseCorrAR_R]);
 
                 scsP(d).noiseCorrZerRfCorr = scsP(d).noiseCorrZer * scsP(d).rfCorr;
                 scsP(d).noiseCorrLowRfCorr = scsP(d).noiseCorrLow * scsP(d).rfCorr;
@@ -146,10 +154,13 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
 
 end
 
-function nc = noiseCorr(c1, c2, Ynm, minTrials)
+function nc = noiseCorr(c1, c2, Ynm, minTrials, ix0)
     Y1 = c1.(Ynm);
-    Y2 = c2.(Ynm);
+    Y2 = c2.(Ynm);    
     ix = ~isnan(Y1) & ~isnan(Y2);
+    if nargin > 4
+        ix = ix & ix0;
+    end
     if sum(ix) < minTrials
         nc = nan;
         return;
