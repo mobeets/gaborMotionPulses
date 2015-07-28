@@ -106,20 +106,3 @@ function outdir = getOutputDir(basedir, dt)
         outdir = '';
     end
 end
-%%
-function fitAndSaveSTRF(data, fitMask, fitNames, llstr, scorestr, ...
-    label, foldinds, figdir, fitdir)
-
-    dat_fnfcn = @(tag) fullfile(fitdir, [tag '.mat']);
-    for ii = 1:numel(fitMask)
-        if fitMask(ii)
-            obj = fitSTRF(data, fitNames{ii}, llstr, scorestr, ...
-                [label '-' fitNames{ii}], foldinds);
-            plot.plotAndSaveKernel(obj, data, figdir, true, true, false);
-            fits.(fitNames{ii}) = obj;
-        end
-    end
-    if ~isempty(fitdir)
-        tools.updateStruct(dat_fnfcn(label), fits);
-    end
-end
