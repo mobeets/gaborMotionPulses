@@ -1,4 +1,4 @@
-function fitSummaries(vals, x, y, z, plotUnity)
+function S = fitSummaries(vals, x, y, z, plotUnity)
     if nargin < 5
         plotUnity = false;
     end
@@ -16,6 +16,13 @@ function fitSummaries(vals, x, y, z, plotUnity)
     xs = [vals.(x)];
     ys = [vals.(y)];
     zs = [vals.(z)];
+    S = struct();
+    S.(x) = xs;
+    S.(y) = ys;
+    S.(z) = zs;
+    S.monkey = monkey;
+    S.categ  = categ;
+    
     for jj = 1:numel(monkeys)
         mnk_ind = monkey == monkeys(jj);
         if jj == 1

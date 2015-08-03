@@ -1,4 +1,4 @@
-function h = trueVsModelSpikes(v, idx)
+function [h,S] = trueVsModelSpikes(v, idx)
     if ~exist('idx', 'var')
         idx = 1:100;
     end
@@ -11,7 +11,8 @@ function h = trueVsModelSpikes(v, idx)
     h(1) = figure;
     ax = tight_subplot(1,1,.1, .1, .1);
     axes(ax)
-    
+    % output for pyplot
+    S = struct();
     Yp = Y(idx);
     Yhp = Yh1(idx);
     xx = [1 1:numel(Yp) numel(Yp)];
@@ -20,7 +21,13 @@ function h = trueVsModelSpikes(v, idx)
     plot(Yhp, 'r', 'Linewidth', 1);   
     set(gcf, 'color', 'w');
     xlabel('trial'); ylabel('spike count'); title(v.name);
-
+    
+    S.trial_prediction.Y = Y;
+    S.trial_prediction.Yhat = Yh1;
+    S.trial_prediction.ix   = idx;
+    S.trial_prediction.fillx = xx;
+    S.trial_prediction.filly = yy;
+    S.trial_prediction.xstim = v.dirprob(ix);
         
     xlim([0 numel(Yp)])
     h(2) = figure;
@@ -33,7 +40,7 @@ function h = trueVsModelSpikes(v, idx)
     scatter(xs, Y, 'b');hold on;
     scatter(xs, Yh1, 'r');
     
-
+    
     h(3) = figure; 
     ax = tight_subplot(1,1,1, .1, .1);
     hold on; set(gcf, 'color', 'w');

@@ -6,7 +6,7 @@ d = io.loadDataByDate(vMT.dt, vMT.isNancy);
 goodCells = find([vuMT.dPrime] > 1);
 
 idx = 300:400;
-h = plot.trueVsModelSpikes(vMT, idx);
+[h, pyS] = plot.trueVsModelSpikes(vMT, idx);
 
 % sample trials model fit quality
 figure(h(1))
@@ -26,7 +26,8 @@ saveas(h(3), fullfile(figDir, sprintf('MotionDirSensitivity%s.pdf', exampleCellM
 
 %% Space-time image of a single trial
 figure(110); clf
-tr = randi(d.stim.nTrials);
+% tr = randi(d.stim.nTrials)
+tr = 725;
 imagesc(squeeze(d.stim.pulses(tr,:,:))', [-1 1]); colormap gray
 set(gca, 'Xtick', [1 d.stim.nPulses], 'Ytick', [1 d.stim.nGabors])
 xlabel('Pulse #')
@@ -34,7 +35,8 @@ ylabel('Gabor Id')
 figure.cleanupForPrint(gcf, 'FontSize', 8, 'PaperSize', [25 25])
 plot.saveFigure(sprintf('stimTrial%d.png', tr), figDir, gcf);
 
-
+pyS.sample_trial.xyimage = squeeze(d.stim.pulses(tr,:,:));
+pyS.sample_trial.gaborXY = vMT.Xxy;
 %% All the trials
 figure(111); clf
 imagesc(reshape(d.stim.pulses(idx,:,:), numel(idx), [])'); colormap gray
@@ -44,14 +46,16 @@ ylabel('S(Trial)')
 figure.cleanupForPrint(gcf, 'FontSize', 8, 'PaperSize', [80 25])
 plot.saveFigure(sprintf('stimulus%d.png', exampleCellMT), figDir, gcf)
 
-
+pyS.all_trials.image = reshape(d.stim.pulses, size(d.stim.pulses,1), [])';
 %% r-sq before and after AR-2 model
 figure(112); clf
 set(gcf, 'color', 'w');
-plot.fitSummaries(vuMT, 'b', 'score_AR', nan, false);
+pyS.fit_summary= plot.fitSummaries(vuMT, 'b', 'score_AR', nan, false);
 xlim([0 100])
 hold on
 xlabel('Mean Spike Rate')
 ylabel('r^2')
 figure.cleanupForPrint(gcf, 'FontSize', 8, 'PaperSize', [25 25])
 plot.saveFigure('modelPerformancePopulation', figDir, gcf)
+
+save(fullfile(figDir, 'figure02_pystruct.mat'), '-v7.3', '-struct', 'pyS')
