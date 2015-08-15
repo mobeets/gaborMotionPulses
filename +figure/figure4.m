@@ -2,6 +2,8 @@
 Yh = 'YresAR';
 cpY = 'cp_YresAR';
 
+pyS = struct();
+
 % vut = vuMT([vuMT.nzertrials] >= 30);
 % vut = vuMT(arrayfun(@(v) all(v.nlowmottrials > 30), vuMT));
 vut = vuMT_var;
@@ -30,7 +32,7 @@ diffCorr = @(v0, v1) corr(getWf(v0), getWf(v1)) < 0;
 %% noise-correlation vs. RF similarity
 [a,b,c] = plot.pairwiseCorrs(vut, 'w', Yh);
 set(gcf, 'PaperSize', [4 6], 'PaperPosition', [0 0 4 6])
-plot.saveFigure('MT - noise-corr vs. rf-corr', figDir, gcf, 'pdf');
+plot.saveFigure('MT - noise-corr vs. rf-corr', figDir, gcf, 'png');
 
 %% CP vs. dPrime
 
@@ -46,6 +48,15 @@ plot([0 1.5], [.5 .5], 'k:')
 figure.cleanupForPrint(gcf, 'PaperSize', [25 25], 'FontSize', 8)
 plot.saveFigure(['MT - ' cpY ' vs. rf-eccentricity'], figDir, gcf);
 
+%% output struct
+pyS.rf_ecc = [vut.rf_ecc];
+pyS.rf_xy  = reshape([vut.rf_center], 2,[]);
+pyS.dprime = [vut.dPrime];
+pyS.CPres  = [vut.cp_YresAR];
+pyS.CPlow  = [vut.cp_Ylow];
+
+save(fullfile(figDir, 'figure04_pystruct.mat'), '-v7.3', '-struct', 'pyS')
+    
 %% dPrime vs. rfEcc
 plot.boxScatterFitPlotWrap(vut, 'rf_ecc', 'dPrime', ...
     true, false, 6);
@@ -70,3 +81,30 @@ plot.pairwiseCorrs(vut, 'wrat', 'YresAR', ...
 plot.pairwiseCorrs(vut, 'wrat', 'YresAR', ...
     nan, 'wrat', ...
     nan, @(a,b) a+b, @corr, sameTarg);
+
+%% Figure 4 Jake Draft
+showBox=false;
+showPCline=true;
+figure(4); clf
+subplot(2,2,1)
+[~,xs,ys]=plot.boxScatterFitPlotWrap(vut, 'rf_ecc', 'dPrime', showBox, false, 10, showPCline);
+[~,idx] = sort(xs);
+plot(xs(idx), smooth(xs(idx), ys(idx), 0.3, 'loess'), 'r-');
+title('Sensitivity')
+xlabel('RF Center Distance')
+ylabel('d''')
+git pull
+subplot(2,2,2)
+[~,xs,ys]=plot.boxScatterFitPlotWrap(vut, 'rf_ecc', cpY, showBox, false, 10, showPCline);
+[~,idx] = sort(xs);
+plot(xs(idx), smooth(xs(idx), ys(idx), 0.3, 'loess'), 'r-');
+xlim([0 1.2])
+ylim([.4 .65])
+title('Choice Probability')
+xlabel('RF Center Distance')
+ylabel('CP')
+plot(xlim, [.5 .5], 'k')
+
+
+
+

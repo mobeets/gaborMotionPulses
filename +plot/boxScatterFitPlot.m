@@ -1,9 +1,12 @@
-function mdl = boxScatterFitPlot(xs, ys, showBox, showFit, nbins)
+function mdl = boxScatterFitPlot(xs, ys, showBox, showFit, nbins, PCregression)
     if nargin < 5
         nbins = 12;
     end
     if nargin < 4
         showFit = true;
+    end
+    if nargin <6
+        PCregression=true;
     end
     if nargin < 3
         showBox = true;
@@ -34,6 +37,19 @@ function mdl = boxScatterFitPlot(xs, ys, showBox, showFit, nbins)
         set(hs(2), 'LineWidth', 2);        
     end
     legend off;
+    if PCregression
+        X=[xs(:) ys(:)];
+        xd=xlim;
+        yd=ylim;
+        coeff = pca(X);
+        meanX=mean(X);
+        Xfit = @(x,k) (coeff(1,k)/coeff(2,k))*(x-meanX(1))+meanX(2);
+        cmap=lines;
+        plot(xlim,Xfit(xlim,1), 'Color', cmap(1,:))
+        plot(xlim,Xfit(xlim,2), 'Color', cmap(2,:))
+        xlim(xd)
+        ylim(yd)
+    end
     
     title(['corr(xs,ys) = ' num2str(rho) ...
         ', fit r^2 = ' num2str(rsq) ', pval = ' num2str(pval) ...

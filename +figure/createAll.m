@@ -14,7 +14,7 @@ tm = arrayfun(@(v) var(v.wfSvd_1(:,1)), vu, 'uni', 0);
 [vu.wfVar] = tm{:};
 vuMT = vu([vu.isMT]);
 vuMT_var = vuMT(log([vuMT.wfVar])>-17);
-
+% vuMT_var = vuMT;
 %%
 
 figBaseDir = '~/Dropbox/gaborMotionPulseASD/figures/';
