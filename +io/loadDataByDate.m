@@ -43,10 +43,16 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
     
     neurons = loadNeurons(dt, fullfile(basedir, spikesdir));
     Y = loadSpikeCounts(neurons, max(stim.trialnumber), stim.timing);
+    inds = false(size(Y,1),1);
+    if isempty(neurons)
+        inds(stim.goodtrial)=true;
+    else
+        inds(neurons{1}.trialIndex)=true;
+    end
     frzinds = stim.frozentrials & stim.goodtrial;
     Yfrz = Y(frzinds,:);
     Rfrz = -(stim.targchosen(frzinds)-1) + 1;
-    inds = stim.goodtrial;
+    
      % each targ1 must be within 2 deg of median targ1, and same for targ2
 %     targix = ignoreDistantTargets(stim, 2);
 %     inds = inds & targix;
@@ -111,7 +117,7 @@ function Y = loadSpikeCounts(neurons, ny, stimtiming)
     Y2 = nan(ny, numel(neurons));
     for ii = 1:numel(neurons)
         cur = neurons{ii};
-        if ~isequal(size(cur.trialIndex), size(cur.spikeCount))
+        if islogical(cur.trialIndex) && ~isequal(size(cur.trialIndex), size(cur.spikeCount)) || isempty(cur.trialIndex)
             continue;
         end
 %         sps = cur.spikeTimes;
@@ -123,7 +129,14 @@ function Y = loadSpikeCounts(neurons, ny, stimtiming)
 %             t1 = t + tmg.motionoff + 0.2;
 %             Y2(ti, ii) = sum(sps >= t0 & sps <= t1);
 %         end
-        Y(cur.trialIndex, ii) = cur.spikeCount;
+        
+        windowFunction = @(t, T) 1 - 0.05 * cos(2*pi*t/T); % weighted sum of spikes
+        if islogical(cur.trialIndex) || numel(unique(cur.trialIndex))==2
+            win = stimtiming(find(cur.trialIndex,1)).motionoff - stimtiming(find(cur.trialIndex,1)).motionon + .2;
+        else
+            win = stimtiming(cur.trialIndex(1)).motionoff - stimtiming(cur.trialIndex(1)).motionon + .2;
+        end
+        Y(cur.trialIndex, ii) = arrayfun(@(x) sum(windowFunction(cur.spikeTimes(cur.spikeTimes > x & cur.spikeTimes < x + win)-x, win)), [stimtiming(cur.trialIndex).motionon]+[stimtiming(cur.trialIndex).plxstart])/win;
     end
 %     Y = Y2;
 end

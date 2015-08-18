@@ -108,11 +108,13 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
                 val.hyper_ssq = val.hyper(2);
                 val.targPref = neuron.targPref;
                 val.electrodeDepth = neuron.electrodeDepth;
+%                 val=getNeuronPrefDir(val, neuron, d.stim);
             else
                 val.Y = d.R;
                 val.Yfrz = d.R_frz;
                 val.targPref = 1;
                 val.electrodeDepth = nan;
+%                 val=getNeuronPrefDir(val, neuron, d.stim);
             end
             if sum(strcmp(val.name, flipTargPrefNames)) > 0
                 val.targPref = ~(val.targPref-1)+1; % flip targ pref
@@ -435,4 +437,56 @@ function val = addSelectivityTests(val, f, d, foldinds)
     end
     disp(num2str(mean(scs)));
 
+end
+
+
+function val = getNeuronPrefDir(val, neuron, stim)
+% get a neuron's preferred direction
+% prefDir = getNeuronPrefDir(neuron)
+% Inputs
+%   neuron (struct) - output of make_SingleNeuronStruct
+% Outputs
+%   prefDir - in degrees
+
+val.prefDir   = nan;
+val.deltaPref = nan;
+val.relativePref = nan;
+if isempty(neuron)
+    return
+end
+
+switch neuron.brainArea
+    case 'MT'
+        hyperflowPrefDir = nan;
+        mtrfmapPrefDir   = nan;
+        if ~isempty(neuron.hyperflow) && isfield(neuron.hyperflow, 'prefDir')
+            hyperflowPrefDir = neuron.hyperflow.prefDir;
+        end
+        
+        if ~isempty(neuron.mtrfmap)
+            mtrfmapPrefDir = neuron.mtrfmap.prefDir;
+        end
+        
+        
+        
+        val.prefDir = nanmean([hyperflowPrefDir mtrfmapPrefDir]);
+        
+        
+    case 'LIP'
+        
+        %         if ~isempty(neuron.delayedsaccades)
+        %             prefDir = cart2pol(neuron.delayedsaccades.rfXY(1), neuron.delayedsaccades.rfXY(2))*180/pi;
+        %         end
+        
+    otherwise
+        warning('getNeuronPrefDir: no support for areas besides MT and LIP')
+end
+
+
+
+circ_dist = @(x,y) angle(exp(1i*x)./exp(1i*y));
+diffCirc  = @(x,y) (circ_dist(x/180*pi, y/180*pi))*180/pi;
+
+val.relativePref=diffCirc(val.prefDir, stim.theta);
+val.deltaPref=abs(val.relativePref);
 end
