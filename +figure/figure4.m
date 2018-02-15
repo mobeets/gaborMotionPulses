@@ -46,7 +46,7 @@ set(gca, 'Xtick', [0 .5 1 1.5])
 hold on
 plot([0 1.5], [.5 .5], 'k:')
 figure.cleanupForPrint(gcf, 'PaperSize', [25 25], 'FontSize', 8)
-plot.saveFigure(['MT - ' cpY ' vs. rf-eccentricity'], figDir, gcf);
+% plot.saveFigure(['MT - ' cpY ' vs. rf-eccentricity'], figDir, gcf);
 
 %% output struct
 pyS.rf_ecc = [vut.rf_ecc];
@@ -63,9 +63,9 @@ plot.boxScatterFitPlotWrap(vut, 'rf_ecc', 'dPrime', ...
 set(gca, 'Xtick', [0 .5 1 1.5])
 hold on
 figure.cleanupForPrint(gcf, 'PaperSize', [25 25], 'FontSize', 8)
-axis off
-title('')
-plot.saveFigure(['MT - ' 'dPrime' ' vs. rf-eccentricity'], figDir, gcf);
+% axis off
+% title('')
+% plot.saveFigure(['MT - ' 'dPrime' ' vs. rf-eccentricity'], figDir, gcf);
 
 %%
 
@@ -93,7 +93,7 @@ plot(xs(idx), smooth(xs(idx), ys(idx), 0.3, 'loess'), 'r-');
 title('Sensitivity')
 xlabel('RF Center Distance')
 ylabel('d''')
-git pull
+% git pull
 subplot(2,2,2)
 [~,xs,ys]=plot.boxScatterFitPlotWrap(vut, 'rf_ecc', cpY, showBox, false, 10, showPCline);
 [~,idx] = sort(xs);

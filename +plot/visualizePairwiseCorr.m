@@ -1,10 +1,13 @@
-function S = visualizePairwiseCorr(r, c)
+function S = visualizePairwiseCorr(r, c, showHists)
 % visualize joint responses for neuron pairs
 % S = vizualizePairwiseCorr(spikeCount, Condition)
 % INPUT:
 %   spikeCount = [nTrials x 2]
 %   Condition  = [nTrials x 1] logical condition
 
+if nargin < 3
+    showHists = true;
+end
 cmap = lines(2);
 cmap = flipud(cmap);
 
@@ -13,6 +16,7 @@ ix1=~any(isnan(c),2);
 ix = ix0&ix1;
 r = r(ix,:);
 c = c(ix);
+c = (c == 1); % make logical
 
 % get group mean and covariances
 mu1 = mean(r(c, :)); sig1 = cov(r(c, :));
@@ -63,10 +67,12 @@ S.critBlind = crit0;
 
 
 
-qd = ezplot(q, [0 max(xlim) 0 max(ylim)]);
 qo = ezplot(qOr, [0 max(xlim) 0 max(ylim)]);
 set(qo, 'Linewidth', 2, 'Color', 'k', 'Linestyle', '-');
-set(qd, 'Linewidth', 2, 'Color', 'k', 'Linestyle', '-');
+if showHists
+    qd = ezplot(q, [0 max(xlim) 0 max(ylim)]);
+    set(qd, 'Linewidth', 2, 'Color', 'k', 'Linestyle', '-');
+end
 qe = ezplot(q1, [0 max(xlim) 0 max(ylim)]);
 set(qe, 'Linewidth', 2, 'Color', 'k', 'Linestyle', '--');
 
@@ -91,8 +97,10 @@ X1 = [bins(:) s*cnt1(:)]*R;
 X2 = [bins(:) s*cnt2(:)]*R;
 
 ab = x0;
-plot(X1(:,1)+ab, q(ab)+ X1(:,2), 'Color', cmap(2,:));
-plot(X2(:,1)+ab, q(ab)+ X2(:,2), 'Color', cmap(1,:));
+if showHists
+    plot(X1(:,1)+ab, q(ab)+ X1(:,2), 'Color', cmap(2,:));
+    plot(X2(:,1)+ab, q(ab)+ X2(:,2), 'Color', cmap(1,:));
+end
 xlabel('Neuron 1')
 ylabel('Neuron 2')
 title('')
