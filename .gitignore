@@ -3,6 +3,7 @@ _old
 *.m~
 *.mat
 *.png
+*.pdf
 notes/
 papers/
 plots/

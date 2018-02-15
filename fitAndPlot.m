@@ -18,9 +18,12 @@ vuMT_var = vuMT(log([vuMT.wfVar])>-17);
 
 %% decoding
 
-nShuffles = 20;
+nShuffles = 10;
 pairs = tools.makeCellPairs(vuMT_var);
-[scsRaw, scsShuf] = tools.decodeAndShuffle({pairs.stim}, {pairs.Ys}, nShuffles);
+[scsRaw, scsShuf] = tools.decodeAndShuffle({pairs.stimdir}, {pairs.Ys}, ...
+    nShuffles);
+% [scsRaw, scsShuf] = tools.decodeAndShuffle({pairs.stimdir}, {pairs.Ys}, ...
+%     nShuffles, {pairs.dirstrength_binned});
 
 %% plot score change with shuffles
 
@@ -44,33 +47,38 @@ ylabel('decoding improvement compared to shuffled');
 doSave = false;
 scs = pairs;
 
-ix = [scs.sameTarg];
-ix1 = [scs.sameCorr];
-ix2a = (ix&~ix1); % same dir, anti-corr
-ix2b = (~ix&ix1); % opp dir, pos-cor
-ix2 = ix2a | ix2b;
+samePool = [scs.sameTarg];
+posRfCorr = [scs.sameCorr];
+ix1 = ~samePool & ~posRfCorr;
+ix2 = ~samePool & posRfCorr;
+ix3 = samePool & ~posRfCorr;
+ix4 = samePool & posRfCorr;
 
 xnms = {'rfCorr', 'noiseCorrAR', 'rfCorr', 'rfDist'};
 ynms = {'noiseCorrAR', 'scoreGainWithCorrs', 'scoreGainWithCorrs', 'scoreGainWithCorrs'};
-xlbls = {'RF correlation', 'noise correlation', 'RF correlation', 'RF center dist'};
-ylbls = {'noise correlation', '\Delta decoding accuracy', '\Delta decoding accuracy', '\Delta decoding accuracy'};
 fnms = {'rscVsRf', 'scoreVsrsc', 'scoreVsRf', 'rfdistVsScore'};
+
+fldnms = struct('rfCorr', 'RF correlation', ...
+    'noiseCorrAR', 'noise correlation', ...
+    'rfDist', 'RF center distance', ...
+    'scoreGainWithCorrs', '\Delta decoding accuracy');
+fldnms = containers.Map(fieldnames(fldnms), struct2cell(fldnms));
 
 for ii = 1:numel(xnms)
     xnm = xnms{ii};
     ynm = ynms{ii};
-    xlbl = xlbls{ii};
-    ylbl = ylbls{ii};
+    xlbl = fldnms(xnm);
+    ylbl = fldnms(ynm);
     fnm = fnms{ii};
     fnm = fullfile('data', 'figs', 'summary', [fitnm '_' fnm '.pdf']);
 
     figure; hold on; set(gcf, 'color', 'w');
-    t1 = scs(ix2a); % same dir, anti-corr
-    t2 = scs(ix2b); % opp dir, pos-cor
-    t3 = scs(~ix2 & ~ix);
-    t4 = scs(~ix2 & ix);
-    c2 = [0.3 0.6 0.6];
-    c1 = [0.9 0.7 0.2];
+    t1 = scs(ix1);
+    t2 = scs(ix2);
+    t3 = scs(ix3);
+    t4 = scs(ix4);
+    c1 = [0.8 0.3 0.3];
+    c2 = [0.3 0.3 0.8];
 
     nms = {'different pools, -RF corr', 'different pools, +RF corr', ...
         'same pool, -RF corr', 'same pool, +RF corr'};
@@ -81,7 +89,7 @@ for ii = 1:numel(xnms)
     yl = [-ymx ymx];
 
     subplot(2,2,1); hold on; set(gca, 'FontSize', 14);
-    scatter([t3.(xnm)], [t3.(ynm)], 50, c1, 'filled');
+    scatter([t1.(xnm)], [t1.(ynm)], 50, c1, 'filled');
     xlabel(xlbl); ylabel(ylbl); plot(xl, [0 0], 'k--'); plot([0 0], yl, 'k--');
     xlim(xl); ylim(yl);
     title(nms{1});
@@ -93,7 +101,7 @@ for ii = 1:numel(xnms)
     title(nms{2});
 
     subplot(2,2,3); hold on; set(gca, 'FontSize', 14);
-    scatter([t1.(xnm)], [t1.(ynm)], 50, c2);
+    scatter([t3.(xnm)], [t3.(ynm)], 50, c2);
     xlabel(xlbl); ylabel(ylbl); plot(xl, [0 0], 'k--'); plot([0 0], yl, 'k--');
     xlim(xl); ylim(yl);
     title(nms{3});

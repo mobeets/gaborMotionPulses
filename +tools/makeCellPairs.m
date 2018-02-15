@@ -7,10 +7,15 @@ function pairs = makeCellPairs(allcells)
         cells = allcells(strcmp({allcells.dt}, dts{ii}));
         
         % get stimulus direction for decoding
-        dec = cells(1);
-        Y = sign(dec.dirstrength);
-        Y(Y == 0) = nan;
-%         Y = (Y == 1); % correct choice
+        %   and also bin dirstrength
+        stim = cells(1);
+        X = sign(stim.dirstrength); X(X == 0) = nan;
+        dirs = stim.dirstrength;
+        if numel(unique(dirs)) > 10
+            dirsbn = discretize(dirs, linspace(min(dirs), max(dirs), 10));
+        else
+            dirsbn = dirs;
+        end
 
         for jj = 1:(numel(cells)-1)
             for kk = jj+1:numel(cells)
@@ -18,7 +23,9 @@ function pairs = makeCellPairs(allcells)
                 pairs(d).cell1 = cells(jj).name;
                 pairs(d).cell2 = cells(kk).name;
                 pairs(d).Ys = [cells(jj).Y cells(kk).Y];
-                pairs(d).stim = Y;
+                pairs(d).stimdir = X;
+                pairs(d).dirstrength = dirs;
+                pairs(d).dirstrength_binned = dirsbn;
                 
                 pairs(d).rfCorr = corr(cells(jj).w(:), cells(kk).w(:));
                 pairs(d).sameCorr = pairs(d).rfCorr > 0;
