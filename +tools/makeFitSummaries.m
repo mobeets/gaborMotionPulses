@@ -26,7 +26,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
         if isempty(fs)
             continue;
         end
-        d = io.loadDataByDate(dt, isNancy);
+        d = io.loadDataByDate(dt);
         if isSpaceOnly
             d.X = sum(d.Xf, 3);
             d.D = d.Ds;
@@ -59,7 +59,7 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             % meta data
             val.name = [dt '-' nms{jj}];
             disp(val.name);
-            val.isNancy = isNancy;
+            val.isNancy = str2num(dt(4)) > 4;
             val.dt = dt;
             nm = strsplit(nms{jj}, '_');
             val.type = nm{1};
@@ -103,7 +103,11 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             if val.isCell
                 neuron = d.neurons{val.cellind};
                 val.Y = d.Y_all(:,val.cellind);
-                val.Yfrz = d.Y_frz(:,val.cellind);
+                if isfield(d, 'Y_frz')
+                    val.Yfrz = d.Y_frz(:,val.cellind);
+                else
+                    val.Yfrz = [];
+                end
                 val.dPrime = neuron.dPrime;
                 val.hyper_ssq = val.hyper(2);
                 val.targPref = neuron.targPref;
@@ -127,9 +131,13 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             val.nlowmottrials = sum(lowTrials);
             val.fano = nanvar(val.Y)/nanmean(val.Y);
             
-            val.C = logical(-d.R+2 == val.targPref);
-            val.C0 = logical(d.R); % uncorrected for targPref
-            val.Cfrz = logical(-d.R_frz+2 == val.targPref);
+            val.C = -d.R+2 == val.targPref;
+            val.C0 = d.R; % uncorrected for targPref
+            if isfield(d, 'R_frz')
+                val.Cfrz = -d.R_frz+2 == val.targPref;
+            else
+                val.Cfrz = [];
+            end
             val.Czer = val.C(zerTrials);
             val.Clow = val.C(lowTrials);
             
@@ -166,18 +174,18 @@ function vals = makeFitSummaries(fitdir, isNancy, fitstr, dts)
             
             % CP
             C = val.C0; % for signed CP (i.e., both above/below 0.5)
-            val.cp_Y = tools.AUC(val.Y(C), val.Y(~C));
-            val.cp_Yres = tools.AUC(val.Yres(C), val.Yres(~C));
-            val.cp_YresAR = tools.AUC(val.YresAR(C), val.YresAR(~C));
+            val.cp_Y = tools.AUC(val.Y(C == 1), val.Y(C == 0));
+            val.cp_Yres = tools.AUC(val.Yres(C == 1), val.Yres(C == 0));
+            val.cp_YresAR = tools.AUC(val.YresAR(C == 1), val.YresAR(C == 0));
             C = val.C;
-            val.cp_Yc = tools.AUC(val.Y(C), val.Y(~C));
-            val.cp_Yresc = tools.AUC(val.Yres(C), val.Yres(~C));
-            val.cp_YresARc = tools.AUC(val.YresAR(C), val.YresAR(~C));
+            val.cp_Yc = tools.AUC(val.Y(C == 1), val.Y(C == 0));
+            val.cp_Yresc = tools.AUC(val.Yres(C == 1), val.Yres(C == 0));
+            val.cp_YresARc = tools.AUC(val.YresAR(C == 1), val.YresAR(C == 0));
             C = val.Czer;
-            val.cp_Yzer = tools.AUC(val.Yzer(C), val.Yzer(~C));
+            val.cp_Yzer = tools.AUC(val.Yzer(C == 1), val.Yzer(C == 0));
             C = val.Clow;
-            if any(~isnan(val.Ylow(C))) && any(~isnan(val.Ylow(~C)))
-                val.cp_Ylow = tools.AUC(val.Ylow(C), val.Ylow(~C));
+            if any(~isnan(val.Ylow(C == 1))) && any(~isnan(val.Ylow(C == 0)))
+                val.cp_Ylow = tools.AUC(val.Ylow(C == 1), val.Ylow(C == 0));
             else
                 val.cp_Ylow = nan;
             end
@@ -240,7 +248,11 @@ function val = addStimulusInfo(d)
         inds = d.stim.goodtrial & ~d.stim.frozentrials;
     end
     val.ix = inds;
-    val.ixfrz = d.ixfrz;
+    if isfield(d, 'ixfrz')
+        val.ixfrz = d.ixfrz;
+    else
+        val.ixfrz = [];
+    end
     val.dirprob = d.stim.dirprob(inds);
     val.dirstrength = sum(sum(d.stim.pulses(...
         inds,:,:),3),2);

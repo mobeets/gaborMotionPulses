@@ -1,38 +1,40 @@
 %% load data
 
+figure5_reGenData = true;
+
 if figure5_reGenData
     vut = [vuMT_var vu(~[vu.isCell])];
 %     vut = vuMT;
     [scs, scsP, ~] = tools.decodeWithCells(vut, false, false);
     [scs0, scs1] = tools.decodeWithCellsAndShuffle({scsP.stim}, ...
-        {scsP.Ys}, 10);
+        {scsP.Ys}, 20);
     [~, ~, scsA] = tools.decodeWithCells(vut, true, false);    
-    [scs3, scs4] = tools.decodeWithCellsAndShuffle({scsA.stim}, ...
-        {scsA.Ys}, 10);
-    save('data/decodeScs_all.mat', 'scs', 'scsP');
-    save('data/allCells_all.mat', 'scsA');
-    save('data/decodeScsShuffled_scsP_all.mat', 'scs0', 'scs1');
-    save('data/decodeScsShuffled_scsA_all.mat', 'scs3', 'scs4');
+%     [scs3, scs4] = tools.decodeWithCellsAndShuffle({scsA.stim}, ...
+%         {scsA.Ys}, 10);
+    save('data/decode/decodeScs.mat', 'scs', 'scsP');
+    save('data/decode/allCells.mat', 'scsA');
+    save('data/decode/decodeScsShuffled_scsP.mat', 'scs0', 'scs1');
+%     save('data/decodeScsShuffled_scsA_all.mat', 'scs3', 'scs4');
 
 else
-    x = load('data/allCells.mat');
+    x = load('data/decode/allCells.mat');
     scsA = x.scsA;
-    x = load('data/decodeScs.mat');
+    x = load('data/decode/decodeScs.mat');
     scsP = x.scsP;
-    x = load('data/decodeScsShuffled_scsP.mat');
+    x = load('data/decode/decodeScsShuffled_scsP.mat');
     scs0 = x.scs0; scs1 = x.scs1;
-    x = load('data/decodeScsShuffled_scsA.mat');
-    scs3 = x.scs3; scs4 = x.scs4;
+%     x = load('data/decodeScsShuffled_scsA.mat');
+%     scs3 = x.scs3; scs4 = x.scs4;
 end
 
 %%
-
-vut = [vuMT_var vu(~[vu.isCell])];
-[scs, scsP, ~] = tools.decodeWithCells(vut, false, false);
-[scs0, scs1] = tools.decodeWithCellsAndShuffle({scsP.stim}, ...
-    {scsP.Ys}, 10);
-save('data/decodeScs_all_2.mat', 'scs', 'scsP');
-save('data/decodeScsShuffled_scsP_all_2.mat', 'scs0', 'scs1');
+% 
+% vut = [vuMT_var vu(~[vu.isCell])];
+% [scs, scsP, ~] = tools.decodeWithCells(vut, false, false);
+% [scs0, scs1] = tools.decodeWithCellsAndShuffle({scsP.stim}, ...
+%     {scsP.Ys}, 10);
+% save('data/decode/decodeScs_all_2.mat', 'scs', 'scsP');
+% save('data/decode/decodeScsShuffled_scsP_all_2.mat', 'scs0', 'scs1');
 
 %% sorry this is messy...
 

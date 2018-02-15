@@ -5,21 +5,23 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
         ignoreEarlyRepeats = true;
     end
     if nargin < 6
-        ignoreFrozen = true;
+        ignoreFrozen = false;
     end    
     if nargin < 2
         isNancy = str2num(dt(4)) > 4;
     end
-    if isNancy
-        mnkNm = 'nancy';
-    else
-        mnkNm = 'pat';
-    end
+%     if isNancy
+%         mnkNm = 'nancy';
+%     else
+%         mnkNm = 'pat';
+%     end
     if nargin < 5 || isempty(spikesdir)
-        spikesdir = [mnkNm 'NeuronFiles'];
+        spikesdir = 'neurons';
+%         spikesdir = [mnkNm 'NeuronFiles'];
     end
     if nargin < 4 || isempty(stimdir)
-        stimdir = [mnkNm 'StimFiles'];
+        stimdir = 'stim';
+%         stimdir = [mnkNm 'StimFiles'];
     end
     if nargin < 3 || isempty(basedir)
 %         basedir = '/Volumes/LKCLAB/Users/Jay';
@@ -28,6 +30,9 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
         switch user
             case {'jacobyates'}
                 basedir = '~/Dropbox/MatlabCode/Projects/gaborPulseASD/data';
+            case {'mobeets'}
+                basedir = 'data';
+%                 basedir = '/Users/mobeets/code/gaborMotionReboot/data';
             otherwise
                 basedir = '~/Documents';
         end
@@ -49,9 +54,9 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
     else
         inds(neurons{1}.trialIndex)=true;
     end
-    frzinds = stim.frozentrials & stim.goodtrial;
-    Yfrz = Y(frzinds,:);
-    Rfrz = -(stim.targchosen(frzinds)-1) + 1;
+%     frzinds = stim.frozentrials & stim.goodtrial;
+%     Yfrz = Y(frzinds,:);
+%     Rfrz = -(stim.targchosen(frzinds)-1) + 1;
     
      % each targ1 must be within 2 deg of median targ1, and same for targ2
 %     targix = ignoreDistantTargets(stim, 2);
@@ -76,13 +81,13 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
 
     % add all to output struct
     data.ix = inds;
-    data.ixfrz = frzinds;
+%     data.ixfrz = frzinds;
     data.Xf = Xf;
     data.X = X;
     data.Y_all = Y;
-    data.Y_frz = Yfrz;
+%     data.Y_frz = Yfrz;
     data.R = R;
-    data.R_frz = Rfrz;
+%     data.R_frz = Rfrz;
     data.D = D;
     data.Ds = Ds;
     data.ndeltas = size(D, 3);

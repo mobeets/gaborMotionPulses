@@ -36,8 +36,12 @@ function [scs0, scsSh] = decodeWithCellsAndShuffle(X, Y, nshuffles, doPlot)
         x = [x(ix); x(~ix)];
         ys = [ys(ix,:); ys(~ix,:)];
         ix = x == 1;
-        [scs0(ii), L0(ii,:), K0(ii)] = getMeanCellScore(ys, x, ...
+        [scs0c, L0c, K0c] = getMeanCellScore(ys, x, ...
             scoreFcn, 10, 10);
+        
+        scs0(ii) = scs0c;
+        L0(ii,:) = L0c;
+        K0(ii) = K0c;
         if doPlot
             subplot(nr,nc,1); hold on;
             scatter(ys(ix,1), ys(ix,2), 'b');
@@ -94,7 +98,7 @@ end
 function [sc, L, K] = getMeanCellScore(X, Y, scoreFcn, nfolds, ntimes)
     ix = all(~isnan(X),2) | isnan(Y); X = X(ix,:); Y = Y(ix);
     if numel(Y) == 0
-        sc = nan;
+        sc = nan; L = nan; K = nan;
         return;
     end
     sc0 = estimate(X, Y, scoreFcn, nfolds, ntimes);    

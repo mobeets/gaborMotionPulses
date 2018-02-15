@@ -5,6 +5,8 @@ ix = abs(zscore([scsP.(Ynm)])) < 2;
 % figure; hist(zscore([scsP.(Ynm)]));
 scsP0 = scsP(ix);
 
+scsP0 = scsP;
+
 % 
 % scsP0 = scsP0([scsP0.noiseCorr_pavg] < 0.05);
 
@@ -28,14 +30,14 @@ end
 %%
 
 figure; hold on; set(gca, 'FontSize', 14); set(gcf, 'color', 'w');
-xnm = 'rfDist_norm';
+% xnm = 'rfDist_norm';
 % xnm = 'rfCorr';
-% xnm = 'noiseCorrAR';
+xnm = 'noiseCorrAR';
 % ynm = 'noiseCorrAR';
 % ynm = 'rfCorr';
 ynm = 'scoreGainWithCorrs_lb';
 % ynm = 'scoreOverDiagLinear';
-% znm = 'rfCorr';
+znm = 'rfCorr';
 
 c1 = [0.9 0.7 0.2];
 c2 = [0.3 0.6 0.6];
@@ -54,24 +56,23 @@ ix2a = (ix&~ix1); % same dir, anti-corr
 ix2b = (~ix&ix1); % opp dir, pos-cor
 ix2 = ix2a | ix2b;
 
-
-
 % xnm = 'rfDist_norm';
 % xnm = 'rfCorr';
 % xnm = 'sigNoiseAngleDev';
 % xnm = 'noiseCorr_slope';
-xnm = 'noiseCorr_avg';
-% xnm = 'noiseCorrAR';
+% xnm = 'noiseCorr_avg';
+xnm = 'noiseCorrAR';
+
 % ynm = 'noiseCorrAR';
 % ynm = 'noiseCorr_avg';
 % ynm = 'rfCorr';
 ynm = 'scoreGainWithCorrs_lb';
 % ynm = 'scoreOverDiagLinear';
-% znm = 'rfCorr';
+znm = 'rfCorr';
 
 figure; hold on; set(gca, 'FontSize', 14); set(gcf, 'color', 'w');
-t1 = scsP0(ix2a);
-t2 = scsP0(ix2b);
+t1 = scsP0(ix2a); % same dir, anti-corr
+t2 = scsP0(ix2b); % opp dir, pos-cor
 t3 = scsP0(~ix2 & ~ix);
 t4 = scsP0(~ix2 & ix);
 c2 = [0.3 0.6 0.6];

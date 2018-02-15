@@ -32,12 +32,15 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
     c = 1; d = 1; e = 1;
     for ii = 1:numel(dts)
         vc = vs(strcmp({vs.dt}, dts{ii}));
-        dec = vc(~[vc.isCell]);
+        dec = vc(1); % any cell will do to get C and dirstrength
+%         dec = vc(~[vc.isCell]);
         if numel(dec) == 0
+            disp('Empty decision');
             continue;
         end
         cells = vc([vc.isMT]);
         if numel(cells) == 0
+            disp('Empty cells');
             continue;
         end
         Ym = dec.C; % monkey's choice
@@ -118,7 +121,7 @@ function [scs, scsP, scsA] = decodeWithCells(vs, useAllCells, ...
                 % split by stimulus dir                
                 X = scsP(d).stim;
                 Y1 = cells(jj).Y;
-                Y2 = cells(jj).Y;
+                Y2 = cells(kk).Y;
                 ix = X > 0;
                 [nc, ps] = tools.noiseCorr(Y1, Y2, 30, ix);
                 scsP(d).noiseCorr_pavg = nanmean(ps);

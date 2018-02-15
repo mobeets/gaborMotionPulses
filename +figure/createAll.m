@@ -1,12 +1,16 @@
 %% load fit data
 
 % fitdir = '20150615';
-fitdir = '20150716';
+% fitdir = '20150716';
+fitdir = 'new';
 fitbasedir = 'data';
-ff = @(mnkNm) fullfile(fitbasedir, [fitdir '-' mnkNm], 'fits');
-vp = tools.makeFitSummaries(ff('pat'), false, 'ASD');
-vn = tools.makeFitSummaries(ff('nancy'), true, 'ASD');
-vu = [vp vn];
+
+% ff = @(mnkNm) fullfile(fitbasedir, [fitdir '-' mnkNm], 'fits');
+% vp = tools.makeFitSummaries(ff('pat'), false, 'ASD');
+% vn = tools.makeFitSummaries(ff('nancy'), true, 'ASD');
+% vu = [vp vn];
+fitdir = fullfile('data', 'fits', fitdir);
+vu = tools.makeFitSummaries(fitdir, true, 'ASD');
 vu = figure.filterData(vu);
 
 % mark RFs that are not uniform in space
@@ -17,10 +21,15 @@ vuMT_var = vuMT(log([vuMT.wfVar])>-17);
 % vuMT_var = vuMT;
 %%
 
-figBaseDir = '~/Dropbox/gaborMotionPulseASD/figures/';
+figBaseDir = '~/code/gaborMotionPulses/data/figs/';
 dirNames = arrayfun(@(x) dir(fullfile(figBaseDir, ...
     ['Figure0' num2str(x) '*'])), 1:5, 'uni', 0);
 figDirFcn = @(num) fullfile(figBaseDir, dirNames{num}.name);
+
+%%
+
+figDir = '~/code/gaborMotionPulses/data/figs/';
+figure.figure2;
 
 %%
 

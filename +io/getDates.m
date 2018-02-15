@@ -1,4 +1,7 @@
 function dts = getDates(dirname)
+    if nargin < 1
+        dirname = 'data/stim';
+    end
     d = dir(dirname);
     folders = {d.name};
     dts = folders(cellfun(@(x) numel(x) > 2, folders));

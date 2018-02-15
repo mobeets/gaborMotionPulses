@@ -1,20 +1,20 @@
-function fitAllSTRFs(runName, isNancy, fitType, dts)
-% fitAllSTRFs(runName, isNancy, fitType, dts)
+function fitAllSTRFs(runName, ~, fitType, dts, brainArea)
+% fitAllSTRFs(runName, ~, fitType, dts)
 % 
 % n.b. make sure to add path to mASD and cbrewer 
 %
     if nargin < 4
         dts = {};
     end
-    if isNancy
-        mnkNm = 'nancy';
-    else
-        mnkNm = 'pat';
+    if nargin < 5
+        brainArea = '';
     end
     if isempty(dts)
-        stimdir = '..'; % assumes data in parent dir
-        dts = io.getDates(fullfile(stimdir, [mnkNm 'StimFiles']));
-    end    
+        stimdir = fullfile('data', 'stim');
+        dts = io.getDates(stimdir);
+%         stimdir = '..'; % assumes data in parent dir
+%         dts = io.getDates(fullfile(stimdir, [mnkNm 'StimFiles']));
+    end
     
     fitCells = ~isempty(strfind(fitType, 'cell'));
     fitBehavior = ~isempty(strfind(fitType, 'behavior'));
@@ -27,9 +27,9 @@ function fitAllSTRFs(runName, isNancy, fitType, dts)
     end
     nfolds = 5;
     
-    basedir = fullfile('data', [runName '-' mnkNm]);
-    figbasedir = fullfile(basedir, 'figs');
-    fitbasedir = fullfile(basedir, 'fits');
+    basedir = 'data';
+    figbasedir = fullfile(basedir, 'figs', runName);
+    fitbasedir = fullfile(basedir, 'fits', runName);
     if ~isempty(basedir) && ~exist(basedir, 'dir')
         mkdir(basedir);
         mkdir(figbasedir);
@@ -45,7 +45,11 @@ function fitAllSTRFs(runName, isNancy, fitType, dts)
         figdir = getOutputDir(figbasedir, dt);
         fitdir = getOutputDir(fitbasedir, dt);
                 
-        data = io.loadDataByDate(dt, isNancy);
+        data = io.loadDataByDate(dt);
+        if ~isfield(data, 'X')
+            warning(['Error loading ' dt]);
+            continue;
+        end
         if size(data.X,1) < 5 % min # of trials
             continue;
         end
@@ -70,6 +74,10 @@ function fitAllSTRFs(runName, isNancy, fitType, dts)
 %                 end
                 data.Y = data.Y_all(:,cell_ind); % choose cell for analysis
                 if sum(~isnan(data.Y)) == 0
+                    continue;
+                end
+                if ~isempty(brainArea) && ...
+                        ~strcmpi(data.neurons{cell_ind}.brainArea, brainArea)
                     continue;
                 end
                 label = [data.neurons{cell_ind}.brainArea '-' ...
