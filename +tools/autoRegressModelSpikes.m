@@ -24,9 +24,9 @@ function v = autoRegressModelSpikes(v, nlags, nfolds, nshuffles)
     
     v.YhAR = nan(size(v.Y));
     v.YhAR(ix) = Yh1;
-    v.score_AR = sc1;
-    v.AR_nlags = nlags;
-    v.AR_weights = mdl.Coefficients.Estimate';
+    v.AR.score_AR = sc1;
+    v.AR.nlags = nlags;
+    v.AR.weights = mdl.Coefficients.Estimate';
 
 end
 

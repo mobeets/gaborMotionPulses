@@ -25,20 +25,26 @@ function pairs = makeCellPairs(allcells)
                 pairs(d).Ys = [cells(jj).Y cells(kk).Y];
                 pairs(d).stimdir = X;
                 pairs(d).dirstrength = dirs;
-                pairs(d).dirstrength_binned = dirsbn;
+                pairs(d).dirstrength_binned = dirsbn;                
                 
                 pairs(d).rfCorr = corr(cells(jj).w(:), cells(kk).w(:));
                 pairs(d).sameCorr = pairs(d).rfCorr > 0;
                 pairs(d).rfDist = norm(cells(jj).rf_center - cells(kk).rf_center);
                 pairs(d).cell1_dPrime = cells(jj).dPrime;
                 pairs(d).cell2_dPrime = cells(kk).dPrime;
-                pairs(d).cell1_sep = cells(jj).separability_index;
-                pairs(d).cell2_sep = cells(kk).separability_index;
                 pairs(d).cell1_targPref = cells(jj).targPref;
                 pairs(d).cell2_targPref = cells(kk).targPref;
                 pairs(d).sameTarg = pairs(d).cell1_targPref == pairs(d).cell2_targPref;
                 pairs(d).noiseCorrAR = tools.noiseCorr(cells(jj).YresAR, ...
                     cells(kk).YresAR, 30);
+                
+                % for later filtering
+                pairs(d).ntrials = stim.ntrials;
+                pairs(d).pctCorrect = stim.pctCorrect;
+                pairs(d).minAbsDprime = min(abs(pairs(d).cell1_dPrime), ...
+                    abs(pairs(d).cell2_dPrime));
+                pairs(d).minRfSpatialVar = min(cells(jj).rfSpatialVariability, ...
+                    cells(kk).rfSpatialVariability);
                 d = d+1;
             end
         end

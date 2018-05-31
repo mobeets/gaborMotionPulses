@@ -1,4 +1,4 @@
-function [scsRaw, scsShuf] = decodeAndShuffle(X, Y, nshuffles, G)
+function scs = decodeAndShuffle(X, Y, nshuffles, G)
 % for each entry in vs,
 %   decode X using Y
 %   and decode X using Y shuffled conditional on X
@@ -7,11 +7,12 @@ function [scsRaw, scsShuf] = decodeAndShuffle(X, Y, nshuffles, G)
     if nargin < 4
         G = cell(numel(X), 1);
     end
-    scsRaw = nan(numel(X), 1);
+    nreps = nshuffles; % reps applied only to scsRaw
+    scsRaw = nan(numel(X), nreps);
     scsShuf = nan(numel(X), nshuffles);
-    nfolds = 5; nreps = 1;
+    nfolds = 5;
     
-    for ii = 1:numel(X)
+    parfor ii = 1:numel(X)
         if mod(ii, 10) == 0
             disp(sprintf('Pair %d of %d...', ii, numel(X)));
         end
@@ -30,7 +31,7 @@ function [scsRaw, scsShuf] = decodeAndShuffle(X, Y, nshuffles, G)
         end
         
         % unshuffled
-        scsRaw(ii) = getDecodingAccuracyOnHoldout(ys, x, nfolds, nreps);
+        scsRaw(ii,:) = getDecodingAccuracyOnHoldout(ys, x, nfolds, nreps);
         
         % shuffled
         for jj = 1:nshuffles
@@ -38,10 +39,23 @@ function [scsRaw, scsShuf] = decodeAndShuffle(X, Y, nshuffles, G)
 %             xsp = [x(ix,:); x(~ix,:)];
 %             ysp = [randPermByRow(ys(ix,:)); randPermByRow(ys(~ix,:))];
             ysp = shuffleByGroup(ys, gs);
-            scsShuf(ii,jj) = getDecodingAccuracyOnHoldout(ysp, x, ...
-                nfolds, nreps);
+            scsShuf(ii,jj) = getDecodingAccuracyOnHoldout(ysp, ...
+                x, nfolds, 1); % only 1 rep
         end
     end
+    
+    clear scs;
+    scs.scsRaw = scsRaw;
+    scs.scsShuf = scsShuf;
+    scs.scsRawMean = mean(scsRaw, 2);
+    scs.scsShufMean = mean(scsShuf, 2);
+    scs.scsRawSe = (std(scsRaw,[],2)/sqrt(size(scsRaw,2)));
+    scs.scsShufSe = (std(scsShuf,[],2)/sqrt(size(scsShuf,2)));    
+    scs.scsDelta = scs.scsRawMean - scs.scsShufMean;
+    scs.nreps = nreps;
+    scs.nfolds = nfolds;
+    scs.nshuffles = nshuffles;
+    
 end
 
 function ys = shuffleByGroup(y, gs)
@@ -69,12 +83,14 @@ function sc = getDecodingAccuracyOnHoldout(Y, X, nfolds, nreps)
         return;
     end
     scs = estimate(Y, X, nfolds, nreps);
-    sc = nanmean(nanmean(scs,2)); % avg over reps
+    sc = scs;
+%     sc = nanmean(scs,2); % avg over folds
 end
 
 function scs = estimate(Y, X, nfolds, nreps)
     scs = nan(nreps, 1);
     for jj = 1:nreps
+%         scs(jj) = rand; continue;
         mdl = fitcdiscr(Y, X, 'CrossVal', 'on', 'KFold', nfolds, ...
             'DiscrimType', 'linear');
         scs(jj) = 1-kfoldLoss(mdl); % accuracy = 1 - err
