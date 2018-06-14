@@ -54,19 +54,19 @@ disp('-----SUMMARY-----');
 % summarize experiments, cells, and trials per monkey
 isNancy = sessions >= 20150101;
 nexps = [sum(~isNancy) sum(isNancy)];
-disp(sprintf('# sessions: P=%d, N=%d', nexps));
+fprintf('# sessions: P=%d, N=%d\n', nexps);
 ncells = [sum(ncells_per_session(~isNancy)) sum(ncells_per_session(isNancy))];
-disp(sprintf('# cells: P=%d, N=%d', ncells));
+fprintf('# cells: P=%d, N=%d\n', ncells);
 
 mu = [mean(ncells_per_session(~isNancy)) mean(ncells_per_session(isNancy))];
 sd = [std(ncells_per_session(~isNancy)) std(ncells_per_session(isNancy))];
 avgcells = [mu; sd]; avgcells = avgcells(:);
-disp(sprintf('avg # cells per session: P = %0.1f +/- %0.1f, N = %0.1f +/- %0.1f', avgcells));
+fprintf('avg # cells per session: P = %0.1f +/- %0.1f, N = %0.1f +/- %0.1f\n', avgcells);
 
 mu = [mean(ntrials_per_session(~isNancy)) mean(ntrials_per_session(isNancy))];
 sd = [std(ntrials_per_session(~isNancy)) std(ntrials_per_session(isNancy))];
 avgtrials = [mu; sd]; avgtrials = avgtrials(:);
-disp(sprintf('avg # trials per session: P = %0.1f +/- %0.1f, N = %0.1f +/- %0.1f', avgtrials));
+fprintf('avg # trials per session: P = %0.1f +/- %0.1f, N = %0.1f +/- %0.1f\n', avgtrials);
 
 % summarize pair filtering as well
 ixCellsToKeepInPairs = figure.filterCellsAndPairs(cells, true);
@@ -75,13 +75,13 @@ dts = {curCells.dt};
 dts = cellfun(@(x) str2double(x(1:8)), dts);
 isNancy = dts >= 20150101;
 ncells = [sum(~isNancy) sum(isNancy)];
-disp(sprintf('# cells used in pairs: P=%d, N=%d', ncells));
+fprintf('# cells used in pairs: P=%d, N=%d\n', ncells);
 
 dts = {pairs.dt};
 dts = cellfun(@(x) str2double(x(1:8)), dts);
 isNancy = dts >= 20150101;
 ncells = [sum(~isNancy) sum(isNancy)];
-disp(sprintf('# pairs: P=%d, N=%d', ncells));
+disp(sprintf('# pairs: P=%d, N=%d\n', ncells));
 
 %% Fig 2 - ASD
 

@@ -3,7 +3,8 @@ function fig = deltaDecodingScatters(pairs, xnm, ynm, kind)
 
 scs = pairs;
 samePool = [scs.sameTarg];
-posRfCorr = [scs.sameCorr_spatial];
+% posRfCorr = [scs.sameCorr_spatial];
+posRfCorr = [scs.sameCorr];
 ix1 = ~samePool & ~posRfCorr;
 ix2 = ~samePool & posRfCorr;
 ix3 = samePool & ~posRfCorr;
@@ -17,9 +18,9 @@ t5 = scs(ix0);
 
 cnm = 'rfCorr';
 
-fldnms = struct('rfCorr', 'RF correlation', ...
-    'rfCorr_spatial', 'RF_{spatial} correlation', ...
-    'noiseCorrAR', 'noise correlation', ...
+fldnms = struct('rfCorr', 'RF correlation (r_{RF})', ...
+    'rfCorr_spatial', 'RF_{spatial} correlation (r_{RF})', ...
+    'noiseCorrAR', 'noise correlation (r_{sc})', ...
     'rfDist', 'RF center distance', ...
     'scoreGainWithCorrs', '\Delta decoding accuracy');
 fldnms = containers.Map(fieldnames(fldnms), struct2cell(fldnms));
@@ -79,21 +80,22 @@ elseif strcmpi(kind, 'both')
     
 end
 
-xlabel(xlbl); ylabel(ylbl);
+xlabel(xlbl, 'Interpreter', 'tex'); ylabel(ylbl, 'Interpreter', 'tex');
 plot(xl, [0 0], '-', 'Color', 0.8*ones(3,1));
 plot([0 0], yl, '-', 'Color', 0.8*ones(3,1));
 xlim(xl); ylim(yl);
 set(gca, 'TickLength', [0 0]);
-if ~doSave
-    title(nm);
-else
-    title('');
-end
+% if ~doSave
+%     title(nm);
+% else
+%     title('');
+% end
+title('');
 legend off;
+plot.setPrintSize(gcf, struct('width', 4, 'height', 3));
 if strcmpi(ylbl, '\Delta decoding accuracy')
     ytcks = get(gca, 'YTick');
     set(gca, 'YTickLabel', arrayfun(@(n) [num2str(n) '%'], ytcks, 'uni', 0));
 end
-plot.setPrintSize(gcf, struct('width', 4, 'height', 3));
 
 end
