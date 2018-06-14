@@ -23,7 +23,7 @@ function fig = showAllRfs(cells)
             
             cell = cells(c);
             rf = cell.wsep.spatial_RF;
-            if cell.dPrime > 0 % sum(cell.wsep.temporal_RF < 0) > 3
+            if sum(cell.wsep.scalar_RF*cell.wsep.temporal_RF) < 0
                 rf = -rf;
             end
             clrs = plot.getColors(rf, true, cmin);

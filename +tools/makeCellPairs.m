@@ -30,10 +30,10 @@ function pairs = makeCellPairs(allcells)
                 pairs(d).rfCorr = corr(cells(jj).w(:), cells(kk).w(:));
                 rf1 = cells(jj).wsep.spatial_RF;
                 rf2 = cells(kk).wsep.spatial_RF;
-                if sum(cells(jj).wsep.temporal_RF < 0) > 3
+                if sum(cells(jj).wsep.scalar_RF*cells(jj).wsep.temporal_RF) < 0
                     rf1 = -rf1;
                 end
-                if sum(cells(kk).wsep.temporal_RF < 0) > 3
+                if sum(cells(kk).wsep.scalar_RF*cells(kk).wsep.temporal_RF) < 0
                     rf2 = -rf2;
                 end
                 pairs(d).rfCorr_spatial = corr(rf1, rf2);
