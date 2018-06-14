@@ -28,6 +28,17 @@ function pairs = makeCellPairs(allcells)
                 pairs(d).dirstrength_binned = dirsbn;                
                 
                 pairs(d).rfCorr = corr(cells(jj).w(:), cells(kk).w(:));
+                rf1 = cells(jj).wsep.spatial_RF;
+                rf2 = cells(kk).wsep.spatial_RF;
+                if sum(cells(jj).wsep.temporal_RF < 0) > 3
+                    rf1 = -rf1;
+                end
+                if sum(cells(kk).wsep.temporal_RF < 0) > 3
+                    rf2 = -rf2;
+                end
+                pairs(d).rfCorr_spatial = corr(rf1, rf2);
+                pairs(d).sameCorr_spatial = pairs(d).rfCorr_spatial > 0;
+                
                 pairs(d).sameCorr = pairs(d).rfCorr > 0;
                 pairs(d).rfDist = norm(cells(jj).rf_center - cells(kk).rf_center);
                 pairs(d).cell1_dPrime = cells(jj).dPrime;

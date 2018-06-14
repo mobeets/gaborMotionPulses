@@ -7,7 +7,8 @@ scs = pairs;
 % scs = scs(ix);
 
 samePool = [scs.sameTarg];
-posRfCorr = [scs.sameCorr];
+% posRfCorr = [scs.sameCorr];
+posRfCorr = [scs.sameCorr_spatial];
 ix1 = ~samePool & ~posRfCorr;
 ix2 = ~samePool & posRfCorr;
 ix3 = samePool & ~posRfCorr;
@@ -24,6 +25,7 @@ cnm = 'rfCorr';
 % fnms = {'rscVsRf'};
 
 fldnms = struct('rfCorr', 'RF correlation', ...
+    'rfCorr_spatial', 'RF_{spatial} correlation', ...
     'noiseCorrAR', 'noise correlation', ...
     'rfDist', 'RF center distance', ...
     'scoreGainWithCorrs', '\Delta decoding accuracy');
@@ -106,7 +108,9 @@ if strcmpi(ylbl, '\Delta decoding accuracy')
 end
 
 fig3 = plot.init;
-scatter([t5.(xnm)], scale*[t5.(ynm)], mkrsz, 0.5*ones(numel(t5),3), 'filled');
+xs = [t5.(xnm)];
+ys = scale*[t5.(ynm)];
+scatter(xs, ys, mkrsz, 0.5*ones(numel(t5),3), 'filled');
 mdl = fitlm(xs, ys);
 h = mdl.plot;
 h(1).Marker = 'o';

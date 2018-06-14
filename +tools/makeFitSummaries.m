@@ -1,4 +1,4 @@
-function cells = makeFitSummaries2(fitdir, dts, fitstr)
+function cells = makeFitSummaries(fitdir, dts, fitstr)
     if nargin < 2|| isempty(dts)
         dts = io.getDates(fitdir);
     end
