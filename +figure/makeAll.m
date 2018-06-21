@@ -1,7 +1,7 @@
 %% init
 
 fitnm = 'new-2';
-doSaveFigs = true;
+doSaveFigs = false;
 
 saveDir = fullfile('data', 'figures', fitnm);
 if doSaveFigs && ~exist(saveDir, 'dir')
@@ -81,13 +81,14 @@ dts = {pairs.dt};
 dts = cellfun(@(x) str2double(x(1:8)), dts);
 isNancy = dts >= 20150101;
 ncells = [sum(~isNancy) sum(isNancy)];
-disp(sprintf('# pairs: P=%d, N=%d\n', ncells));
+fprintf('# pairs: P=%d, N=%d\n', ncells);
 
 %% Fig 2 - ASD
 
-cellName = '20140304-MT_12';
-startTrial = 300;
-endTrial = 400;
+% cellName = '20140304-MT_12'; % 300-400
+cellName = '20150304b-MT_14'; % 600-700; 60-160
+startTrial = 600;
+endTrial = 700;
 
 % 2b - stimuli
 fig2b = figure.plotStimOrSpikes(cells, cellName, startTrial, endTrial, 'stim');
@@ -109,6 +110,8 @@ if doSaveFigs
 end
 
 %% Fig 3 - decoding
+
+doSaveFigs = false;
 
 % 3b
 fig3b = figure.deltaDecodingAcc(pairs);
@@ -138,6 +141,73 @@ if doSaveFigs
     export_fig(fig3e, fullfile(curSaveDir, '3e.pdf'));
     export_fig(fig3f, fullfile(curSaveDir, '3f.pdf'));
 end
+
+%% summarize cell pair types
+
+disp('---------');
+scs = pairs;
+ppct = @(n) sprintf('%d (%0.1f%%) ', [n 100*n/numel(scs)]);
+xnm = 'noiseCorrAR'; xnmA = 'r_{sc} >= 0'; xnmB = 'r_{sc} < 0';
+ynm = 'scoreGainWithCorrs'; ynmA = '\Delta >= 0'; ynmB = '\Delta < 0';
+% xnm = 'sameTarg'; xnmA = 'same pools'; xnmB = 'diff pools';
+% ynm = 'sameCorr'; ynmA = 'r_{RF} >= 0'; ynmB = 'r_{RF} < 0';
+
+xG = [scs.(xnm)] > 0;
+yG = [scs.(ynm)] > 0;
+
+disp(['# in ' xnmA ' vs. ' xnmB ':']);
+[ppct(sum(xG)) ppct(sum(~xG))]
+disp(['# in ' ynmA ' vs. ' ynmB ':']);
+[ppct(sum(yG)) ppct(sum(~yG))]
+disp(['# with ' ynmA ' and ' xnmA ' vs. ' xnmB ':']);
+[ppct(sum(xG & yG)) ppct(sum(~xG & yG))]
+disp(['# with ' ynmB ' and ' xnmA ' vs. ' xnmB ':']);
+[ppct(sum(xG & ~yG)) ppct(sum(~xG & ~yG))]
+disp('---------');
+
+% of pairs in same pool, % with r_RF > 0 and r_sc > 0
+scs = pairs;
+scs = scs([scs.sameTarg]);
+ppct = @(n) sprintf('%d (%0.1f%%) ', [n 100*n/numel(scs)]);
+A = [scs.rfCorr] > 0;
+B = [scs.noiseCorrAR] > 0;
+disp(['# in same pool with r_RF > 0 and r_sc > 0: ' ppct(sum(A & B))]);
+
+% of pairs in diff pools, % with r_RF < 0
+scs = pairs;
+scs = scs(~[scs.sameTarg]);
+ppct = @(n) sprintf('%d (%0.1f%%) ', [n 100*n/numel(scs)]);
+A = [scs.rfCorr] < 0;
+% B = [scs.noiseCorrAR] < 0;
+disp(['# in diff pools with r_{RF} < 0: ' ppct(sum(A))]);
+
+% of pairs in diff pools, % with r_RF > 0 and r_sc > 0
+scs = pairs;
+scs = scs(~[scs.sameTarg]);
+ppct = @(n) sprintf('%d (%0.1f%%) ', [n 100*n/numel(scs)]);
+A = [scs.rfCorr] > 0;
+B = [scs.noiseCorrAR] > 0;
+disp(['# in diff pools with r_{RF} > 0 and r_{sc} > 0: ' ppct(sum(A & B))]);
+
+% # with significant \Delta > 0 or \Delta < 0
+scs = pairs;
+ppct = @(n) sprintf('%d (%0.1f%%) ', [n 100*n/numel(scs)]);
+S = [scs.scoreGainWithCorrs];
+se = [scs.scoreGainWithCorrs_se];
+a = (S - se > 0);
+b = (S + se < 0);
+disp(['# with significant \Delta > 0: ' ppct(sum(a)) ...
+    '; \Delta < 0: ' ppct(sum(~b))]);
+
+% correlation between r_sc and r_RF
+scs = pairs;
+ppct = @(n) sprintf('%d (%0.1f%%) ', [n 100*n/numel(scs)]);
+A = [scs.noiseCorrAR];
+B = [scs.rfCorr];
+ix = ~isnan(A) & ~isnan(B);
+r = corr(A(ix)', B(ix)');
+disp(['correlation between r_{sc} and r_{RF}: ' sprintf('%0.2f', r)]);
+
 
 %% Fig 4 - cell pair examples
 

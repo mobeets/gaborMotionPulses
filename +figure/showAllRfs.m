@@ -3,6 +3,7 @@ function fig = showAllRfs(cells)
     n = numel(cells);
     ncols = ceil(sqrt(n));
     nrows = ceil(n/ncols);
+    nrows = 12; ncols = 11;
     offset = 5;    
     sz = 50;
     cmin = nan;

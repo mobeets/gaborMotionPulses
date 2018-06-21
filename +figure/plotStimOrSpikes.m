@@ -24,7 +24,8 @@ function fig = plotStimOrSpikes(cells, cellName, startTrial, endTrial, kind)
     else
         % spike counts (predicted vs. data)
         xx = [min(ts) ts max(ts)]; yy = [0 y' 0];
-        fill(xx(:), yy(:), 'k', 'FaceColor', 0.6*ones(3,1), 'Linestyle', 'none');
+%         fill(xx(:), yy(:), 'k', 'FaceColor', 0.6*ones(3,1), 'Linestyle', 'none');
+        plot(ts, y, 'LineWidth', 4, 'Color', 0.6*ones(3,1));
         plot(ts, yh, 'LineWidth', 4, 'Color', [0.2 0.45 0.2]);
         ylabel('spike count');
     end
