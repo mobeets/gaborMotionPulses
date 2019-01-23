@@ -1,6 +1,6 @@
 %% init
 
-fitnm = 'new-2';
+fitnm = 'space-time';
 doSaveFigs = false;
 
 saveDir = fullfile('data', 'figures', fitnm);
@@ -10,17 +10,37 @@ end
 pairsFnm = fullfile(saveDir, 'allPairs.mat');
 decodingFnm = fullfile(saveDir, 'allPairsWithScs.mat');
 % addpath(genpath('~/code/gaborMotionASD/mASD/'));
+% or: mpm install masd -u https://github.com/mobeets/masd.git
 
-%% make fits, cell pairs, and perform decoding analysis
+%% make fits
 
 % fits
 % fitAllSTRFs(fitnm, false, 'cells ASD', io.getDates, 'MT');
+% fitAllSTRFs('time-only', false, 'cells ASD time-only', io.getDates, 'MT');
+% fitAllSTRFs('flat', false, 'cells Flat', io.getDates, 'MT');
 
-% cell pairs
-% allPairs = tools.makeCellPairs(cells);
-% save(pairsFnm, 'allPairs');
+%% decode with shuffled cell pairs, triplets, quads, etc.
 
 % decoding analysis, with noise corr shuffle
+cellGroups = tools.makeCellGroups(cells, [2 3 4]);
+
+% nShuffles = 1;
+% scs = tools.decodeAndShuffle({cellGroups.stimdir}, ...
+%     {cellGroups.Ys}, nShuffles);
+% scDelta = num2cell(scs.scsDelta);
+% [cellGroups.scoreGainWithCorrs] = scDelta{:};
+% scDeltaSe = num2cell(scs.scsShufSe);
+% [cellGroups.scoreGainWithCorrs_se] = scDeltaSe{:};
+% 
+% save(decodingFnm, 'scs', 'cellGroups');
+
+%% make cell pairs, and perform decoding analysis
+
+% % cell pairs
+% allPairs = tools.makeCellPairs(cells);
+% save(pairsFnm, 'allPairs');
+% 
+% % decoding analysis, with noise corr shuffle
 % nShuffles = 25;
 % scs = tools.decodeAndShuffle({allPairs.stimdir}, ...
 %     {allPairs.Ys}, nShuffles);
@@ -208,15 +228,121 @@ ix = ~isnan(A) & ~isnan(B);
 r = corr(A(ix)', B(ix)');
 disp(['correlation between r_{sc} and r_{RF}: ' sprintf('%0.2f', r)]);
 
+% avg noise corr
+mu = nanmean([pairs.noiseCorrAR]);
+sd = nanstd([pairs.noiseCorrAR]);%/sqrt(numel(pairs));
+disp(['avg. noise corr: ' sprintf('%0.2f +/- %0.2f', [mu sd])]);
 
 %% Fig 4 - cell pair examples
 
 figure.plotExamplePairs(pairs, cells, doSaveFigs, ...
     fullfile(saveDir, 'Fig4'));
 
-%% Fig Sx - hyperflow
+%% Fig S1 - behavior (fit and plot psychometric function for each monkey)
 
-%% Fig Sx - CP, dPrime, etc.
+% acc = cell(numel(dts), 1);
+% dts = io.getDates;
+% for ii = 1:numel(dts)
+%     stim = io.loadStim(dts{ii}, 'data/stim');
+%     ix = stim.goodtrial;
+%     xs = stim.dirprob;
+%     ys = -(stim.targchosen-2);
+%     acc{ii,1} = unique(xs(ix));
+%     acc{ii,2} = grpstats(ys(ix), xs(ix));
+% end
 
-figS1 = figure.dPrimeAndCP(cells, 'dPrime');
-figS2 = figure.dPrimeAndCP(cells, 'CP');
+plot.init;
+set(gca, 'FontSize', 18);
+set(gca, 'LineWidth', 2);
+
+weibull = @(x,k,lambda) 1 - exp(-(x/lambda).^k);
+lossfcn = @(k,lambda,x,y) sum((y-weibull(x,k,lambda)).^2);
+
+mnkNms = {'Nancy', 'Pat'};
+clrs = {[0.2 0.2 0.7], [0.7 0.2 0.2]};
+for ii = 1:numel(mnkNms)
+    ixm = io.getMonkeyDateFilter(dts, mnkNms(ii));
+    Xm = (cell2mat(acc(ixm,1))+1)/2; % map from [-1,1] -> [0,1]
+    Ym = cell2mat(acc(ixm,2));
+    objfcn = @(th) lossfcn(th(1),th(2),Xm,Ym);
+    ths = fmincon(objfcn, 2*[1 1], [], [], [], [], [0 0], [100 100]);
+    
+    plot(2*Xm-1, Ym, 'o', 'Color', clrs{ii}, 'LineWidth', 2);
+    xfine = linspace(min(Xm), max(Xm));
+    yhat = weibull(xfine, ths(1), ths(2));    
+    plot(2*xfine - 1, yhat, '-', 'Color', clrs{ii}, 'LineWidth', 3);
+end
+xlabel('Motion Strength');
+ylabel('Proportion Right Choices');
+set(gca, 'TickDir', 'out');
+set(gca, 'XTick', -1:0.5:1);
+set(gca, 'YTick', 0:0.25:1);
+plot.setPrintSize(gcf, struct('width', 4, 'height', 3.5));
+axis square;
+
+%% Fig S2 - load all fits and compare r-sq
+
+% dts = io.getDates('data/fits/space-time');
+% fitnms = {'space-time', 'time-only', 'flat'};
+% fitstrs = {'ASD', 'ASD', 'Flat'};
+% fldsToRm = {'X', 'Xxy'};
+% Cells = cell(numel(fitnms),1);
+% for ii = 1:numel(fitnms)
+%     ccells = tools.makeFitSummaries(['data/fits/' fitnms{ii}], ...
+%         [], fitstrs{ii});
+%     for jj = 1:numel(fldsToRm)
+%         ccells = rmfield(ccells, fldsToRm{jj});
+%     end    
+%     Cells{ii} = ccells;
+% end
+% disp('Done');
+
+xi = 2;
+yi = 1;
+
+Cx = Cells{xi};
+Cy = Cells{yi};
+xlbl = fitnms{xi};
+ylbl = fitnms{yi};
+
+xs = [Cx.rsq];
+ys = [Cy.rsq];
+
+ixCellsToKeep = figure.filterCellsAndPairs(Cy, false);
+xs = xs(ixCellsToKeep);
+ys = ys(ixCellsToKeep);
+
+plot.init;
+set(gca, 'FontSize', 18);
+set(gca, 'LineWidth', 2);
+xlim([-0.1 1]);
+ylim([-0.1 1]);
+plot(xlim, ylim, '-', 'Color', 0.8*ones(3,1), 'LineWidth', 2);
+plot(xs, ys, 'k.');
+xlabel(['r^2 (' xlbl ')']);
+ylabel(['r^2 (' ylbl ')']);
+set(gca, 'XTick', 0:0.25:1);
+set(gca, 'YTick', 0:0.25:1);
+set(gca, 'TickDir', 'out');
+plot.setPrintSize(gcf, struct('width', 4, 'height', 3.5));
+axis square;
+
+%% Fig S3 - hyperflow
+
+%% Fig S4 - d'/CP as a function of heterogeneity/eccentricity
+
+curCells = cells(ixCellsToKeep);
+
+figS4 = plot.init;
+
+% figS4a = plot.init;
+subplot(1,2,1); hold on;
+figure.scatterCellFeatures(curCells, 'rf_ecc', 'dPrime');
+title('Sensitivity vs. Eccentricity');
+
+% figS4b = figure.scatterCellFeatures(curCells, 'CP', 'rf_ecc');
+
+% figS4b = plot.init;
+subplot(1,2,2); hold on;
+figure.scatterCellFeatures(curCells, 'rfSpatialVariability', 'dPrime');
+title('Sensitivity vs. Heterogeneity');

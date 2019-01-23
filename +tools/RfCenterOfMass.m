@@ -23,7 +23,7 @@ function cell = RfCenterOfMass(cell)
     cell.rf_ecc = rho;
     cell.rf_theta = theta;
     
-    warning('Need to validate new center of mass estimate...');
+%     warning('Need to validate new center of mass estimate...');
     ys = ys0;
     if (cell.targPref ~= 1) % used to be == 1 but that gave problems
         % flip weights so that < 0 always refers to subfield

@@ -22,6 +22,7 @@ function fitAllSTRFs(runName, ~, fitType, dts, brainArea)
     fitASD = ~isempty(strfind(fitType, 'ASD'));
     fitFlat = ~isempty(strfind(fitType, 'Flat'));
     fitSpaceOnly = ~isempty(strfind(fitType, 'space-only'));
+    fitTimeOnly = ~isempty(strfind(fitType, 'time-only'));
     if ~fitASD && ~fitML && ~fitFlat
         fitASD = true;
     end
@@ -57,6 +58,11 @@ function fitAllSTRFs(runName, ~, fitType, dts, brainArea)
             data.D = data.Ds;
             data.X = sum(data.Xf, 3);
             data.nt = 1;
+        end
+        if fitTimeOnly
+            data.D = data.Dt;
+            data.X = squeeze(sum(data.Xf, 2));
+            data.ns = 1;
         end
         [~, foldinds] = tools.trainAndTestKFolds(data.X, data.R, nfolds);
 

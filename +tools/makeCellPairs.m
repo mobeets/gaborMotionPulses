@@ -23,6 +23,7 @@ function pairs = makeCellPairs(allcells)
                 pairs(d).cell1 = cells(jj).name;
                 pairs(d).cell2 = cells(kk).name;
                 pairs(d).Ys = [cells(jj).Y cells(kk).Y];
+                pairs(d).Ys_resAR = [cells(jj).YresAR cells(kk).YresAR];
                 pairs(d).stimdir = X;
                 pairs(d).dirstrength = dirs;
                 pairs(d).dirstrength_binned = dirsbn;                

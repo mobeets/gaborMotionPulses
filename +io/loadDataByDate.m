@@ -77,6 +77,7 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
     X = reshape(Xf, ny, ns*nt); % n.b. inverse is reshape(X, ny, ns, nt)
     D = asd.sqdist.spaceTime(Xxy, nt);
     Ds = asd.sqdist.space(Xxy);
+    Dt = asd.sqdist.time(nt, 1);
     R = -(stim.targchosen(inds)-1) + 1; % 1->1 (pref), 2->0 (anti-pref)
 
     % add all to output struct
@@ -90,6 +91,7 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
 %     data.R_frz = Rfrz;
     data.D = D;
     data.Ds = Ds;
+    data.Dt = Dt;
     data.ndeltas = size(D, 3);
     data.Xxy = Xxy;
     data.ns = ns;

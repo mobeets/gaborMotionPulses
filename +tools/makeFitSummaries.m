@@ -30,38 +30,51 @@ function cells = makeFitSummaries(fitdir, dts, fitstr)
             fits = fs.(cellnms{jj}).(fitstr);
             assert(numel(fits) == 1, 'Found multiple fits for cell.');
             curfit = fits{1};
-                        
+
+            % general cell and fit info
             cell.name = [curfit.dt '-' cellnms{jj}];
             ind = strsplit(cellnms{jj}, '_');
             cell.index = str2num(ind{2});            
-            
+            cell.shape = curfit.shape;
+            cell.ns = curfit.shape(1);
+            cell.nt = curfit.shape(2);
             cell.mu = curfit.mu;
             cell.w = curfit.w;
-            cell.wf = reshape(cell.w, d.ns, d.nt);
-            cell.wsep = tools.getSeparableRF(cell.wf);
-            cell.rfSpatialVariability = var(cell.wsep.spatial_RF);
-            cell.rsq = curfit.score_cvMean;
-            cell.rsq_se = curfit.score_cvStd/sqrt(numel(curfit.scores));
-            
-            neuron = d.neurons{cell.index};
+            cell.wf = reshape(cell.w, cell.ns, cell.nt);  
             cell.id = d.neurons{cell.index}.id;
-            cell.Y = d.Y_all(:,cell.index);            
-            predFcn = reg.getPredictionFcn(curfit.isLinReg);
-            cell.Yh = predFcn(d.X, cell.mu);
-            
-%             cell.dPrime = neuron.dPrime;
-%             cell.targPref = neuron.targPref;
+            cell.Y = d.Y_all(:,cell.index);
             cell.dPrime = tools.dprime(cell.Y, stim.dirstrength > 0);
             cell.targPref = (cell.dPrime < 0) + 1;
             
-            cell = tools.RfCenterOfMass(cell); % adds rf_ecc, rf_center, rf_theta
+            % extract spatial weights and eccentricity
+            if cell.ns > 1
+                cell.wsep = tools.getSeparableRF(cell.wf);
+                cell.rfSpatialVariability = var(cell.wsep.spatial_RF);
+                cell = tools.RfCenterOfMass(cell); % adds rf_ecc, rf_center, rf_theta
+            end
+            
+            % predictions and fit quality
+            predFcn = reg.getPredictionFcn(curfit.isLinReg);
+            if cell.ns == 1 && cell.nt > 1 % time-only
+                Xc = squeeze(sum(d.Xf,2));
+            elseif cell.ns > 1 && cell.nt == 1 % space-only
+                Xc = sum(data.Xf, 3);
+            elseif cell.ns == 1 && cell.nt == 1 % flat
+                Xc = sum(d.X,2);
+            else
+                Xc = d.X;
+            end
+            cell.Yh = predFcn(Xc, cell.mu);
+            cell.rsq = curfit.score_cvMean;
+            cell.rsq_se = curfit.score_cvStd/sqrt(numel(curfit.scores));
             cell = tools.autoRegressModelSpikes(cell, 4); % adds YhAR
-            cell.YresAR = cell.Y - cell.YhAR;
+            cell.YresAR = cell.Y - cell.YhAR; % used for noise corr
             
             % choice probability
             C = -d.R+2 == cell.targPref;
             cell.cp_YresARc = tools.AUC(cell.YresAR(C == 1), cell.YresAR(C == 0));
             
+            % make cell name, and skip if it's in our bad list
             nm = [cell.dt '_' num2str(cell.id)];
             if any(ismember(badCells, nm))
                 disp(['Skipping bad cell: ' nm]);
