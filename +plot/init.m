@@ -11,4 +11,5 @@ function fig = init(FontSize, FontName)
     hold on;
     set(gca, 'FontSize', FontSize); 
     set(gca, 'FontName', FontName); % default anyway, but just for fun
+    set(gca, 'TickDir', 'out');
 end

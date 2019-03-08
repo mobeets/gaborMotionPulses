@@ -18,7 +18,7 @@ function fig = deltaDecodingAcc(pairs)
     %     '\leftarrow Correlations hurt      Correlations help \rightarrow'});
     ytcks = get(gca, 'YTick');
     set(gca, 'YTickLabel', arrayfun(@(n) [num2str(n) '%'], ytcks, 'uni', 0));
-    set(gca, 'TickLength', [0 0]);
+%     set(gca, 'TickLength', [0 0]);
     plot.setPrintSize(gcf, struct('width', 4, 'height', 3));
 
 end

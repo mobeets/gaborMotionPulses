@@ -29,8 +29,8 @@ ylbl = fldnms(ynm);
 
 mkrsz = 50;
 nclrs = 21;
-cs1 = cbrewer('seq', 'Reds', nclrs);
-cs2 = cbrewer('seq', 'Blues', nclrs);
+cs1 = cbrewer('seq', 'Purples', nclrs);
+cs2 = cbrewer('seq', 'Oranges', nclrs);
 valToClrInd = @(v, vmn, vmx) floor((nclrs-1)*(v - vmn)/(vmx - vmn))+1;
 
 if strcmpi(ylbl, '\Delta decoding accuracy')
@@ -45,6 +45,7 @@ xl = [-xmx xmx];
 yl = [-ymx ymx];
 
 fig = plot.init;
+set(gca, 'LineWidth', 2);
 
 if strcmpi(kind, 'different')
     
@@ -84,7 +85,7 @@ xlabel(xlbl, 'Interpreter', 'tex'); ylabel(ylbl, 'Interpreter', 'tex');
 plot(xl, [0 0], '-', 'Color', 0.8*ones(3,1));
 plot([0 0], yl, '-', 'Color', 0.8*ones(3,1));
 xlim(xl); ylim(yl);
-set(gca, 'TickLength', [0 0]);
+% set(gca, 'TickLength', [0 0]);
 % if ~doSave
 %     title(nm);
 % else

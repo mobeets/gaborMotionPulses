@@ -13,6 +13,9 @@ dts = unique({pairs.dt});
 % of units
 % 
 
+fnm = fullfile(saveDir, 'Fig5B.pdf');
+doSave = true;
+
 pts = [];
 for jj = 1:numel(dts)
     dtstr = dts{jj};
@@ -40,11 +43,38 @@ for jj = 1:numel(dts)
     end
     pts = [pts; cpts];    
 end
-plot.init;
-plot(pts(:,1), pts(:,2), 'k.', 'MarkerSize', 20);
+Fig5B = plot.init;
+
+xs = pts(:,1);
+ys = pts(:,2);
+
+set(gca, 'LineWidth', 2);
+mdl = fitlm(xs, ys);
+h = mdl.plot;
+h(1).Marker = 'o';
+h(1).Color = 'k';
+h(1).MarkerSize = 4.5;
+h(1).MarkerFaceColor = 0.5*ones(3,1);
+h(1).LineWidth = 1.5;
+h(2).LineWidth = 3;
+h(2).Color = [0.8 0.2 0.2];
+set(gca, 'TickDir', 'out');
+legend off;
+xlabel(xlbl);
+ylabel(ylbl);    
+title('');
+plot.setPrintSize(gcf, struct('width', 4, 'height', 3.5));
+
+% set(gca, 'LineWidth', 2);
+% plot(pts(:,1), pts(:,2), 'ko', 'MarkerSize', 4.5, ...
+%     'MarkerFaceColor', 0.5*ones(3,1));
 xlabel('predicted noise cov. (using STRFs)');
 ylabel('actual noise cov. (using residuals)');
-title(['r^2 = ' sprintf('%0.2f', corr(pts(:,1), pts(:,2)))]);
+% title(['r^2 = ' sprintf('%0.2f', corr(pts(:,1), pts(:,2)))]);
+
+if doSave
+    export_fig(Fig5B, fnm);
+end
 
 %% part 2. noise correlation predicts delta decoding (with groups of cells)
 
@@ -123,22 +153,32 @@ end
 
 %%
 
-plot.init;
+fnm = fullfile(saveDir, 'Fig5C.pdf');
+doSave = true;
+
+Fig5C = plot.init;
+set(gca, 'LineWidth', 2);
 % plot(pts(:,1).^2, pts(:,2).^2, 'k.', 'MarkerSize', 20);
 nks = unique(pts(:,3));
-clrs = [0.8 0.2 0.2; 0.2 0.2 0.8; 0.2 0.8 0.2];
+clrs = cbrewer('seq', 'Greens', 8);
+clrs = clrs([3 5 8],:);
+% clrs = [0.4 0.8 0.2; 0.2 0.4 0.6; 0.8 0.5 0.8];
 for kk = numel(nks):-1:1
     ixc = pts(:,3) == nks(kk);
     clr = clrs(kk,:);
-    plot(pts(ixc,1).^1, pts(ixc,2).^1, '.', 'Color', clr, ...
-        'MarkerSize', 1);
+    plot(pts(ixc,1).^1, pts(ixc,2).^1, 'o', 'Color', clr, ...
+        'MarkerSize', 3);
 end
 xlabel({'predicted d-prime ratio', ...
-    '\leftarrow r_{sc} hurts         r_{sc} helps \rightarrow'});
+    '\leftarrow detrimental r_{sc}      beneficial r_{sc} \rightarrow'});
 ylabel({'actual d-prime ratio', ...
-    '\leftarrow r_{sc} hurts         r_{sc} helps \rightarrow'});
+    '\leftarrow detrimental r_{sc}      beneficial r_{sc} \rightarrow'});
 ixc = ~any(isnan(pts(:,1:2)),2);
 axis equal;
 xlim([0.5 1.6]); ylim(xlim);
 set(gca, 'XTick', [0.5 1 1.5]); set(gca, 'YTick', [0.5 1 1.5]);
-title({cnm, ['r^2 = ' sprintf('%0.2f', corr(pts(ixc,1), pts(ixc,2)))]});
+% title({cnm, ['r^2 = ' sprintf('%0.2f', corr(pts(ixc,1), pts(ixc,2)))]});
+
+if doSave
+    export_fig(Fig5C, fnm);
+end

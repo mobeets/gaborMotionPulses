@@ -4,6 +4,7 @@ _old
 *.mat
 *.png
 *.pdf
+figures/
 notes/
 papers/
 plots/

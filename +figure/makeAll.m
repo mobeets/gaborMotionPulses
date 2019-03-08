@@ -131,23 +131,26 @@ end
 
 %% Fig 3 - decoding
 
+dd = load(decodingFnm);
+cpairs = dd.allPairs;
+
 doSaveFigs = false;
 
 % 3b
-fig3b = figure.deltaDecodingAcc(pairs);
+fig3b = figure.deltaDecodingAcc(cpairs);
 
 % 3a, 3c, 3e
 xnm = 'rfCorr';
 ynm = 'noiseCorrAR';
-fig3a = figure.deltaDecodingScatters(pairs, xnm, ynm, 'both');
-fig3c = figure.deltaDecodingScatters(pairs, xnm, ynm, 'same');
-fig3e = figure.deltaDecodingScatters(pairs, xnm, ynm, 'different');
+fig3a = figure.deltaDecodingScatters(cpairs, xnm, ynm, 'both');
+fig3c = figure.deltaDecodingScatters(cpairs, xnm, ynm, 'same');
+fig3e = figure.deltaDecodingScatters(cpairs, xnm, ynm, 'different');
 
 % 3d, 3f
 xnm = 'noiseCorrAR';
 ynm = 'scoreGainWithCorrs';
-fig3d = figure.deltaDecodingScatters(pairs, xnm, ynm, 'same');
-fig3f = figure.deltaDecodingScatters(pairs, xnm, ynm, 'different');
+fig3d = figure.deltaDecodingScatters(cpairs, xnm, ynm, 'same');
+fig3f = figure.deltaDecodingScatters(cpairs, xnm, ynm, 'different');
 
 if doSaveFigs
     curSaveDir = fullfile(saveDir, 'Fig3');
@@ -302,8 +305,11 @@ yi = 1;
 
 Cx = Cells{xi};
 Cy = Cells{yi};
-xlbl = fitnms{xi};
-ylbl = fitnms{yi};
+
+lblnms = {'spatial+temporal RF', 'temporal RF', 'flat'};
+xlbl = lblnms{xi};
+ylbl = lblnms{yi};
+fnm = fullfile(saveDir, 'FigSx_r2.pdf');
 
 xs = [Cx.rsq];
 ys = [Cy.rsq];
@@ -312,13 +318,13 @@ ixCellsToKeep = figure.filterCellsAndPairs(Cy, false);
 xs = xs(ixCellsToKeep);
 ys = ys(ixCellsToKeep);
 
-plot.init;
+figSx = plot.init;
 set(gca, 'FontSize', 18);
 set(gca, 'LineWidth', 2);
 xlim([-0.1 1]);
 ylim([-0.1 1]);
 plot(xlim, ylim, '-', 'Color', 0.8*ones(3,1), 'LineWidth', 2);
-plot(xs, ys, 'k.');
+plot(xs, ys, 'k.', 'MarkerSize', 10);
 xlabel(['r^2 (' xlbl ')']);
 ylabel(['r^2 (' ylbl ')']);
 set(gca, 'XTick', 0:0.25:1);
@@ -326,23 +332,30 @@ set(gca, 'YTick', 0:0.25:1);
 set(gca, 'TickDir', 'out');
 plot.setPrintSize(gcf, struct('width', 4, 'height', 3.5));
 axis square;
+export_fig(figSx, fnm);
 
 %% Fig S3 - hyperflow
 
+
+
 %% Fig S4 - d'/CP as a function of heterogeneity/eccentricity
 
+fnma = fullfile(saveDir, 'FigSx_a.pdf');
+fnmb = fullfile(saveDir, 'FigSx_b.pdf');
+
 curCells = cells(ixCellsToKeep);
+% figS4 = plot.init;
 
-figS4 = plot.init;
-
-% figS4a = plot.init;
-subplot(1,2,1); hold on;
+figS4a = plot.init;
+% subplot(1,2,1); hold on;
 figure.scatterCellFeatures(curCells, 'rf_ecc', 'dPrime');
-title('Sensitivity vs. Eccentricity');
+% title('Sensitivity vs. Eccentricity');
+export_fig(figS4a, fnma);
 
 % figS4b = figure.scatterCellFeatures(curCells, 'CP', 'rf_ecc');
 
-% figS4b = plot.init;
-subplot(1,2,2); hold on;
+figS4b = plot.init;
+% subplot(1,2,2); hold on;
 figure.scatterCellFeatures(curCells, 'rfSpatialVariability', 'dPrime');
-title('Sensitivity vs. Heterogeneity');
+% title('Sensitivity vs. Heterogeneity');
+export_fig(figS4b, fnmb);
