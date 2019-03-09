@@ -19,21 +19,34 @@ function [xl, yl] = plotHyperflowMT(n, t1, t2, plotMode, arrowHeadWidthLength)
     zs = reshape(zs, numel(unique(xs)), numel(unique(ys)));    
     switch plotMode
         case 1 % contour no quiver
-        contourf(unique(xs), unique(ys), -zs, ...
-        'LineWidth', 1, 'LineColor', 'none'); hold on
-        caxis(2*caxis); % less saturated
+            contourf(unique(xs), unique(ys), -zs, ...
+                'LineWidth', 1, 'LineColor', 'none'); hold on
+%             caxis(2*caxis); % less saturated
         case {2,0} % annotation quiver
-        imagesc(unique(xs), unique(ys), -zs);  hold on
-%         keep = arrayfun(@norm, zs1, zs2) >= 2e-2;        
-        keep = arrayfun(@norm, zs1, zs2) >= 0;
-        plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
-            zs1(keep), zs2(keep)), arrowHeadWidthLength(1), arrowHeadWidthLength(2), 'HeadStyle', 'cback1', ...
-            'LineWidth', .5);
+            imagesc(unique(xs), unique(ys), -zs);  hold on
+    %         keep = arrayfun(@norm, zs1, zs2) >= 2e-2;        
+            keep = arrayfun(@norm, zs1, zs2) >= 0;
+            plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
+                zs1(keep), zs2(keep)), arrowHeadWidthLength(1), arrowHeadWidthLength(2), 'HeadStyle', 'cback1', ...
+                'LineWidth', .5);
         case 3 % for svg graphics
             imagesc(unique(xs), unique(ys), -zs);  hold on
             keep = arrayfun(@norm, zs1, zs2) >= 0;
             quiver(xs(keep), ys(keep), zs1(keep), zs2(keep), ...
                 'k', 'LineWidth', 2);
+        case 4 % imagesc no quiver
+            imagesc(unique(xs), unique(ys), -zs);  hold on
+            caxis(1.0*caxis); % less saturated
+        case 5 % contour and quiver
+            contourf(unique(xs), unique(ys), -zs, ...
+                'LineWidth', 1, 'LineColor', 'none'); hold on;
+            keep = arrayfun(@norm, zs1, zs2) >= 0;
+%             plot.quiverArrowFix(quiver(xs(keep), ys(keep), ...
+%                 zs1(keep), zs2(keep)), arrowHeadWidthLength(1), arrowHeadWidthLength(2), 'HeadStyle', 'cback1', ...
+%                 'LineWidth', .5);
+            quiver(xs(keep), ys(keep), zs1(keep), zs2(keep), ...
+                'k', 'LineWidth', 2);
+            
     end
     caxis([min(0, -max(abs(caxis))) max(0, max(abs(caxis)))]);
 end

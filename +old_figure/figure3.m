@@ -1,11 +1,12 @@
 %% cartoon of color projection
 
 plot.hyperFlowColorCartoon;
-plot.saveFigure('exampleOverlayProjection', figDir, gcf, 'png');
+% plot.saveFigure('exampleOverlayProjection', figDir, gcf, 'png');
 
 %% example hyperflow with arrows and no contourf
 
-exampleCells = {'20150324a-MT_14', '20150324a-MT_13', '20140304-MT_2', '20140307-MT_1', '20140304-MT_3', '20150324a-MT_5'};
+exampleCells = {'20150324a-MT_14', '20150324a-MT_13', ...
+    '20140304-MT_2', '20140307-MT_1', '20140304-MT_3', '20150324a-MT_5'};
 
 for kCell = 1:numel(exampleCells)
     exampleCellMT = exampleCells{kCell};
@@ -34,8 +35,8 @@ for kCell = 1:numel(exampleCells)
     title([n.exname '-' num2str(n.id, '%02.0f')]) % name of neuron (real id, not index)
     set(gca, 'XTick', [xd(1) 0 xd(end)], 'XTickLabel', round([xd(1) 0 xd(end)]), ...
         'YTick', [yd(1) 0 yd(end)], 'YTickLabel', round([yd(1) 0 yd(end)]))
-    figure.cleanupForPrint(gcf, 'FontSize', 8, 'PaperSize', [50 50])
-    plot.saveFigure(sprintf('exampleOverlay%s', exampleCellMT), figDir, gcf, 'png');
+    figure.cleanupForPrint(gcf, 'FontSize', 8, 'PaperSize', [50 50])    
+%     plot.saveFigure(sprintf('exampleOverlay%s', exampleCellMT), figDir, gcf, 'png');
     
 end
 

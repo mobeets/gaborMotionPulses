@@ -334,9 +334,112 @@ plot.setPrintSize(gcf, struct('width', 4, 'height', 3.5));
 axis square;
 export_fig(figSx, fnm);
 
-%% Fig S3 - hyperflow
+%% Fig S3 - hyperflow with arrows
 
+doSaveFigs = true;
 
+exampleCellNames = {'20140304-MT_6', '20150324a-MT_14', '20150324a-MT_13', ...
+    '20140304-MT_2', '20140307-MT_1', '20140304-MT_3', '20150324a-MT_5'};
+% exampleCellNames = {'20150306b-MT_9'};
+exampleCellNames = {'20140303-MT_3', '20140305-MT_2', '20140305-MT_4', ...
+    '20140306-MT_2', '20150324a-MT_4', '20150324a-MT_10', '20150324a-MT_12'};
+
+for kCell = 1:numel(exampleCellNames)
+    exampleCellMT = exampleCellNames{kCell};
+    vMT = cells(strcmp({cells.name}, exampleCellMT));
+    if isempty(vMT)
+        continue;
+    end
+    d = io.loadDataByDate(vMT.dt);
+    n = d.neurons{vMT.index};
+    if isempty(n.hyperflow)
+        continue
+    end
+    t1 = d.stim.targ1XY; t2 = d.stim.targ2XY;
+    
+    figure;
+%     set(gcf, 'color', 'w');
+    plot.getColors([0 1]);
+    plot.plotHyperflowMT(n, t1, t2, 5); axis xy;
+    xd = xlim; yd = ylim;
+    axis equal; xlim(xd); ylim(yd); axis off;
+    figure.cleanupForPrint(gcf, 'FontSize', 8, 'PaperSize', [50 50]);
+    if doSaveFigs
+        fignm = vMT.name;
+        cSaveDir = fullfile(saveDir, 'hyperflow');
+        if ~exist(cSaveDir, 'dir')
+            mkdir(cSaveDir);
+        end
+        fnm = fullfile(cSaveDir, [fignm '.pdf']);
+        export_fig(fnm);
+        close;
+    end
+end
+
+% todo:
+% - need to make sure the pdfs in the .ai file are the ones in that folder
+% - find cells with as much subfields as possible
+% - confirm sign of hyperflow vs. RF (e.g., 20140310-MT_5)
+
+%% find all cells with hyperflow
+
+% ns = dir('data/neurons/');
+% Ns = [];
+% for ii = 5:numel(ns)
+%     n = load(['data/neurons/' ns(ii).name]);
+%     if isfield(n, 'hyperflow') && ~isempty(n.hyperflow)
+%         Ns = [Ns n];
+%     end
+% end
+% dtsWithHyperflow = unique({Ns.exname});
+exampleCellNames = {};
+% goodCells = cells([cells.rsq] < 0.0);
+goodCells = cells(ixCellsToKeep);
+for ii = 1:numel(dtsWithHyperflow)
+    cCells = {goodCells(ismember({goodCells.dt}, dtsWithHyperflow{ii}(2:end))).name};
+    exampleCellNames = [exampleCellNames cCells];
+end
+
+%% Fig S3 - hyperflow with RF
+
+doSaveFigs = false;
+exampleCellNames = {'20150324a-MT_14'};
+% exampleCellNames = {'20150518-MT_12'};
+exampleCellNames = {'20140310-MT_5'};
+
+% ids = [Ns(ismember({Ns.exname}, cdt)).id];
+
+showTargs = false;
+showHyperflow = true;
+for kCell = 1:numel(exampleCellNames)
+    exampleCellMT = exampleCellNames{kCell};
+    vMT = cells(strcmp({cells.name}, exampleCellMT));
+    if isempty(vMT)
+        continue;
+    end
+    vMT.label = 'MT'; vMT.score = vMT.rsq;
+    
+    % hyperflow ASD overlay
+    d = io.loadDataByDate(vMT.dt);
+    n = d.neurons{vMT.index};
+    figure;    
+    plot.plotSaccadeKernelOverlay(d.stim, n, vMT, showTargs, ...
+        showHyperflow, 1);
+    title('');
+    xd = xlim; yd = ylim;
+    xlim(xd); ylim(yd); axis off;
+    figure.cleanupForPrint(gcf, 'FontSize', 8, 'PaperSize', [50 50])
+    if doSaveFigs
+        fignm = vMT.name;
+        cSaveDir = fullfile(saveDir, 'hyperflow');
+        if ~exist(cSaveDir, 'dir')
+            mkdir(cSaveDir);
+        end
+        fnm = fullfile(cSaveDir, [fignm '_withRF.pdf']);
+        export_fig(fnm);
+        close;
+     end
+end
 
 %% Fig S4 - d'/CP as a function of heterogeneity/eccentricity
 

@@ -33,18 +33,17 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, ...
     end
     
     set(gca, 'YDir', 'normal'); % imagesc flips y-axis by default
-    wf0 = reshape(f.mu(1:end-1), f.shape(1), f.shape(2));
-    [wf,~,v] = svds(wf0, 1); % use rank-1 spatial weights
-    if sign(wf(1)) ~= sign(v(1))*sign(wf(1))
-        wf = -wf;
-    end
-    
-    if isstruct(n) && n.targPref > 1
-        wf = -wf;
-        lbl1 = ' (flipped)';
-    else
-        lbl1 = '';
-    end
+%     wf0 = reshape(f.mu(1:end-1), f.shape(1), f.shape(2));
+%     [wf,~,v] = svds(wf0, 1); % use rank-1 spatial weights
+%     if sign(wf(1)) ~= sign(v(1))*sign(wf(1))
+%         wf = -wf;
+%     end
+%     if isstruct(n) && n.targPref > 1
+%         wf = -wf;
+%         lbl1 = ' (flipped)';
+%     else
+%         lbl1 = '';
+%     end
     
     if ~isstruct(n)
         width = 0.2*norm(median(stim.gaborXY), 2); % in degrees
@@ -56,7 +55,11 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, ...
         sz = 15;
     end
     
-    plot.plotKernelSingle(stim.gaborXY, wf(:,1), nan, 3*sz);
+    wf = f.wsep.spatial_RF;
+    if n.targPref > 1
+        wf = -wf;
+    end
+    plot.plotKernelSingle(stim.gaborXY, wf, nan, 3*sz);
     plot(stim.gaborXY(:,1), stim.gaborXY(:,2), ...
         'ko', 'markersize', sz, 'LineWidth', 2);
     
@@ -76,8 +79,6 @@ function plotSaccadeKernelOverlay(stim, n, f, showTargs, showHyperflow, ...
         plot(t2(:,1), t2(:,2), 'o', 'color', [0.2 0.5 0.2]);
         scatter(0, 0, 50, [0.8 0.2 0.2], 'filled');
     end
-    title([lbl lbl1]);
-    
     if ~isnan(xl)
         xlim(xl); ylim(yl);
     end
