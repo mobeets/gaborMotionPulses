@@ -22,7 +22,7 @@ decodingFnm = fullfile(saveDir, 'allPairsWithScs.mat');
 %% decode with shuffled cell pairs, triplets, quads, etc.
 
 % decoding analysis, with noise corr shuffle
-cellGroups = tools.makeCellGroups(cells, [2 3 4]);
+% cellGroups = tools.makeCellGroups(cells, [2 3 4]);
 
 % nShuffles = 1;
 % scs = tools.decodeAndShuffle({cellGroups.stimdir}, ...
@@ -56,14 +56,23 @@ cells = tools.makeFitSummaries(['data/fits/' fitnm]);
 d = load(decodingFnm, 'scs', 'allPairs');
 allPairs = d.allPairs;
 
-ixCellsToKeep = figure.filterCellsAndPairs(cells, false);
-ixPairsToKeep = figure.filterCellsAndPairs(allPairs, true);
+% add r-squared to pairs
+for ii = 1:numel(allPairs)
+    cpair = allPairs(ii);
+    cell1 = cells(ismember({cells.name}, cpair.cell1));
+    cell2 = cells(ismember({cells.name}, cpair.cell2));
+    allPairs(ii).minRsq = min([cell1.rsq cell2.rsq]);
+end
+
+ixCellsToKeep = figure.filterCellsAndPairs(cells, false, 0.0);
+ixPairsToKeep = figure.filterCellsAndPairs(allPairs, true, 0.0);
 pairs = allPairs(ixPairsToKeep);
 
 %% summarize experiment, cell, and pair counts
 
 % get all experiments
-curCells = cells(ixCellsToKeep);
+ixCellsToKeepTmp = figure.filterCellsAndPairs(cells, false);
+curCells = cells(ixCellsToKeepTmp);
 dts = {curCells.dt};
 dts = cellfun(@(x) str2double(x(1:8)), dts);
 sessions = unique(dts);
@@ -89,7 +98,7 @@ avgtrials = [mu; sd]; avgtrials = avgtrials(:);
 fprintf('avg # trials per session: P = %0.1f +/- %0.1f, N = %0.1f +/- %0.1f\n', avgtrials);
 
 % summarize pair filtering as well
-ixCellsToKeepInPairs = figure.filterCellsAndPairs(cells, true);
+ixCellsToKeepInPairs = figure.filterCellsAndPairs(cells, true, 0);
 curCells = cells(ixCellsToKeepInPairs);
 dts = {curCells.dt};
 dts = cellfun(@(x) str2double(x(1:8)), dts);
@@ -105,6 +114,7 @@ fprintf('# pairs: P=%d, N=%d\n', ncells);
 
 %% Fig 2 - ASD
 
+doSaveFigs = false;
 % cellName = '20140304-MT_12'; % 300-400
 cellName = '20150304b-MT_14'; % 600-700; 60-160
 startTrial = 600;
@@ -131,10 +141,10 @@ end
 
 %% Fig 3 - decoding
 
-dd = load(decodingFnm);
-cpairs = dd.allPairs;
-
-doSaveFigs = false;
+% dd = load(decodingFnm);
+% cpairs = dd.allPairs;
+cpairs = pairs;
+doSaveFigs = true;
 
 % 3b
 fig3b = figure.deltaDecodingAcc(cpairs);
@@ -204,6 +214,14 @@ A = [scs.rfCorr] < 0;
 % B = [scs.noiseCorrAR] < 0;
 disp(['# in diff pools with r_{RF} < 0: ' ppct(sum(A))]);
 
+% of pairs in diff pools, % with r_RF < 0 and r_sc < 0
+scs = pairs;
+scs = scs(~[scs.sameTarg]);
+ppct = @(n) sprintf('%d (%0.1f%%) ', [n 100*n/numel(scs)]);
+A = [scs.rfCorr] < 0;
+B = [scs.noiseCorrAR] < 0;
+disp(['# in diff pools with r_{RF} < 0 and r_{sc} < 0: ' ppct(sum(A & B))]);
+
 % of pairs in diff pools, % with r_RF > 0 and r_sc > 0
 scs = pairs;
 scs = scs(~[scs.sameTarg]);
@@ -214,13 +232,13 @@ disp(['# in diff pools with r_{RF} > 0 and r_{sc} > 0: ' ppct(sum(A & B))]);
 
 % # with significant \Delta > 0 or \Delta < 0
 scs = pairs;
-ppct = @(n) sprintf('%d (%0.1f%%) ', [n 100*n/numel(scs)]);
+ppct = @(n) sprintf('%d (%0.2f%%) ', [n 100*n/numel(scs)]);
 S = [scs.scoreGainWithCorrs];
-se = [scs.scoreGainWithCorrs_se];
+se = 2*[scs.scoreGainWithCorrs_se];
 a = (S - se > 0);
 b = (S + se < 0);
 disp(['# with significant \Delta > 0: ' ppct(sum(a)) ...
-    '; \Delta < 0: ' ppct(sum(~b))]);
+    '; \Delta < 0: ' ppct(sum(b))]);
 
 % correlation between r_sc and r_RF
 scs = pairs;
@@ -300,6 +318,7 @@ axis square;
 % end
 % disp('Done');
 
+doSaveFigs = false;
 xi = 2;
 yi = 1;
 
@@ -332,7 +351,9 @@ set(gca, 'YTick', 0:0.25:1);
 set(gca, 'TickDir', 'out');
 plot.setPrintSize(gcf, struct('width', 4, 'height', 3.5));
 axis square;
-export_fig(figSx, fnm);
+if doSaveFigs
+    export_fig(figSx, fnm);
+end
 
 %% Fig S3 - hyperflow with arrows
 
@@ -343,6 +364,7 @@ exampleCellNames = {'20140304-MT_6', '20150324a-MT_14', '20150324a-MT_13', ...
 % exampleCellNames = {'20150306b-MT_9'};
 exampleCellNames = {'20140303-MT_3', '20140305-MT_2', '20140305-MT_4', ...
     '20140306-MT_2', '20150324a-MT_4', '20150324a-MT_10', '20150324a-MT_12'};
+exampleCellNames = {'20140213-MT_4', '20140310-MT_5'};
 
 for kCell = 1:numel(exampleCellNames)
     exampleCellMT = exampleCellNames{kCell};
@@ -366,7 +388,7 @@ for kCell = 1:numel(exampleCellNames)
     figure.cleanupForPrint(gcf, 'FontSize', 8, 'PaperSize', [50 50]);
     if doSaveFigs
         fignm = vMT.name;
-        cSaveDir = fullfile(saveDir, 'hyperflow');
+        cSaveDir = fullfile(saveDir, 'hyperflow2');
         if ~exist(cSaveDir, 'dir')
             mkdir(cSaveDir);
         end
@@ -403,9 +425,9 @@ end
 %% Fig S3 - hyperflow with RF
 
 doSaveFigs = false;
-exampleCellNames = {'20150324a-MT_14'};
+% exampleCellNames = {'20150324a-MT_14'};
 % exampleCellNames = {'20150518-MT_12'};
-exampleCellNames = {'20140310-MT_5'};
+% exampleCellNames = {'20140310-MT_5'};
 
 % ids = [Ns(ismember({Ns.exname}, cdt)).id];
 
@@ -431,7 +453,7 @@ for kCell = 1:numel(exampleCellNames)
     figure.cleanupForPrint(gcf, 'FontSize', 8, 'PaperSize', [50 50])
     if doSaveFigs
         fignm = vMT.name;
-        cSaveDir = fullfile(saveDir, 'hyperflow');
+        cSaveDir = fullfile(saveDir, 'hyperflow2');
         if ~exist(cSaveDir, 'dir')
             mkdir(cSaveDir);
         end

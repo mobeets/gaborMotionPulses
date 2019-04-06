@@ -1,7 +1,8 @@
 %% load cell pairs
 
-pairs_all = tools.makeCellPairs(cells);
-ixPairsToKeep = figure.filterCellsAndPairs(pairs_all, false);
+% pairs_all = tools.makeCellPairs(cells);
+pairs_all = allPairs;
+ixPairsToKeep = figure.filterCellsAndPairs(pairs_all, true, 0);
 pairs = pairs_all(ixPairsToKeep);
 dts = unique({pairs.dt});
 
@@ -13,12 +14,17 @@ dts = unique({pairs.dt});
 % of units
 % 
 
-fnm = fullfile(saveDir, 'Fig5B.pdf');
-doSave = true;
+fnm = fullfile(saveDir, 'Fig5C.pdf');
+doSave = false;
 
 pts = [];
+Cpairs = [];
+c = 0;
 for jj = 1:numel(dts)
     dtstr = dts{jj};
+%     if ismember(dtstr, {'20150304a', '20150316c'})
+%         continue;
+%     end
     ix = ismember({pairs.dt}, dtstr);
     cpairs = pairs(ix);
     cpts = nan(numel(cpairs), 2);
@@ -26,9 +32,11 @@ for jj = 1:numel(dts)
         cpair = cpairs(ii);
         cell1 = cells(ismember({cells.name}, cpair.cell1));
         cell2 = cells(ismember({cells.name}, cpair.cell2));
+        cpair.cell1 = cell1; cpair.cell2 = cell2;
         rf1 = cell1.w; rf2 = cell2.w;
-        cpts(ii,1) = rf1'*rf2;        
+        cpts(ii,1) = rf1'*rf2;
 
+        cpair.Ys_resAR = [cell1.YresAR cell2.YresAR];
         noiseCov = nancov(cpair.Ys_resAR);
         cpts(ii,2) = noiseCov(1,2);
         
@@ -37,43 +45,51 @@ for jj = 1:numel(dts)
 %         cpts(ii,1) = cpair.rfCorr;
 %         cpts(ii,1) = cpair.noiseCorrAR;
         
-        ixd = ~any(isnan(cpair.Ys_resAR),2);
-        assert(corr(cpair.Ys_resAR(ixd,1), cpair.Ys_resAR(ixd,2)) == ...
-            cpair.noiseCorrAR);
+%         ixd = ~any(isnan(cpair.Ys_resAR),2);
+%         assert(corr(cpair.Ys_resAR(ixd,1), cpair.Ys_resAR(ixd,2)) == ...
+%             cpair.noiseCorrAR);
+        Cpairs = [Cpairs cpair];
     end
-    pts = [pts; cpts];    
+    pts = [pts; cpts];        
 end
-Fig5B = plot.init;
+Fig5C = plot.init;
 
 xs = pts(:,1);
 ys = pts(:,2);
+% ixc = (xs >= prctile(xs, 1)) & (xs <= prctile(xs, 99));
+% ixc = ixc & (ys >= prctile(ys, 1)) & (ys <= prctile(ys, 99));
+% xs = xs(ixc); ys = ys(ixc);
 
 set(gca, 'LineWidth', 2);
 mdl = fitlm(xs, ys);
 h = mdl.plot;
 h(1).Marker = 'o';
 h(1).Color = 'k';
-h(1).MarkerSize = 4.5;
+h(1).MarkerSize = 5;
 h(1).MarkerFaceColor = 0.5*ones(3,1);
 h(1).LineWidth = 1.5;
 h(2).LineWidth = 3;
 h(2).Color = [0.8 0.2 0.2];
 set(gca, 'TickDir', 'out');
 legend off;
-xlabel(xlbl);
-ylabel(ylbl);    
 title('');
-plot.setPrintSize(gcf, struct('width', 4, 'height', 3.5));
+plot.setPrintSize(gcf, struct('width', 4, 'height', 3.4));
+
+% ixp = abs(xs) < 3 & ys > 40;
+% plot(xs(ixp), ys(ixp), 'ro');
 
 % set(gca, 'LineWidth', 2);
 % plot(pts(:,1), pts(:,2), 'ko', 'MarkerSize', 4.5, ...
 %     'MarkerFaceColor', 0.5*ones(3,1));
-xlabel('predicted noise cov. (using STRFs)');
-ylabel('actual noise cov. (using residuals)');
+xlabel(''); ylabel('');
+xlabel('dot-product of subfields (w_1\cdotw_2)', ...
+    'interpreter', 'tex', 'Color', 'k');
+ylabel('noise covariance', 'Color', 'k');
 % title(['r^2 = ' sprintf('%0.2f', corr(pts(:,1), pts(:,2)))]);
+axis tight;
 
 if doSave
-    export_fig(Fig5B, fnm);
+    export_fig(Fig5C, fnm);
 end
 
 %% part 2. noise correlation predicts delta decoding (with groups of cells)
@@ -81,10 +97,8 @@ end
 ks = 2:4; % 2 = pairs, 3 = triplets, 4 = quads, etc. (can include multiple)
 fitToShuffled = true; % if false, fit to unshuffled data
 
-ixCellsToKeep = figure.filterCellsAndPairs(cells, false);
-cellGroups = tools.makeCellGroups(cells(ixCellsToKeep), ks);
-ixGroupsToKeep = figure.filterCellsAndPairs(cellGroups, false);
-groups = cellGroups(ixGroupsToKeep);
+ixCellsToKeep = figure.filterCellsAndPairs(cells, true, 0);
+groups = tools.makeCellGroups(cells(ixCellsToKeep), ks);
 dts = unique({groups.dt});
 
 if fitToShuffled
@@ -93,11 +107,8 @@ else
     shufnm = 'unshuffled';
 end
 cnm = ['weights fit to ' shufnm];% '; k= ' num2str(ks)];
-% todo next:
-% - ideally I think we'd like the prediction to be in terms of
-% delta-percent correct, since that's what we use elsewhere in the paper
-% - need to do cross-val on model fitting
 
+tic;
 pts = [];
 for jj = 1:numel(dts)
     dtstr = dts{jj};
@@ -135,7 +146,6 @@ for jj = 1:numel(dts)
         dPrime_raw_hat = 1./(ws'*Sigma*ws);
         cpts(ii,1) = sqrt(dPrime_raw_hat/dPrime_shuf_hat);
         
-        % n.b. need to do crossval
         if fitToShuffled
             Ysc = Ys_shuf;
         else
@@ -147,38 +157,77 @@ for jj = 1:numel(dts)
         dPrime_raw = tools.dprime(Ys_unshuf*L + K, cgroup.stimdir);
         cpts(ii,2) = sqrt(dPrime_raw/dPrime_shuf);
         cpts(ii,3) = numel(ws); % whether pair, triplet, etc.
+        
+        cpts(ii,4) = dPrime_raw_hat;
+        cpts(ii,5) = dPrime_shuf_hat;
+        cpts(ii,6) = dPrime_raw;
+        cpts(ii,7) = dPrime_shuf;
     end
     pts = [pts; cpts];
 end
+toc;
 
 %%
 
-fnm = fullfile(saveDir, 'Fig5C.pdf');
-doSave = true;
+pts = ptsFitToShuf;
+fnm = fullfile(saveDir, 'Fig5D.pdf');
+doSave = false;
 
-Fig5C = plot.init;
+Fig5D = plot.init;
 set(gca, 'LineWidth', 2);
 % plot(pts(:,1).^2, pts(:,2).^2, 'k.', 'MarkerSize', 20);
 nks = unique(pts(:,3));
 clrs = cbrewer('seq', 'Greens', 8);
-clrs = clrs([3 5 8],:);
-% clrs = [0.4 0.8 0.2; 0.2 0.4 0.6; 0.8 0.5 0.8];
+clrs = clrs([4 6 8],:);
+% clrs = clrs([3 5 8],:);
+
+xlim([0.5 1.6]); ylim(xlim);
+xlim([-1 1]); ylim(xlim);
+plot(xlim, 0*[1 1], '--', 'Color', 0.8*ones(3,1), 'Linewidth', 2);
+plot(0*[1 1], ylim, '--', 'Color', 0.8*ones(3,1), 'Linewidth', 2);
+
+mdls = cell(numel(nks),1);
+counts = nan(numel(nks),2,2);
 for kk = numel(nks):-1:1
     ixc = pts(:,3) == nks(kk);
     clr = clrs(kk,:);
-    plot(pts(ixc,1).^1, pts(ixc,2).^1, 'o', 'Color', clr, ...
-        'MarkerSize', 3);
+    xc = pts(ixc,1).^1;
+    yc = pts(ixc,2).^1;
+    
+    xc = log(pts(ixc,4)) - log(pts(ixc,5));
+    yc = log(pts(ixc,6)) - log(pts(ixc,7));
+    
+%     [bandwidth,density,xa,ya] = kde2d([xc yc]);
+%     contour3(xa,ya,density,50);
+%     surf(xa,ya,density,'LineStyle','none');
+    
+    scatter(xc, yc, 10, clr, 'o');%, 'filled');
+%     mu = nanmean([xc yc]);
+%     cpts = plot.gauss2dcirc([], 2, cov([xc yc]));
+%     plot(mu(1)+cpts(1,:), mu(2)+cpts(2,:), '-', 'LineWidth', 2, ...
+%         'Color', clr);
+    
+    counts(kk,1,1) = nanmean((pts(ixc,1) <= 1) & (pts(ixc,2) > 1));
+    counts(kk,1,2) = nanmean((pts(ixc,1) > 1) & (pts(ixc,2) > 1));
+    counts(kk,2,1) = nanmean((pts(ixc,1) <= 1) & (pts(ixc,2) <= 1));
+    counts(kk,2,2) = nanmean((pts(ixc,1) > 1) & (pts(ixc,2) <= 1));
+    round(100*squeeze(counts(kk,:,:)))
+    100*(1 - sum(diag(squeeze(counts(kk,:,:))')))
+    
+    mdls{kk} = fitlm(pts(ixc,1), pts(ixc,2));
 end
-xlabel({'predicted d-prime ratio', ...
-    '\leftarrow detrimental r_{sc}      beneficial r_{sc} \rightarrow'});
-ylabel({'actual d-prime ratio', ...
-    '\leftarrow detrimental r_{sc}      beneficial r_{sc} \rightarrow'});
+xlabel({'predicted log d'' ratio', ...
+    '\leftarrow detrimental r_{sc}      beneficial r_{sc} \rightarrow'}, ...
+    'Color', 'k');
+ylabel({'actual log d'' ratio', ...
+    '\leftarrow detrimental r_{sc}      beneficial r_{sc} \rightarrow'}, ...
+    'Color', 'k');
 ixc = ~any(isnan(pts(:,1:2)),2);
-axis equal;
-xlim([0.5 1.6]); ylim(xlim);
-set(gca, 'XTick', [0.5 1 1.5]); set(gca, 'YTick', [0.5 1 1.5]);
+axis equal; axis tight;
+set(gca, 'XTick', [-1 0 1]);
+set(gca, 'YTick', get(gca, 'XTick'));
 % title({cnm, ['r^2 = ' sprintf('%0.2f', corr(pts(ixc,1), pts(ixc,2)))]});
-
+% xlim([0.5 1.6]); ylim(xlim);
 if doSave
-    export_fig(Fig5C, fnm);
+    export_fig(Fig5D, fnm);
 end
