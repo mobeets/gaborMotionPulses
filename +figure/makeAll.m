@@ -256,50 +256,124 @@ disp(['avg. noise corr: ' sprintf('%0.2f +/- %0.2f', [mu sd])]);
 
 %% Fig 4 - cell pair examples
 
-figure.plotExamplePairs(pairs, cells, doSaveFigs, ...
+doSave = false;
+figure.plotExamplePairs(pairs, cells, doSave, ...
     fullfile(saveDir, 'Fig4'));
 
 %% Fig S1 - behavior (fit and plot psychometric function for each monkey)
 
-% acc = cell(numel(dts), 1);
 % dts = io.getDates;
+% acc = cell(numel(dts), 4);
 % for ii = 1:numel(dts)
 %     stim = io.loadStim(dts{ii}, 'data/stim');
 %     ix = stim.goodtrial;
 %     xs = stim.dirprob;
+%     
+%     Xs = sum(stim.pulses(ix,:,:),3);
+%     sd = std(Xs(:)); % standard deviation over all pulses
+%     X = Xs/sd;
+%     coh = mean(X,2);
+%     
 %     ys = -(stim.targchosen-2);
 %     acc{ii,1} = unique(xs(ix));
 %     acc{ii,2} = grpstats(ys(ix), xs(ix));
+%     acc{ii,3} = coh;
+%     acc{ii,4} = ys(ix);
 % end
 
+% From Yates2017:
+% The strength of the pulses was normalized by the s.d. of all 
+% pulse values shown. The psychophysical performance (Fig. 1d) was
+% measured by calculating the proportion of rightward choices as a
+% function of the net motion on each trial (sum of normalized pulse
+% strength). The net motion strengths from all trials were divided
+% into 30 equal quantiles to form the bins in Figure 1d.
+
+saveFig = true;
 plot.init;
 set(gca, 'FontSize', 18);
 set(gca, 'LineWidth', 2);
 
 weibull = @(x,k,lambda) 1 - exp(-(x/lambda).^k);
 lossfcn = @(k,lambda,x,y) sum((y-weibull(x,k,lambda)).^2);
+doFit = false;
 
-mnkNms = {'Nancy', 'Pat'};
-clrs = {[0.2 0.2 0.7], [0.7 0.2 0.2]};
-for ii = 1:numel(mnkNms)
-    ixm = io.getMonkeyDateFilter(dts, mnkNms(ii));
-    Xm = (cell2mat(acc(ixm,1))+1)/2; % map from [-1,1] -> [0,1]
-    Ym = cell2mat(acc(ixm,2));
-    objfcn = @(th) lossfcn(th(1),th(2),Xm,Ym);
-    ths = fmincon(objfcn, 2*[1 1], [], [], [], [], [0 0], [100 100]);
-    
-    plot(2*Xm-1, Ym, 'o', 'Color', clrs{ii}, 'LineWidth', 2);
-    xfine = linspace(min(Xm), max(Xm));
-    yhat = weibull(xfine, ths(1), ths(2));    
-    plot(2*xfine - 1, yhat, '-', 'Color', clrs{ii}, 'LineWidth', 3);
+if doFit
+    xind = 1; yind = 2;
+else
+    xind = 3; yind = 4;
 end
-xlabel('Motion Strength');
-ylabel('Proportion Right Choices');
+mnkNms = {'Nancy', 'Pat', ''};
+clrs = {[0.2 0.2 0.7], [0.7 0.2 0.2], 0.2*ones(1,3)};
+for ii = 3%1:2%numel(mnkNms)
+    if ~isempty(mnkNms{ii})
+        ixm = io.getMonkeyDateFilter(dts, mnkNms(ii));
+    else
+        ixm = true(size(acc,1),1);
+    end
+    Xm = cell2mat(acc(ixm,xind));
+    Ym = cell2mat(acc(ixm,yind));
+    
+    if doFit
+        Xm = (Xm+1)/2; % map from [-1,1] -> [0,1]
+        objfcn = @(th) lossfcn(th(1),th(2),Xm,Ym);
+        ths = fmincon(objfcn, 1*[1 1], [], [], [], [], [0 0], [100 100]);
+        Xc = 2*Xm-1;
+        Yc = Ym;
+    else
+        nbins = 30;
+        bins = prctile(Xm, linspace(0, 100, nbins));
+%         bins = linspace(min(Xm), max(Xm), nbins);% bins(end) = bins(end)+0.1;
+%         bins = linspace(prctile(Xm,0.5), prctile(Xm,99.5), nbins);
+        bins = [bins inf];
+        Yc = nan(nbins,1);
+        ses = nan(nbins,1);
+        ns = nan(nbins,1);
+        for jj = 1:(numel(bins)-1)
+            ixc = (Xm >= bins(jj)) & (Xm < bins(jj+1));
+            Yc(jj) = nanmean(Ym(ixc));
+            ses(jj) = nanstd(Ym(ixc))/sqrt(sum(ixc));
+            ns(jj) = sum(ixc);
+        end
+        Xc = bins(1:end-1);
+    end    
+    plot(Xc, Yc, 'o', 'MarkerFaceColor', clrs{ii}, 'Color', clrs{ii}, ...
+        'LineWidth', 2);
+    if ~doFit
+        for jj = 1:numel(ses)
+            plot(Xc(jj)*[1 1], Yc(jj) + ses(jj)*[-1 1], 'k-', ...
+                'LineWidth', 2, 'Color', clrs{ii});
+        end
+
+        [logitCoef,dev] = glmfit(Xm, Ym, 'binomial', 'logit');
+        logitFit = glmval(logitCoef, Xc', 'logit');
+        plot(Xc, logitFit, '-', 'Color', clrs{ii}, 'LineWidth', 3);
+    end
+    
+    if doFit
+        xfine = linspace(min(Xm), max(Xm));
+        yhat = weibull(xfine, ths(1), ths(2));
+        Xcfine = 2*xfine - 1;
+        plot(Xcfine, yhat, '-', 'Color', clrs{ii}, 'LineWidth', 3);
+    end
+end
+xlabel('cumulative motion strength');
+ylabel('proportion right choices');
 set(gca, 'TickDir', 'out');
-set(gca, 'XTick', -1:0.5:1);
+if doFit
+    set(gca, 'XTick', -1:0.5:1);
+else
+    set(gca, 'XTick', -2:1:2);
+    axis tight;
+end
 set(gca, 'YTick', 0:0.25:1);
 plot.setPrintSize(gcf, struct('width', 4, 'height', 3.5));
 axis square;
+
+if saveFig
+    fnm = fullfile(saveDir, 'Fig1D.pdf');
+    export_fig(gcf, fnm);
+end
 
 %% Fig S2 - load all fits and compare r-sq
 

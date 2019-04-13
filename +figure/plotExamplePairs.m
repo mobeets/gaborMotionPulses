@@ -54,8 +54,8 @@ for ii = 1:numel(ps)
 %     title({nm, vals});
     title(vals);
     set(gca, 'TickDir', 'out');
-    xlabel('Neuron 1 spike count');
-    ylabel('Neuron 2 spike count');
+    xlabel('neuron 1 spike count');
+    ylabel('neuron 2 spike count');
     if doSave
         plot.setPrintSize(gcf, struct('width', 3.5, 'height', 3));
         cnm = [nms{ii} '_scatter'];
