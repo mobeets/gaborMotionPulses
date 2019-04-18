@@ -162,6 +162,7 @@ for jj = 1:numel(dts)
         cpts(ii,5) = dPrime_shuf_hat;
         cpts(ii,6) = dPrime_raw;
         cpts(ii,7) = dPrime_shuf;
+        cpts(ii,8) = dPrime_raw/dPrime_shuf;
     end
     pts = [pts; cpts];
 end
@@ -181,8 +182,9 @@ clrs = cbrewer('seq', 'Greens', 8);
 clrs = clrs([4 6 8],:);
 % clrs = clrs([3 5 8],:);
 
-xlim([0.5 1.6]); ylim(xlim);
-xlim([-1 1]); ylim(xlim);
+% xlim([0.5 1.6]); ylim(xlim);
+xlim(0.5*[-1 1]); ylim(xlim);
+% xlim([-1 1]); ylim(xlim);
 plot(xlim, 0*[1 1], '--', 'Color', 0.8*ones(3,1), 'Linewidth', 2);
 plot(0*[1 1], ylim, '--', 'Color', 0.8*ones(3,1), 'Linewidth', 2);
 
@@ -194,7 +196,8 @@ for kk = numel(nks):-1:1
     xc = pts(ixc,1).^1;
     yc = pts(ixc,2).^1;
     
-    xc = log(pts(ixc,4)) - log(pts(ixc,5));
+%     xc = log(pts(ixc,4)) - log(pts(ixc,5));
+    xc = log(sqrt(pts(ixc,4))) - log(sqrt(pts(ixc,5)));
     yc = log(pts(ixc,6)) - log(pts(ixc,7));
     
 %     [bandwidth,density,xa,ya] = kde2d([xc yc]);
@@ -224,7 +227,7 @@ ylabel({'actual log d'' ratio', ...
     'Color', 'k');
 ixc = ~any(isnan(pts(:,1:2)),2);
 axis equal; axis tight;
-set(gca, 'XTick', [-1 0 1]);
+% set(gca, 'XTick', [-0.5 0 0.5]);
 set(gca, 'YTick', get(gca, 'XTick'));
 % title({cnm, ['r^2 = ' sprintf('%0.2f', corr(pts(ixc,1), pts(ixc,2)))]});
 % xlim([0.5 1.6]); ylim(xlim);
