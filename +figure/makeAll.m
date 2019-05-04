@@ -1,6 +1,6 @@
 %% init
 
-fitnm = 'space-time';
+fitnm = 'space-time-reboot';
 doSaveFigs = false;
 
 saveDir = fullfile('data', 'figures', fitnm);
@@ -16,8 +16,8 @@ decodingFnm = fullfile(saveDir, 'allPairsWithScs.mat');
 
 % fits
 % fitAllSTRFs(fitnm, false, 'cells ASD', io.getDates, 'MT');
-% fitAllSTRFs('time-only', false, 'cells ASD time-only', io.getDates, 'MT');
-% fitAllSTRFs('flat', false, 'cells Flat', io.getDates, 'MT');
+% fitAllSTRFs('time-only-reboot', false, 'cells ASD time-only', io.getDates, 'MT');
+% fitAllSTRFs('flat-reboot', false, 'cells Flat', io.getDates, 'MT');
 
 %% decode with shuffled cell pairs, triplets, quads, etc.
 
@@ -37,6 +37,7 @@ decodingFnm = fullfile(saveDir, 'allPairsWithScs.mat');
 %% make cell pairs, and perform decoding analysis
 
 % % cell pairs
+% cells = tools.makeFitSummaries(['data/fits/' fitnm]);
 % allPairs = tools.makeCellPairs(cells);
 % save(pairsFnm, 'allPairs');
 % 
@@ -83,18 +84,22 @@ disp('-----SUMMARY-----');
 % summarize experiments, cells, and trials per monkey
 isNancy = sessions >= 20150101;
 nexps = [sum(~isNancy) sum(isNancy)];
-fprintf('# sessions: P=%d, N=%d\n', nexps);
+nexps = [nexps sum(nexps)];
+fprintf('# sessions: P=%d, N=%d, total=%d\n', nexps);
 ncells = [sum(ncells_per_session(~isNancy)) sum(ncells_per_session(isNancy))];
-fprintf('# cells: P=%d, N=%d\n', ncells);
+ncells = [ncells sum(ncells)];
+fprintf('# cells: P=%d, N=%d, total=%d\n', ncells);
 
 mu = [mean(ncells_per_session(~isNancy)) mean(ncells_per_session(isNancy))];
 sd = [std(ncells_per_session(~isNancy)) std(ncells_per_session(isNancy))];
-avgcells = [mu; sd]; avgcells = avgcells(:);
+ns = [sqrt(sum(~isNancy)) sqrt(sum(isNancy))];
+avgcells = [mu; sd./ns]; avgcells = avgcells(:);
 fprintf('avg # cells per session: P = %0.1f +/- %0.1f, N = %0.1f +/- %0.1f\n', avgcells);
 
 mu = [mean(ntrials_per_session(~isNancy)) mean(ntrials_per_session(isNancy))];
 sd = [std(ntrials_per_session(~isNancy)) std(ntrials_per_session(isNancy))];
-avgtrials = [mu; sd]; avgtrials = avgtrials(:);
+ns = [sqrt(sum(~isNancy)) sqrt(sum(isNancy))];
+avgtrials = [mu; sd./ns]; avgtrials = avgtrials(:);
 fprintf('avg # trials per session: P = %0.1f +/- %0.1f, N = %0.1f +/- %0.1f\n', avgtrials);
 
 % summarize pair filtering as well
@@ -114,17 +119,17 @@ fprintf('# pairs: P=%d, N=%d\n', ncells);
 
 %% Fig 2 - ASD
 
-doSaveFigs = false;
+doSaveFigs = true;
 % cellName = '20140304-MT_12'; % 300-400
 cellName = '20150304b-MT_14'; % 600-700; 60-160
 startTrial = 600;
 endTrial = 700;
 
 % 2b - stimuli
-fig2b = figure.plotStimOrSpikes(cells, cellName, startTrial, endTrial, 'stim');
+% fig2b = figure.plotStimOrSpikes(cells, cellName, startTrial, endTrial, 'stim');
 
 % 2c - spikes
-fig2c = figure.plotStimOrSpikes(cells, cellName, startTrial, endTrial, 'spikes');
+% fig2c = figure.plotStimOrSpikes(cells, cellName, startTrial, endTrial, 'spikes');
 
 % 2d - all RFs
 fig2d = figure.showAllRfs(cells(ixCellsToKeep));
@@ -134,8 +139,8 @@ if doSaveFigs
     if ~exist(curSaveDir, 'dir')
         mkdir(curSaveDir);
     end
-    export_fig(fig2b, fullfile(curSaveDir, '2b.pdf'));
-    export_fig(fig2c, fullfile(curSaveDir, '2c.pdf'));
+%     export_fig(fig2b, fullfile(curSaveDir, '2b.pdf'));
+%     export_fig(fig2c, fullfile(curSaveDir, '2c.pdf'));
     export_fig(fig2d, fullfile(curSaveDir, '2d.pdf'));
 end
 
@@ -144,7 +149,7 @@ end
 % dd = load(decodingFnm);
 % cpairs = dd.allPairs;
 cpairs = pairs;
-doSaveFigs = true;
+doSaveFigs = false;
 
 % 3b
 fig3b = figure.deltaDecodingAcc(cpairs);
@@ -198,6 +203,14 @@ disp(['# with ' ynmB ' and ' xnmA ' vs. ' xnmB ':']);
 [ppct(sum(xG & ~yG)) ppct(sum(~xG & ~yG))]
 disp('---------');
 
+% beneficial noise corr
+A = ([scs.sameTarg] & [scs.noiseCorrAR]<0);
+B = (~[scs.sameTarg] & [scs.noiseCorrAR]>0);
+disp(['# with beneficial noise corr: ' ppct(sum(A | B))]);
+A = ([scs.sameTarg] & [scs.noiseCorrAR]>0);
+B = (~[scs.sameTarg] & [scs.noiseCorrAR]<0);
+disp(['# with harmful noise corr: ' ppct(sum(A | B))]);
+
 % of pairs in same pool, % with r_RF > 0 and r_sc > 0
 scs = pairs;
 scs = scs([scs.sameTarg]);
@@ -213,6 +226,14 @@ ppct = @(n) sprintf('%d (%0.1f%%) ', [n 100*n/numel(scs)]);
 A = [scs.rfCorr] < 0;
 % B = [scs.noiseCorrAR] < 0;
 disp(['# in diff pools with r_{RF} < 0: ' ppct(sum(A))]);
+
+% of pairs in diff pools, % with r_RF < 0 and r_sc > 0
+scs = pairs;
+scs = scs(~[scs.sameTarg]);
+ppct = @(n) sprintf('%d (%0.1f%%) ', [n 100*n/numel(scs)]);
+A = [scs.rfCorr] < 0;
+B = [scs.noiseCorrAR] > 0;
+disp(['# in diff pools with r_{RF} < 0 and r_{sc} > 0: ' ppct(sum(A & B))]);
 
 % of pairs in diff pools, % with r_RF < 0 and r_sc < 0
 scs = pairs;
@@ -256,7 +277,7 @@ disp(['avg. noise corr: ' sprintf('%0.2f +/- %0.2f', [mu sd])]);
 
 %% Fig 4 - cell pair examples
 
-doSave = false;
+doSave = true;
 figure.plotExamplePairs(pairs, cells, doSave, ...
     fullfile(saveDir, 'Fig4'));
 
@@ -289,7 +310,7 @@ figure.plotExamplePairs(pairs, cells, doSave, ...
 % strength). The net motion strengths from all trials were divided
 % into 30 equal quantiles to form the bins in Figure 1d.
 
-saveFig = true;
+saveFig = false;
 plot.init;
 set(gca, 'FontSize', 18);
 set(gca, 'LineWidth', 2);
@@ -377,8 +398,9 @@ end
 
 %% Fig S2 - load all fits and compare r-sq
 
-% dts = io.getDates('data/fits/space-time');
-% fitnms = {'space-time', 'time-only', 'flat'};
+% dts = io.getDates('data/fits/space-time-reboot');
+% % fitnms = {'space-time', 'time-only', 'flat'};
+% fitnms = {'space-time-reboot', 'time-only-reboot', 'flat-reboot'};
 % fitstrs = {'ASD', 'ASD', 'Flat'};
 % fldsToRm = {'X', 'Xxy'};
 % Cells = cell(numel(fitnms),1);
@@ -402,7 +424,6 @@ Cy = Cells{yi};
 lblnms = {'spatial+temporal RF', 'temporal RF', 'flat'};
 xlbl = lblnms{xi};
 ylbl = lblnms{yi};
-fnm = fullfile(saveDir, 'FigSx_r2.pdf');
 
 xs = [Cx.rsq];
 ys = [Cy.rsq];
@@ -414,8 +435,7 @@ ys = ys(ixCellsToKeep);
 figSx = plot.init;
 set(gca, 'FontSize', 18);
 set(gca, 'LineWidth', 2);
-xlim([-0.1 1]);
-ylim([-0.1 1]);
+xlim([-0.1 1]); ylim(xlim);
 plot(xlim, ylim, '-', 'Color', 0.8*ones(3,1), 'LineWidth', 2);
 plot(xs, ys, 'k.', 'MarkerSize', 10);
 xlabel(['r^2 (' xlbl ')']);
@@ -426,12 +446,13 @@ set(gca, 'TickDir', 'out');
 plot.setPrintSize(gcf, struct('width', 4, 'height', 3.5));
 axis square;
 if doSaveFigs
+    fnm = fullfile(saveDir, 'FigSx_r2.pdf');
     export_fig(figSx, fnm);
 end
 
 %% Fig S3 - hyperflow with arrows
 
-doSaveFigs = true;
+doSaveFigs = false;
 
 exampleCellNames = {'20140304-MT_6', '20150324a-MT_14', '20150324a-MT_13', ...
     '20140304-MT_2', '20140307-MT_1', '20140304-MT_3', '20150324a-MT_5'};
@@ -539,8 +560,9 @@ end
 
 %% Fig S4 - d'/CP as a function of heterogeneity/eccentricity
 
-fnma = fullfile(saveDir, 'FigSx_a.pdf');
-fnmb = fullfile(saveDir, 'FigSx_b.pdf');
+doSaveFigs = true;
+fnma = fullfile(saveDir, 'FigS3_a.pdf');
+fnmb = fullfile(saveDir, 'FigS3_b.pdf');
 
 curCells = cells(ixCellsToKeep);
 % figS4 = plot.init;
@@ -548,13 +570,19 @@ curCells = cells(ixCellsToKeep);
 figS4a = plot.init;
 % subplot(1,2,1); hold on;
 figure.scatterCellFeatures(curCells, 'rf_ecc', 'dPrime');
+axis tight; yl = ylim; ylim([0 yl(2)]);
 % title('Sensitivity vs. Eccentricity');
-export_fig(figS4a, fnma);
+if doSaveFigs
+    export_fig(figS4a, fnma);
+end
 
 % figS4b = figure.scatterCellFeatures(curCells, 'CP', 'rf_ecc');
 
 figS4b = plot.init;
 % subplot(1,2,2); hold on;
 figure.scatterCellFeatures(curCells, 'rfSpatialVariability', 'dPrime');
+axis tight; yl = ylim; ylim([0 yl(2)]);
 % title('Sensitivity vs. Heterogeneity');
-export_fig(figS4b, fnmb);
+if doSaveFigs
+    export_fig(figS4b, fnmb);
+end

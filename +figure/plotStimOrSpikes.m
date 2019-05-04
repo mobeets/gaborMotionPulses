@@ -9,6 +9,7 @@ function fig = plotStimOrSpikes(cells, cellName, startTrial, endTrial, kind)
     X = cell.X(ix,:);
     y = cell.Y(ix);
     yh = cell.Yh(ix);
+%     yh = cell.YhAR(ix);
 
     fig = plot.init(16);
     set(gca, 'LineWidth', 3);

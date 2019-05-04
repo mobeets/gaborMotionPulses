@@ -1,34 +1,38 @@
 function figs = plotExamplePairs(pairs, cells, doSave, saveDir)
 
 scs = pairs;
-ix = [scs.minAbsDprime] > 0.4;
+ix = [scs.minAbsDprime] > 0.3;
 scs = scs(ix);
 
 samePool = [scs.sameTarg];
 posNoiseCorr = [scs.noiseCorrAR] > 0;
 posDecAcc = [scs.scoreGainWithCorrs] > 0.02;
+negDecAcc = [scs.scoreGainWithCorrs] < -0.02;
+posRfCorr = [scs.rfCorr] > 0;
 
 % diff pools, beneficial noise corrs
-ixA = ~samePool & posNoiseCorr & posDecAcc;
+ixA = ~samePool & posNoiseCorr & posRfCorr & posDecAcc;
 psA = scs(ixA);
-psA = psA([2 4]);
+psA = psA([1]);
 
-% diff pools, harmful noise corrs
-ixB = ~samePool & ~posNoiseCorr & [scs.scoreGainWithCorrs] < -0.02;
-psB = scs(ixB);
+% % diff pools, harmful noise corrs
+% ixB = ~samePool & ~posNoiseCorr & [scs.scoreGainWithCorrs] < -0.02;
+% psB = scs(ixB);
 
 % same pools, harmful noise corrs
-ixC = samePool & posNoiseCorr & [scs.scoreGainWithCorrs] < -0.03;
+ixC = samePool & posRfCorr & posNoiseCorr & negDecAcc;
 psC = scs(ixC);
-psC = psC(4);
+psC = psC(16);
 
-% same pools, helpful noise corrs
-ixD = samePool & posNoiseCorr & [scs.scoreGainWithCorrs] > 0.02;
-psD = scs(ixD);
+% % same pools, helpful noise corrs
+% ixD = samePool & posNoiseCorr & [scs.scoreGainWithCorrs] > 0.02;
+% psD = scs(ixD);
 
-ps = [psC psB psA];
-nms = {'same_pool_pos_noisecorr', 'diff_pool_neg_noisecorr', ...
-    'diff_pool_pos_noisecorr_1', 'diff_pool_pos_noisecorr_2'};
+ps = [psC psA];
+% ps = [psC psB psA];
+% nms = {'same_pool_pos_noisecorr', 'diff_pool_neg_noisecorr', ...
+%     'diff_pool_pos_noisecorr_1', 'diff_pool_pos_noisecorr_2'};
+nms = {'same_pool_pos_noisecorr', 'diff_pool_pos_noisecorr'};
 
 if doSave && ~exist(saveDir, 'dir')
     mkdir(saveDir);

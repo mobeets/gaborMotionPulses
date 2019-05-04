@@ -10,7 +10,8 @@ function fitAllSTRFs(runName, ~, fitType, dts, brainArea)
         brainArea = '';
     end
     if isempty(dts)
-        stimdir = fullfile('data', 'stim');
+        stimdir = '/Users/mobeets/code/gaborMotionReboot/data/stim';
+%         stimdir = fullfile('data', 'stim');
         dts = io.getDates(stimdir);
 %         stimdir = '..'; % assumes data in parent dir
 %         dts = io.getDates(fullfile(stimdir, [mnkNm 'StimFiles']));

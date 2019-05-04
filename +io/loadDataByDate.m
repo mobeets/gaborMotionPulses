@@ -31,8 +31,9 @@ function data = loadDataByDate(dt, isNancy, basedir, stimdir, ...
             case {'jacobyates'}
                 basedir = '~/Dropbox/MatlabCode/Projects/gaborPulseASD/data';
             case {'mobeets'}
-                basedir = 'data';
-%                 basedir = '/Users/mobeets/code/gaborMotionReboot/data';
+                % n.b. gaborMotionReboot has the updated stimulus files
+%                 basedir = 'data';
+                basedir = '/Users/mobeets/code/gaborMotionReboot/data';
             otherwise
                 basedir = '~/Documents';
         end

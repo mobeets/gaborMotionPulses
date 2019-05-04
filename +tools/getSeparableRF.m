@@ -20,4 +20,10 @@ function obj = getSeparableRF(w)
     obj.temporal_RF = V(:,1);
     obj.scalar_RF = S(1);
     
+    % handle cases where spatial and temporal weights are both negative
+    if sum(obj.scalar_RF*obj.temporal_RF) < 0
+        obj.temporal_RF = -obj.temporal_RF;
+        obj.spatial_RF = -obj.spatial_RF;
+    end
+    
 end

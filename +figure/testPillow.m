@@ -96,11 +96,11 @@ end
 
 ks = 2:4; % 2 = pairs, 3 = triplets, 4 = quads, etc. (can include multiple)
 fitToShuffled = true; % if false, fit to unshuffled data
+nshufflereps = 5; % # of repeats of shuffles (I did 20)
 
 ixCellsToKeep = figure.filterCellsAndPairs(cells, true, 0);
 groups = tools.makeCellGroups(cells(ixCellsToKeep), ks);
 dts = unique({groups.dt});
-
 if fitToShuffled
     shufnm = 'shuffled';
 else
@@ -115,6 +115,9 @@ for jj = 1:numel(dts)
     ix = ismember({groups.dt}, dtstr);
     cgroups = groups(ix);
     cpts = nan(numel(cgroups), 3);
+    if fitToShuffled && mod(jj,2) == 0
+        disp([num2str(jj) ' of ' num2str(numel(dts)) '...']);
+    end
     for ii = 1:numel(cgroups)
         cgroup = cgroups(ii);
         Ys_unshuf = cgroup.Ys_resAR;
@@ -126,19 +129,6 @@ for jj = 1:numel(dts)
         % define decoding weights based on aggregate tuning
         ws = -(2*(cgroup.targPrefs == 1)-1); ws = ws';
         
-        grps = unique(cgroup.stimdir);
-        Ys_shuf = nan(size(Ys_unshuf));
-        for kk = 1:numel(grps)
-            ixc = (cgroup.stimdir == grps(kk));
-            Yc = Ys_unshuf(ixc,:);
-            [~, idx] = sort(rand(size(Yc)),1);
-            ytmp = nan(size(Yc));
-            for ll = 1:size(Yc,2)
-                ytmp(:,ll) = Yc(idx(:,ll),ll);
-            end
-            Ys_shuf(ixc,:) = ytmp;
-        end
-        
         Sigma = cov(Ys_unshuf);
         Sigma_diag = diag(diag(Sigma));
 %         dPrime_shuf_hat = 1./(ws'*cov(Ys_shuf)*ws);
@@ -147,14 +137,36 @@ for jj = 1:numel(dts)
         cpts(ii,1) = sqrt(dPrime_raw_hat/dPrime_shuf_hat);
         
         if fitToShuffled
-            Ysc = Ys_shuf;
+            dPrime_shufs = nan(nshufflereps,1);
+            dPrime_raws = nan(nshufflereps,1);
+            for rr = 1:nshufflereps
+                % shuffle data
+                grps = unique(cgroup.stimdir);
+                Ys_shuf = nan(size(Ys_unshuf));
+                for kk = 1:numel(grps)
+                    ixc = (cgroup.stimdir == grps(kk));
+                    Yc = Ys_unshuf(ixc,:);
+                    [~, idx] = sort(rand(size(Yc)),1);
+                    ytmp = nan(size(Yc));
+                    for ll = 1:size(Yc,2)
+                        ytmp(:,ll) = Yc(idx(:,ll),ll);
+                    end
+                    Ys_shuf(ixc,:) = ytmp;
+                end
+                mdl = fitcdiscr(Ys_shuf, cgroup.stimdir, 'DiscrimType', 'linear');
+                K = mdl.Coeffs(1,2).Const; L = mdl.Coeffs(1,2).Linear;
+                dPrime_shufs(rr) = tools.dprime(Ys_shuf*L + K, cgroup.stimdir);
+                dPrime_raws(rr) = tools.dprime(Ys_unshuf*L + K, cgroup.stimdir);
+            end
+            dPrime_shuf = nanmedian(dPrime_shufs);
+            dPrime_raw = nanmedian(dPrime_raws);
         else
-            Ysc = Ys_unshuf;
+            mdl = fitcdiscr(Ys_unshuf, cgroup.stimdir, 'DiscrimType', 'linear');
+            K = mdl.Coeffs(1,2).Const; L = mdl.Coeffs(1,2).Linear;
+            dPrime_shuf = tools.dprime(Ys_shuf*L + K, cgroup.stimdir);
+            dPrime_raw = tools.dprime(Ys_unshuf*L + K, cgroup.stimdir);
         end
-        mdl = fitcdiscr(Ysc, cgroup.stimdir, 'DiscrimType', 'linear');
-        K = mdl.Coeffs(1,2).Const; L = mdl.Coeffs(1,2).Linear;
-        dPrime_shuf = tools.dprime(Ys_shuf*L + K, cgroup.stimdir);
-        dPrime_raw = tools.dprime(Ys_unshuf*L + K, cgroup.stimdir);
+        
         cpts(ii,2) = sqrt(dPrime_raw/dPrime_shuf);
         cpts(ii,3) = numel(ws); % whether pair, triplet, etc.
         
@@ -163,10 +175,16 @@ for jj = 1:numel(dts)
         cpts(ii,6) = dPrime_raw;
         cpts(ii,7) = dPrime_shuf;
         cpts(ii,8) = dPrime_raw/dPrime_shuf;
+        
+        cpts(ii,9) = nanmean(log(dPrime_raws./dPrime_shufs));
+        cpts(ii,10) = log(dPrime_raw_hat./dPrime_shuf_hat);
     end
     pts = [pts; cpts];
 end
 toc;
+if fitToShuffled
+    ptsFitToShuf = pts;
+end
 
 %%
 
@@ -183,7 +201,7 @@ clrs = clrs([4 6 8],:);
 % clrs = clrs([3 5 8],:);
 
 % xlim([0.5 1.6]); ylim(xlim);
-xlim(0.5*[-1 1]); ylim(xlim);
+xlim(0.4*[-1 1]); ylim(xlim);
 % xlim([-1 1]); ylim(xlim);
 plot(xlim, 0*[1 1], '--', 'Color', 0.8*ones(3,1), 'Linewidth', 2);
 plot(0*[1 1], ylim, '--', 'Color', 0.8*ones(3,1), 'Linewidth', 2);
@@ -215,7 +233,8 @@ for kk = numel(nks):-1:1
     counts(kk,2,1) = nanmean((pts(ixc,1) <= 1) & (pts(ixc,2) <= 1));
     counts(kk,2,2) = nanmean((pts(ixc,1) > 1) & (pts(ixc,2) <= 1));
     round(100*squeeze(counts(kk,:,:)))
-    100*(1 - sum(diag(squeeze(counts(kk,:,:))')))
+    pct = 100*(1 - sum(diag(squeeze(counts(kk,:,:))')));
+    disp(['% correct for groups of ' num2str(nks(kk)) ' cells: ' num2str(pct) '%']);
     
     mdls{kk} = fitlm(pts(ixc,1), pts(ixc,2));
 end

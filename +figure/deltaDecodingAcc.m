@@ -12,6 +12,8 @@ function fig = deltaDecodingAcc(pairs)
         'Color', 0.8*ones(3,1));
     plot(100*scsDelta(ix,:), '-', 'LineWidth', 2, ...
         'Color', [0.4 0.4 0.4]);
+    xlim([1 numel(pairs)]);
+    ylim([-6 6]);
     xlabel('pair index (sorted)');
     ylabel('\Delta decoding accuracy');
     % ylabel({'\Delta decoding accuracy', ...
@@ -19,6 +21,6 @@ function fig = deltaDecodingAcc(pairs)
     ytcks = get(gca, 'YTick');
     set(gca, 'YTickLabel', arrayfun(@(n) [num2str(n) '%'], ytcks, 'uni', 0));
 %     set(gca, 'TickLength', [0 0]);
-    plot.setPrintSize(gcf, struct('width', 4, 'height', 3));
+    plot.setPrintSize(gcf, struct('width', 4, 'height', 3.05));
 
 end

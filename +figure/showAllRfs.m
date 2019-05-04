@@ -4,10 +4,15 @@ function fig = showAllRfs(cells)
     ncols = ceil(sqrt(n));
     nrows = ceil(n/ncols);
     nrows = 12; ncols = 11;
-    nrows = 13; ncols = 8;
+%     nrows = 13; ncols = 8;
+    nrows = 15; ncols = 8;
+    nrows = 14; ncols = 9;
     offset = 5;    
-    sz = 50;
+    sz = 35;
     cmin = nan;
+    if nrows*ncols < numel(cells)
+        warning('Not showing all RFs!');
+    end
     
     smoothness = 1./[cells.rfSpatialVariability];
     smoothness = sign([cells.dPrime]).*smoothness;
