@@ -267,8 +267,9 @@ ppct = @(n) sprintf('%d (%0.1f%%) ', [n 100*n/numel(scs)]);
 A = [scs.noiseCorrAR];
 B = [scs.rfCorr];
 ix = ~isnan(A) & ~isnan(B);
-r = corr(A(ix)', B(ix)');
-disp(['correlation between r_{sc} and r_{RF}: ' sprintf('%0.2f', r)]);
+[r,pval] = corr(A(ix)', B(ix)');
+disp(['correlation between r_{sc} and r_{RF}: ' sprintf('%0.2f', r) ...
+    ', p=' sprintf('%0.6f', pval)]);
 
 % avg noise corr
 mu = nanmean([pairs.noiseCorrAR]);
@@ -277,7 +278,7 @@ disp(['avg. noise corr: ' sprintf('%0.2f +/- %0.2f', [mu sd])]);
 
 %% Fig 4 - cell pair examples
 
-doSave = true;
+doSave = false;
 figure.plotExamplePairs(pairs, cells, doSave, ...
     fullfile(saveDir, 'Fig4'));
 

@@ -61,6 +61,7 @@ ys = pts(:,2);
 % xs = xs(ixc); ys = ys(ixc);
 
 set(gca, 'LineWidth', 2);
+[rho,pval] = corr(xs, ys);
 mdl = fitlm(xs, ys);
 h = mdl.plot;
 h(1).Marker = 'o';
